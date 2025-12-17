@@ -31,10 +31,10 @@
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
                             <SetVelocity x="0.0" y="0.0" theta="0.0" />
+                            <MoveHead yaw="0.5" pitch="0.0"/>
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
-                            <SubTree ID="dribble" _autoremap="true" /> <!-- 드리블을 위해 적용 -->
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='END'" name="End">

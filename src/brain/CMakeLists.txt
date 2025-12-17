@@ -81,18 +81,8 @@ target_include_directories(brain_node PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(brain_node PUBLIC c_std_99 cxx_std_17) # Require C99 and C++17
 
-# GC Tester Node
-add_executable(gc_tester_node src/gc_tester/src/gc_tester_node.cpp)
-target_include_directories(gc_tester_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/gc_tester/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-)
-ament_target_dependencies(gc_tester_node rclcpp game_controller_interface)
-target_compile_features(gc_tester_node PUBLIC c_std_99 cxx_std_17)
-
 install(TARGETS
   brain_node
-  gc_tester_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch
