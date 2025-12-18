@@ -52,6 +52,9 @@ Brain::Brain() : rclcpp::Node("brain_node"){
     declare_parameter<double>("vision.cam_fov_x", 90);  // 카메라 FOV X (도)
     declare_parameter<double>("vision.cam_fov_y", 65);  // 카메라 FOV Y (도)
 
+    declare_parameter<string>("vision_config_path", "");
+    declare_parameter<string>("vision_config_local_path", "");
+
     // rerun 관련 파라미터 
     declare_parameter<bool>("rerunLog.enable_tcp", false);  // TCP 로그 전송 활성화 여부
     declare_parameter<string>("rerunLog.server_ip", "");  // 로그 서버 IP
@@ -66,6 +69,7 @@ Brain::Brain() : rclcpp::Node("brain_node"){
     
     // BT
     declare_parameter<string>("tree_file_path", "");
+
     // 게임 컨트롤러 IP 주소
     declare_parameter<string>("game_control_ip", "0.0.0.0");
 }
