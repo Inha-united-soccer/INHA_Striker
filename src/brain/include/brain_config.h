@@ -81,5 +81,5 @@ public:
 
     // ---------------- 멤버 함수 ----------------
     void handle();
-    void BrainConfig::print(ostream &os);
+    void print(ostream &os);
 };
