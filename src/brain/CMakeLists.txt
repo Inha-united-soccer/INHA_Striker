@@ -51,6 +51,8 @@ set(SOURCE_FILES
   src/walk.cpp
   src/movehead.cpp
   src/detection_utils.cpp 
+  src/brain_log.cpp
+  src/locator.cpp
 )
 
 add_executable(brain_node ${SOURCE_FILES})

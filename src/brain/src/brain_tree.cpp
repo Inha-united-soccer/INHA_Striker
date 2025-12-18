@@ -1,13 +1,16 @@
 #include <cmath>
 #include <cstdlib>
-#include "brain_tree.h"
-#include "brain.h"
+
 #include "utils/math.h"
 #include "utils/print.h"
 #include "utils/misc.h"
 #include "std_msgs/msg/string.hpp"
 #include <fstream>
 #include <ios>
+
+#include "brain_tree.h"
+#include "brain.h"
+#include "locator.h"
 
 
 #define REGISTER_BUILDER(Name)     \
