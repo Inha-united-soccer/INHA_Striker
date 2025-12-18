@@ -63,6 +63,8 @@ public:
 
     double robotOdomFactor; // 로봇 odometer에 사용
 
+    double robotHeight; 
+
     // --------- 공 감지 관련 파라미터 ----------------
     double ballConfidenceThreshold;
     double ballOutThreshold = 2.0; // 공이 밖으로 나갔는지 판단을 위한 임계값

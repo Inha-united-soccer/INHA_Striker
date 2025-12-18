@@ -39,6 +39,9 @@ Brain::Brain() : rclcpp::Node("brain_node"){
     declare_parameter<double>("robot.vy_limit", 0.4);
     declare_parameter<double>("robot.vtheta_limit", 1.0);
 
+    declare_parameter<double>("robot.robot_height", 1.0);
+    declare_parameter<double>("robot.odom_factor", 1.0);
+
     // 전략 관련 파라미터
     declare_parameter<double>("strategy.ball_confidence_threshold", 50.0);   // 공 인식 신뢰도 임계값
 
@@ -111,6 +114,9 @@ void Brain::loadConfig(){
     get_parameter("game.number_of_players", config->numOfPlayers);
 
     // 로봇 제어 관련 파라미터
+    get_parameter("robot.robot_height", config->robotHeight);
+    get_parameter("robot.odom_factor", config->robotOdomFactor);
+
     get_parameter("robot.vx_factor", config->vxFactor);
     get_parameter("robot.yaw_offset", config->yawOffset);
     get_parameter("robot.vx_limit", config->vxLimit);
@@ -588,7 +594,7 @@ void Brain::logDetection(const vector<GameObject> &gameObjects, bool logBounding
             // do nothing, use default
             // colors.push_back(rerun::Color(0xFFFFFFFF));
         }
-        if (label == "Ball" && isBallOut(0.2, 10.0))
+        if (label == "Ball" && detection_utils::isBallOut(0.2, 10.0))
             color = rerun::Color(0x000000FF);
         if (label == "Ball" && obj.confidence < config->ballConfidenceThreshold)
             color = rerun::Color(0xAAAAAAFF);
