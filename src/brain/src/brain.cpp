@@ -206,8 +206,8 @@ void Brain::loadConfig(){
 }
 
 void Brain::tick(){ 
-    detection_utils::updateBallMemory(data, tree, log); // 공 위치 기억 업데이트
-    
+    detection_utils::updateBallMemory(data, tree, config, log); // 공 위치 기억 업데이트
+
     tree->tick(); 
 }
 
