@@ -610,7 +610,7 @@ void Brain::updateBallMemory(){
         tree->setEntry<bool>("ball_out", false); 
     }
 
-    updateRelativePos(data->ball, data, config);
+    updateRelativePos(data->ball);
     // updateRelativePos(data->tmBall);
 
     tree->setEntry<double>("ball_range", data->ball.range);
