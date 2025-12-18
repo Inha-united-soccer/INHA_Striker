@@ -1,5 +1,4 @@
 #include "detection_utils.h"
-#include "brain_log.h"
 #include "utils/math.h" // norm, transCoord 등
 #include <cmath>
 
@@ -342,7 +341,7 @@ bool isBallOnFieldLine(const FieldLine line, const std::shared_ptr<BrainData> &d
     return fabs(pointPerpDistToLine(point, line.posToField)) < margin; // 수직 거리가 margin보다 작으면 true
 }
 
-void detectProcessMarkings(const vector<GameObject> &markingObjs, const std::shared_ptr<BrainData> &data, const std::shared_ptr<BrainLog> &log){
+void detectProcessMarkings(const vector<GameObject> &markingObjs, const std::shared_ptr<BrainData> &data, const std::shared_ptr<BrainConfig> &config, const std::shared_ptr<BrainLog> &log){
     const double confidenceValve = 50; // confidence 低于这个阈值, 排除
     vector<GameObject> markings = {};
     for (int i = 0; i < markingObjs.size(); i++)
@@ -358,7 +357,7 @@ void detectProcessMarkings(const vector<GameObject> &markingObjs, const std::sha
             continue;
 
         // 如果通过了重重考验, 则记入 brain
-        identifyMarking(marking);
+        identifyMarking(marking, config);
         markings.push_back(marking);
     }
     data->setMarkings(markings);
@@ -473,6 +472,59 @@ void detectProcessRobots(const vector<GameObject> &robotObjs, const std::shared_
     }
 
     data->setRobots(robots);
+}
+
+void identifyMarking(GameObject& marking, const std::shared_ptr<BrainConfig> &config) {
+    double minDist = 100;
+    double secMinDist = 100;
+    int mmIndex = -1;
+    for (int i = 0; i < config->mapMarkings.size(); i++) {
+       auto mm = config->mapMarkings[i];
+       
+       if (mm.type != marking.label) continue;
+
+       double dist = norm(marking.posToField.x - mm.x, marking.posToField.y - mm.y);
+
+       if (dist < minDist) {
+           secMinDist = minDist;
+           minDist = dist;
+           mmIndex = i;
+       } else if (dist < secMinDist) {
+           secMinDist = dist; 
+       }
+    }
+
+    auto fd = config->fieldDimensions;
+    if (
+        mmIndex >=0 && mmIndex < config->mapMarkings.size()
+        && minDist < 1.5 * 14 / fd.length // 1.0 for adultsize
+        && secMinDist - minDist > 1.5 * 14 / fd.length // 2.0 for adultsize
+        // && marking.confidence > 70 
+    ) {
+        marking.id = mmIndex;
+        marking.name = config->mapMarkings[mmIndex].name;
+        marking.idConfidence = 1.0;
+    } else {
+        marking.id = -1;
+        marking.name = "NA";
+        marking.idConfidence = 0.0;
+    }
+}
+
+
+void Brain::identifyGoalpost(GameObject& goalpost) {
+    string side = "NA";
+    string half = "NA";
+    if (goalpost.posToField.x > 0) half = "O";
+    else half = "S";
+
+    if (goalpost.posToField.y > 0) side = "L";
+    else side = "R";
+    
+    goalpost.id = 0;
+    goalpost.name = half + side;
+    goalpost.idConfidence = 1.0;
+    // TODO 参考 markings, 做更为精细的 goalpostid
 }
 
 } // namespace detection_utils
