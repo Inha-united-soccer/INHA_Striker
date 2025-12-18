@@ -101,7 +101,6 @@ struct BrainData {
         std::lock_guard<std::mutex> lock(_goalpostsMutex);
         _goalposts = newVec;
     }
-
     inline vector<GameObject> getMarkings() const {
         std::lock_guard<std::mutex> lock(_markingsMutex);
         return _markings;

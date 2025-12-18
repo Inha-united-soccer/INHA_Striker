@@ -8,36 +8,36 @@ brain_node:
       treat_person_as_robot: false 
       number_of_players: 4
      
-      robot: # 로봇 제어할 때 clapping 등 동작을 위한 파라미터
-        robot_height: 0.9 
-        odom_factor: 1.2 
-        vx_factor: 0.50 
-        yaw_offset: 0.0 
-        vx_limit: 1.0 
-        vy_limit: 0.4
-        vtheta_limit: 1.2 
+    robot: # 로봇 제어할 때 clapping 등 동작을 위한 파라미터
+      robot_height: 0.9 
+      odom_factor: 1.2 
+      vx_factor: 0.50 
+      yaw_offset: 0.0 
+      vx_limit: 1.0 
+      vy_limit: 0.4
+      vtheta_limit: 1.2 
 
-      strategy:
-        ball_confidence_threshold: 50.0 
+    strategy:
+      ball_confidence_threshold: 50.0 
 
-      locator:
-        min_marker_count: 5
-        max_residual: 0.35 
+    locator:
+      min_marker_count: 5
+      max_residual: 0.35 
 
-      vision:
-        image_topic: "/booster_camera_bridge/StereoNetNode/rectified_image" # d-robotics
-        depth_image_topic: "/booster_camera_bridge/StereoNetNode/stereonet_depth" # d-robotics
-        cam_pixel_width: 544. # 相机像素宽度, d-robotics
-        cam_pixel_height: 448. # 相机像素高度, d-robotics
-        cam_fov_x: 69.4 # 相机视场角, 单位: 度, d-robotics
-        cam_fov_y: 42.5 # 相机视场角, 单位: 度, d-robotics
+    vision:
+      image_topic: "/booster_camera_bridge/StereoNetNode/rectified_image" # d-robotics
+      depth_image_topic: "/booster_camera_bridge/StereoNetNode/stereonet_depth" # d-robotics
+      cam_pixel_width: 544. # 相机像素宽度, d-robotics
+      cam_pixel_height: 448. # 相机像素高度, d-robotics
+      cam_fov_x: 69.4 # 相机视场角, 单位: 度, d-robotics
+      cam_fov_y: 42.5 # 相机视场角, 单位: 度, d-robotics
+    
+    rerunLog:
+      enable_tcp: true 
+      server_ip: "192.168.50.221:9876" 
+      enable_file: true 
+      log_dir: "/home/booster/Workspace/rrlog"
+      max_log_file_mins: 5.0 
+      img_interval: 1 
       
-      rerunLog:
-        enable_tcp: false 
-        server_ip: "192.168.10.110:9876" 
-        enable_file: true 
-        log_dir: "/home/booster/Workspace/rrlog"
-        max_log_file_mins: 5.0 
-        img_interval: 1 
-
-      game_control_ip: "192.168.50.221"
+    game_control_ip: "192.168.50.221"

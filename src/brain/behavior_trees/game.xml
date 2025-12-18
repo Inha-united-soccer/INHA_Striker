@@ -1,6 +1,7 @@
 <root BTCPP_format="4">
     <!-- 포함될 BT 파일들 -->
     <!--<include path="./dribble.xml" />-->
+    <include path="./subtrees/locate.xml" />
 
     <!-- 시작 -->
     <BehaviorTree ID="MainTree">
@@ -11,6 +12,7 @@
 
                 <ReactiveSequence _while="gc_is_under_penalty" name="Penalty">
                     <SetVelocity x="0.0" y="0.0" theta="0.0" />
+                    <SelfLocateEnterField />
                 </ReactiveSequence>
 
                 <ReactiveSequence _while="!gc_is_under_penalty" name="No_Penalty">
@@ -27,11 +29,13 @@
 
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
                             <SetVelocity x="0.3" y="0.0" theta="0.0" />
+                            <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
                             <SetVelocity x="0.0" y="0.0" theta="0.0" />
                             <MoveHead yaw="0.5" pitch="0.0"/>
+                            <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">

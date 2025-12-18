@@ -12,6 +12,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
 using namespace std;
 using std::placeholders::_1;
 
@@ -381,7 +382,7 @@ void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
     // detectProcessVisionBox(msg);
 
     // 로그 기록
-    // logDetection(gameObjects);
+    logDetection(gameObjects);
 }
 
 void Brain::fieldLineCallback(const vision_interface::msg::LineSegments &msg){ // 필드 라인 감지 콜백
