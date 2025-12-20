@@ -32,7 +32,7 @@
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
-                            <Chase stop_dist="0.5" stop_angle="0.1" vx_limit="0.6" vy_limit="0.2" />
+                            <Chase vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.1" safe_dist="0.5"/>
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
