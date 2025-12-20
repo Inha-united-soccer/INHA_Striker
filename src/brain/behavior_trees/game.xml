@@ -32,7 +32,7 @@
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
-                            <SetVelocity x="0.3" y="0.0" theta="0.0" />
+                            <SimpleChase stop_dist="0.5" stop_angle="0.1" vx_limit="0.6" vy_limit="0.2" />
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
@@ -43,9 +43,7 @@
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
-                            <!--<SubTree ID="dribble" _autoremap="true" /> 드리블을 위해 적용 -->
-                            <SetVelocity x="0.0" y="0.0" theta="0.0" />
-                            <SubTree ID="Locate" _autoremap="true" />
+                        
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='END'" name="End">

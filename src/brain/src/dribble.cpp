@@ -13,7 +13,7 @@
 
 
 void RegisterDribbleNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
-    REGISTER_DRIBBLE_BUILDER(SimpleChase) // 속도 제어
+    REGISTER_DRIBBLE_BUILDER(SimpleChase) 
 }
 
 NodeStatus SimpleChase::tick()
