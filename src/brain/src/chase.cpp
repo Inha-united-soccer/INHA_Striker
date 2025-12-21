@@ -134,11 +134,24 @@ NodeStatus Chase::tick(){
         vtheta = ballYaw;
     } 
     else {
-        vx = min(vxLimit, brain->data->ball.range);
-        vy = 0;
-        vtheta = targetDir;
-        if (fabs(targetDir) < 0.1 && ballRange > 2.0) vtheta = 0.0;
-        vx *= sigmoid((fabs(vtheta)), 1, 3); 
+        double stopTolerance = 0.1; // 10cm 이내면 도착으로 간주
+        
+        // (A) 목표 지점 도착 시: 멈추고 공 바라보기
+        if (distToTarget < stopTolerance) {
+            vx = 0.0;
+            vy = 0.0;
+            
+            // 도착했으면 '목표 방향(targetDir)'이 아니라 '공 방향(ballYaw)'을 봄
+            // 이유: targetDir은 (0,0) 근처라 값이 매우 불안정함 (특이점 문제)
+            vtheta = ballYaw; 
+        }
+        else{
+            vx = min(vxLimit, brain->data->ball.range);
+            vy = 0;
+            vtheta = targetDir;
+            if (fabs(targetDir) < 0.1 && ballRange > 2.0) vtheta = 0.0;
+            vx *= sigmoid((fabs(vtheta)), 1, 3); 
+        }
     }
 
     // 승재욱 추가 -> 공과의 위치가 5도 이하면 그대로 멈춤
