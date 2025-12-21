@@ -101,7 +101,7 @@ NodeStatus Chase::tick()
     if (targetType == "direct") dirThreshold *= 1.2;
 
 
-    // 计算目标点
+    // calculate target point
     if (fabs(toPInPI(kickDir - theta_rb)) < dirThreshold) {
         log("targetType = direct");
         targetType = "direct";
