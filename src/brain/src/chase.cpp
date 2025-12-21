@@ -228,7 +228,7 @@ NodeStatus Chase::tick(){
     // =========================================================================
     
     // 상태를 기억하기 위한 static 변수들
-    static string targetType = "circle_back"; // 초기값
+    static string targetType = "direct"; // 초기값
     static double lockedCircleDir = 1.0;      // 회전 방향 기억 (1.0 or -1.0)
     static double lockedKickDir = 0.0;        // Direct 모드용 킥 방향 기억
     static bool isTargetLocked = false;       // 타겟 락 여부

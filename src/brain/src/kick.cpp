@@ -94,6 +94,7 @@ NodeStatus CalcKickDir::tick(){
 }
 
 // 승재욱 - 직접 만든 Kick
+// 반코트용으로 부호 및 부등호 바뀐 부분 존재 -> 풀코트로 수정 필요
 tuple<double, double, double> Kick::_calcSpeed() {
     double vx, vy, msecKick;
 
@@ -130,8 +131,7 @@ tuple<double, double, double> Kick::_calcSpeed() {
     return make_tuple(vx, vy, msecKick);
 }
 
-NodeStatus Kick::onStart()
-{
+NodeStatus Kick::onStart(){
     // =========================================================================
     // [추가됨] 1. 블랙보드 신호 확인 (안전장치)
     // =========================================================================
@@ -174,8 +174,7 @@ NodeStatus Kick::onStart()
     return NodeStatus::RUNNING;
 }
 
-NodeStatus Kick::onRunning()
-{
+NodeStatus Kick::onRunning(){
     auto log = [=](string msg) {
         brain->log->setTimeNow();
         brain->log->log("debug/Kick", rerun::TextLog(msg));
@@ -254,8 +253,7 @@ NodeStatus Kick::onRunning()
     return NodeStatus::RUNNING;
 }
 
-void Kick::onHalted()
-{
+void Kick::onHalted(){
     // [추가됨] 강제 중단 시에도 플래그 초기화 안전장치
     brain->tree->setEntry("ready_to_kick", false);
     
