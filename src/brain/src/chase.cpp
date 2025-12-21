@@ -151,13 +151,6 @@ NodeStatus Chase::tick()
 
     // brain->client->setVelocity(smoothVx, smoothVy, smoothVtheta, false, false, false);
     brain->client->setVelocity(vx, vy, vtheta, false, false, false);
-
-    
-    double distToTarget = norm(target_r.x, target_r.y);
-    if (distToTarget > 0.2) { // 20cm 
-        return NodeStatus::RUNNING;
-    }
-    brain->client->setVelocity(0, 0, 0); 
     return NodeStatus::SUCCESS;
 }
 

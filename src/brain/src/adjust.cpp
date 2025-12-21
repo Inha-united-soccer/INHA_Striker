@@ -90,8 +90,5 @@ NodeStatus Adjust::tick(){
     log(format("vx: %.1f vy: %.1f vtheta: %.1f", vx, vy, vtheta));
     brain->client->setVelocity(vx, vy, vtheta);
 
-    if (fabs(deltaDir) > turnThreshold) {
-         return NodeStatus::RUNNING;
-    }
     return NodeStatus::SUCCESS;
 }
