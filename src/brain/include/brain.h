@@ -97,6 +97,11 @@ public:
     void depthImageCallback(const sensor_msgs::msg::Image &msg);
     void imageCallback(const sensor_msgs::msg::Image &msg);
 
+    void logObstacles();
+    void logDepth(int grid_x_count, int grid_y_count, vector<vector<int>> &grid_occupied, vector<rerun::Vec3D> &points_robot);
+
+
+
     /* ----------------------------- 변수 업데이트를 위한 함수들 ----------------------------- */
     void updateRelativePos(GameObject &obj);
     bool isFreekickStartPlacing();
