@@ -55,8 +55,7 @@ NodeStatus SimpleChase::tick(){
 }
 
 // 원본 Chase
-NodeStatus Chase::tick()
-{
+NodeStatus Chase::tick(){
     auto log = [=](string msg) {
         brain->log->setTimeNow();
         brain->log->log("debug/Chase4", rerun::TextLog(msg));

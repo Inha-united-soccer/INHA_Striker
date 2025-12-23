@@ -37,7 +37,7 @@
                             <ReactiveSequence>
                                 <Chase vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.3" safe_dist="0.5"/>
                                 <Adjust turn_threshold="0.1" range="0.4" vx_limit="0.7" vy_limit="0.6" vtheta_limit="1.5" vtheta_factor="1.5" tangential_speed_far="0.7" tangential_speed_near="0.15" />
-                                <Kick speed_limit="0.9" min_msec_kick="1000" msecs_stablize="1000"/>
+                                <Kick speed_limit="0.3" min_msec_kick="1000" msecs_stablize="1000"/>
                             </ReactiveSequence>
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
@@ -49,6 +49,7 @@
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
                             <SetVelocity x="0.0" y="0.0" theta="0.0" />
+                            <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='END'" name="End">
@@ -56,9 +57,19 @@
                         </ReactiveSequence>
 
                     </ReactiveSequence>
-
                     <ReactiveSequence _while="gc_game_sub_state_type=='FREE_KICK' && gc_game_state=='PLAY'" name="Free_Kick">
                          <SetVelocity x="0.0" y="0.0" theta="0.0" />
+                         <SubTree ID="Locate" _autoremap="true" />
+                    </ReactiveSequence>
+
+                    <ReactiveSequence _while="gc_game_sub_state=='GET_READY'">
+                        <SubTree ID="Locate" _autoremap="true" _while="ball_location_known" />
+                    </ReactiveSequence>
+
+                    <ReactiveSequence _while="gc_game_sub_state=='SET'">
+                        <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+                        <SubTree ID="Locate" _autoremap="true" _while="ball_location_known" />
+                        <SetVelocity />
                     </ReactiveSequence>
 
                 </ReactiveSequence>
