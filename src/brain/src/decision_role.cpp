@@ -172,8 +172,6 @@ NodeStatus DefenderDecide::tick() {
 
     double chaseRangeThreshold;
     getInput("chase_threshold", chaseRangeThreshold);
-    double defenseLineX;
-    getInput("defense_line_x", defenseLineX);
     string lastDecision;
     getInput("decision_in", lastDecision);
 
@@ -185,19 +183,19 @@ NodeStatus DefenderDecide::tick() {
     double ballX = ball.posToRobot.x;
     double ballY = ball.posToRobot.y;
     
-    // 수비수는 안전하게 걷어내는 것이 목표 -> "angleGood" 조건이 Striker보다 널널하거나, 
-    // 그냥 뻥 차는(Clear) 로직을 사용할 수도 있음. 
-    // 여기서는 일단 Striker와 비슷하게 킥 각도를 봅니다.
+    // 수비수는 안전하게 걷어내는 것이 목표 (패스)
+    // angleGoodForKick은 골대 방향을 보는지 확인하는 함수지만, 
+    // 반코트 게임에서는 전방으로 차는 동작(패스/걷어내기)을 위해 그대로 사용합니다.
     const double goalpostMargin = 0.5; 
     bool angleGoodForKick = brain->isAngleGood(goalpostMargin, "kick");
 
-    // 장애물 회피 로직 (동일하게 가져감)
+    // 장애물 회피 로직
     bool avoidPushing;
     double kickAoSafeDist;
     brain->get_parameter("obstacle_avoidance.avoid_during_kick", avoidPushing);
     brain->get_parameter("obstacle_avoidance.kick_ao_safe_dist", kickAoSafeDist);
     bool avoidKick = avoidPushing 
-        && brain->data->robotPoseToField.x < -2.0 // 수비 지역 깊숙한 곳에서는 회피보다 걷어내기 우선? 일단 조건 유지
+        && brain->data->robotPoseToField.x < -2.0 
         && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
 
 
@@ -224,23 +222,13 @@ NodeStatus DefenderDecide::tick() {
         newDecision = "find";
         color = 0xFFFFFFFF;
     } 
-    // 2. 공이 너무 멀리 나갔으면(상대 진영 등) -> 후퇴/대기 ("adjust" or "assist")
-    else if (brain->data->ball.posToField.x > defenseLineX) {
-        newDecision = "assist"; // 수비 위치로 복귀
-        color = 0x00FFFFFF;
-    }
-    // 3. 내가 리더가 아니면 -> 대기 ("assist")
-    else if (!brain->data->tmImLead) {
-        newDecision = "assist";
-        color = 0x00FFFFFF;
-    } 
-    // 4. 추적 거리 밖이면 -> 추적 ("chase")
+    // 2. 추적 거리 밖이면 -> chase
     else if (ballRange > chaseRangeThreshold * (lastDecision == "chase" ? 0.9 : 1.0))
     {
         newDecision = "chase";
         color = 0x0000FFFF;
     } 
-    // 5. 킥 조건 만족하면 -> 킥 ("kick")
+    // 3. 킥 조건 만족하면 -> kick(패스)
     else if (
         (
             (angleGoodForKick && !brain->data->isFreekickKickingOff) 
@@ -255,7 +243,7 @@ NodeStatus DefenderDecide::tick() {
         color = 0x00FF00FF;
         brain->data->isFreekickKickingOff = false; 
     }
-    // 6. 그 외 -> 위치 조정 ("adjust")
+    // 4. 그 외 -> adjust
     else
     {
         newDecision = "adjust";

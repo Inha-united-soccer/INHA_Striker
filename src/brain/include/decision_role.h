@@ -67,7 +67,6 @@ public: /* Based on StrikerDecide but for Defender */
         return {
             InputPort<double>("chase_threshold", 1.0, "이 거리보다 멀어지면 공을 추격하는 동작을 수행"),
             InputPort<string>("decision_in", "", "이전 틱에서의 decision 값을 읽기 위해 사용"),
-            InputPort<double>("defense_line_x", -1.0, "수비수가 넘어가지 말아야 할 X 좌표 (상대 진영으로 너무 깊게 안 가도록)"),
             OutputPort<string>("decision_out")};
     }
 
