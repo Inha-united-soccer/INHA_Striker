@@ -2,34 +2,70 @@
    <include path="./cam_find_and_track_ball.xml" />
    <include path="./locate.xml" />
    <include path="./find_ball.xml" />
+   
    <BehaviorTree ID="Striker">
       <ReactiveSequence>
+         <!-- 자기 위치 추정 -->
          <SelfLocate mode="trust_direction" />
+         
+         <!-- 공 위치 알 때만 로컬라이제이션(공 위치에 대한 find상태가 아님을 의미)-->
          <SubTree ID="Locate" _autoremap="true" _while="decision!='find'" />
-         <ReactiveSequence _while="wait_for_opponent_kickoff" name="상대 팀의 킥오프를 대기 중"> 
+         
+         <!-- 상대 킥오프 대기 -->
+         <ReactiveSequence _while="wait_for_opponent_kickoff" name="상대 팀 킥오프 대기"> 
             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
             <SetVelocity />
          </ReactiveSequence>
-         <ReactiveSequence _while="!wait_for_opponent_kickoff" name="정상 경기(우리 킥오프 또는 상대 킥오프)">
+         
+         <!-- 정상 경기 -->
+         <ReactiveSequence _while="!wait_for_opponent_kickoff" name="정상 경기">
+            
+            <!-- 공이 아웃된 경우 -->
             <Sequence _while="ball_out">
                <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
                <GoBackInField />
                <SubTree ID="Locate" _autoremap="true" _while="decision!='find'" />
             </Sequence>
+            
+            <!-- 공이 인플레이 -->
             <ReactiveSequence _while="!ball_out">
-               <ReactiveSequence >
+               <ReactiveSequence>
+                  <!-- 공 추적 -->
                   <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
-                  <CalcKickDir />
+                  
+                  <!-- 킥 방향 계산 (골키퍼 고려) -->
+                  <!-- TODO 1 : CalcKickDirWithGoalkeeper 구현 후 교체 -->
+                  <CalcKickDir cross_threshold="0.5" />
+                  <!-- <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.3" /> -->
+                  
                   <Sequence>
+                     <!-- 의사결정 TODO 2 : 원터치 구현 후 추가) -->
                      <ReactiveSequence>
-                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="1.0" />
+                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="1.0" /> <!-- one_touch_enabled="true" 원터치 활성화 -->
+                        
+                        <!-- 공 찾기 -->
                         <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
-                     </ReactiveSequence> <!-- 모듈화된 클래스 사용, ::tick() 함수 실행 -->
-                        <!--<Assist _while="decision == 'assist'" vx_limit = "0.2" vy_limit="0.2" />-->
-                        <Chase   _while="decision == 'chase'"  vx_limit="0.9"  vy_limit="0.2"  vtheta_limit="1.0"  dist="0.1" safe_dist="0.5" />
-                        <Adjust _while="decision =='adjust'" turn_threshold="0.5" range="0.4" vx_limit="0.7" vy_limit="0.6" vtheta_limit="1.5" vtheta_factor="1.5" tangential_speed_far="0.7" tangential_speed_near="0.15" />
-                        <Kick _while="decision == 'kick'" speed_limit="0.8" min_msec_kick="1000" msecs_stablize="1000"/>
-                        <Kick _while="decision == 'cross'" speed_limit="0.4" min_msec_kick="300"/>
+                     </ReactiveSequence>
+                     
+                     <!-- 행동 실행 -->
+                     <!-- TODO 3 : Assist는 Communication 검증 후 -->
+                     <!-- <Assist _while="decision == 'assist'" vx_limit="0.2" vy_limit="0.2" /> -->
+                     
+                     <!-- Chase -->
+                     <Chase _while="decision == 'chase'" vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.1" safe_dist="0.5" />
+                     
+                     <!-- Adjust -->
+                     <Adjust _while="decision == 'adjust'" turn_threshold="0.5" range="0.4" vx_limit="0.7" vy_limit="0.6" vtheta_limit="1.5" vtheta_factor="1.5" tangential_speed_far="0.7" tangential_speed_near="0.15" />
+                     
+                     <!-- 일반 킥 -->
+                     <Kick _while="decision == 'kick'" speed_limit="0.8" min_msec_kick="1000" msecs_stablize="1000" />
+                     
+                     <!-- 원터치 킥 -->
+                     <!-- TODO 4 : OneTouchKick 구현 -->
+                     <!-- <Kick _while="decision == 'one_touch'" speed_limit="0.9" min_msec_kick="300" skip_adjust="true" /> -->
+                     
+                     <!-- Cross (측면 패스) -->
+                     <Kick _while="decision == 'cross'" speed_limit="0.4" min_msec_kick="300" />
                   </Sequence>
                </ReactiveSequence>
             </ReactiveSequence>
