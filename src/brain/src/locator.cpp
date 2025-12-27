@@ -464,7 +464,7 @@ NodeStatus SelfLocate::tick()
     brain->calibrateOdom(res.pose.x, res.pose.y, res.pose.theta);
     brain->tree->setEntry<bool>("odom_calibrated", true);
     brain->data->lastSuccessfulLocalizeTime = brain->get_clock()->now();
-    prtDebug("定位成功: " + to_string(res.pose.x) + " " + to_string(res.pose.y) + " " + to_string(rad2deg(res.pose.theta)) + " Dur: " + to_string(res.msecs));
+    prtDebug("현재 위치 파악 완료: " + to_string(res.pose.x) + " " + to_string(res.pose.y) + " " + to_string(rad2deg(res.pose.theta)) + " Dur: " + to_string(res.msecs));
 
     return NodeStatus::SUCCESS;
 }
@@ -543,11 +543,11 @@ NodeStatus SelfLocateEnterField::tick()
     if (!res.success) return NodeStatus::SUCCESS; 
 
 
-    // else, 成功了.
+    // else, 성공.
     brain->calibrateOdom(res.pose.x, res.pose.y, res.pose.theta);
     brain->tree->setEntry<bool>("odom_calibrated", true);
     brain->data->lastSuccessfulLocalizeTime = brain->get_clock()->now();
-    prtDebug("定位成功: " + to_string(res.pose.x) + " " + to_string(res.pose.y) + " " + to_string(rad2deg(res.pose.theta)) + " Dur: " + to_string(res.msecs));
+    prtDebug("현재 위치 파악 완료: " + to_string(res.pose.x) + " " + to_string(res.pose.y) + " " + to_string(rad2deg(res.pose.theta)) + " Dur: " + to_string(res.msecs));
 
     return NodeStatus::SUCCESS;
 }

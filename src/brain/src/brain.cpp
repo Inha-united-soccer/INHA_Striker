@@ -445,7 +445,7 @@ void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
     detection_utils::detectProcessBalls(balls, config, data, tree);
     detection_utils::detectProcessGoalposts(goalposts, data, log);
     detection_utils::detectProcessMarkings(markings, data, config, log);
-    detection_utils::detectProcessRobots(robots, data);
+    detection_utils::detectProcessRobots(robots, data, config);
 
     // Store persons for avoidance even if not treated as robots
     data->setPersons(persons);
@@ -1022,6 +1022,7 @@ void Brain::logDetection(const vector<GameObject> &gameObjects, bool logBounding
         {"Person", rerun::Color(0xFF00FFFF)},
         {"Goalpost", rerun::Color(0x00FFFFFF)},
         {"Opponent", rerun::Color(0xFF0000FF)},
+        {"Teammate", rerun::Color(0x00FF00FF)}, // Green = Teammate
         {"PenaltyPoint", rerun::Color(0xFF9900FF)},
     };
 

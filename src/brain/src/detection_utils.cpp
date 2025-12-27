@@ -466,7 +466,7 @@ void detectProcessVisionBox(const vision_interface::msg::Detections &msg, const 
     data->visionBox = vbox;
 }
 
-void detectProcessRobots(const vector<GameObject> &robotObjs, const std::shared_ptr<BrainData> &data) {
+void detectProcessRobots(const vector<GameObject> &robotObjs, const std::shared_ptr<BrainData> &data, const std::shared_ptr<BrainConfig> &config) {
 
     vector<GameObject> robots = {};
     for (int i = 0; i < robotObjs.size(); i++) {
@@ -476,8 +476,46 @@ void detectProcessRobots(const vector<GameObject> &robotObjs, const std::shared_
         // else
         robots.push_back(rbt);
     }
+    
+    // Identify Teammates
+    identifyTeammates(robots, data);
 
     data->setRobots(robots);
+}
+
+void identifyTeammates(std::vector<GameObject>& robots, const std::shared_ptr<BrainData> &data) {
+    // Communication data is in data->tmStatus[0...HL_MAX_NUM_PLAYERS-1]
+    
+    double matchThreshold = 1.0; // 1 meter threshold
+
+    for (auto &rbt : robots) {
+        if (rbt.label != "Opponent") continue; // Only check Opponents (as vision defaults everything to Opponent)
+
+        double minDiff = 1e9;
+        int matchedTmIdx = -1;
+
+        for (int i = 0; i < HL_MAX_NUM_PLAYERS; i++) {
+            const auto& tm = data->tmStatus[i];
+            
+            // Check if teammate is alive and communicating recently
+            if (!tm.isAlive) continue;
+            
+            // Calculate distance between vision-detected robot and teammate reported position
+            // Both should be in Field Coordinates
+            double dist = norm(rbt.posToField.x - tm.robotPoseToField.x, rbt.posToField.y - tm.robotPoseToField.y);
+            
+            if (dist < matchThreshold && dist < minDiff) {
+                minDiff = dist;
+                matchedTmIdx = i;
+            }
+        }
+
+        if (matchedTmIdx >= 0) {
+            rbt.label = "Teammate";
+            rbt.id = matchedTmIdx + 1; // PlayerID (1-based)
+            rbt.name = "T" + to_string(matchedTmIdx + 1);
+        }
+    }
 }
 
 void identifyMarking(GameObject& marking, const std::shared_ptr<BrainConfig> &config) {

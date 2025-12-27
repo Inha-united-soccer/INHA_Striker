@@ -52,11 +52,12 @@ bool isBallOnFieldLine(const FieldLine line, const std::shared_ptr<BrainData> &d
 void detectProcessMarkings(const vector<GameObject> &markingObjs, const std::shared_ptr<BrainData> &data, const std::shared_ptr<BrainConfig> &config, const std::shared_ptr<BrainLog> &log);
 void detectProcessGoalposts(const vector<GameObject> &goalpostObjs, const std::shared_ptr<BrainData> &data, const std::shared_ptr<BrainLog> &log);
 void detectProcessVisionBox(const vision_interface::msg::Detections &msg, const std::shared_ptr<BrainData> &data);
-void detectProcessRobots(const vector<GameObject> &robotObjs, const std::shared_ptr<BrainData> &data);
+void detectProcessRobots(const vector<GameObject> &robotObjs, const std::shared_ptr<BrainData> &data, const std::shared_ptr<BrainConfig> &config);
 
 // 마커, 라인 식별
 void identifyGoalpost(GameObject& goalpost);
 void identifyMarking(GameObject& marking, const std::shared_ptr<BrainConfig> &config);
+void identifyTeammates(std::vector<GameObject>& robots, const std::shared_ptr<BrainData> &data);
 
 
 
