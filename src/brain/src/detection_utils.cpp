@@ -477,8 +477,8 @@ void detectProcessRobots(const vector<GameObject> &robotObjs, const std::shared_
         robots.push_back(rbt);
     }
     
-    // Identify Teammates
-    identifyTeammates(robots, data);
+    // Identify Teammates -> Moved to brain.cpp
+    // identifyTeammates(robots, data);
 
     data->setRobots(robots);
 }

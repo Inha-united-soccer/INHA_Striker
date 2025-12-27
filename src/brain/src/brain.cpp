@@ -419,6 +419,9 @@ void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
     data->timeLastDet = timePoint; // 디버깅 시 지연 시간 정보를 출력하기 위해 사용
 
     auto gameObjects = detection_utils::detectionsToGameObjects(msg, config, data); // 감지된 객체 리스트 GameObject 객체로 변환
+    
+    // Identify Teammates before separating objects
+    detection_utils::identifyTeammates(gameObjects, data);
 
     vector<GameObject> balls, goalposts, persons, robots, obstacles, markings;
     for (int i = 0; i < gameObjects.size(); i++){
@@ -435,7 +438,7 @@ void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
             if (config->treatPersonAsRobot) // 사람도 로봇으로 다룰건지 
                 robots.push_back(obj);
         }
-        if (obj.label == "Opponent")
+        if (obj.label == "Opponent" || obj.label == "Teammate")
             robots.push_back(obj);
         if (obj.label == "LCross" || obj.label == "TCross" || obj.label == "XCross" || obj.label == "PenaltyPoint")
             markings.push_back(obj);
