@@ -3,6 +3,8 @@
     <include path="./subtrees/cam_find_and_track_ball.xml" />
     <include path="./subtrees/locate.xml" />
     <include path="./subtrees/striker.xml" />
+    <include path="./subtrees/goalie.xml" />
+    <include path="./subtrees/defender.xml" />
     <!-- TODO: Goalie, Defender Subtrees Include -->
 
     <BehaviorTree ID="MainTree">
@@ -97,7 +99,7 @@
                         <ReactiveSequence _while="gc_game_sub_state_type == 'NONE'" name="일반 경기">
                             <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
                             <!-- <SubTree ID="Goalie" _autoremap="true" _while="player_role == 'goal_keeper'" /> -->
-                            <!-- <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" /> -->
+                            <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" />
                         </ReactiveSequence>
                         
                     </ReactiveSequence>

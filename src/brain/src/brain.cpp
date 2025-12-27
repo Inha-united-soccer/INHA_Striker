@@ -438,7 +438,7 @@ void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
             if (config->treatPersonAsRobot) // 사람도 로봇으로 다룰건지 
                 robots.push_back(obj);
         }
-        if (obj.label == "Opponent" || obj.label == "Teammate")
+        if (obj.label == "Opponent")
             robots.push_back(obj);
         if (obj.label == "LCross" || obj.label == "TCross" || obj.label == "XCross" || obj.label == "PenaltyPoint")
             markings.push_back(obj);
