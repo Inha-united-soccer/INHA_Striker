@@ -497,10 +497,14 @@ void BrainCommunication::spinCommunicationReceiver() {
         } 
 
 
-        cout << GREEN_CODE <<  format(
-            "communicationId: %d, alive: %d, ballDetected: %d ballRange: %.2f playerId: %d",
-            msg.communicationId, msg.isAlive, msg.ballDetected, msg.ballRange, msg.playerId)
-            << RESET_CODE << endl;
+        double dist = sqrt(pow(brain->data->robotPoseToField.x - msg.robotPoseToField.x, 2) + pow(brain->data->robotPoseToField.y - msg.robotPoseToField.y, 2));
+        cout << GREEN_CODE << format(
+            "TMID: %d | MyPos: (%.2f, %.2f) | TmPos: (%.2f, %.2f) | Dist: %.2f", 
+            msg.playerId, 
+            brain->data->robotPoseToField.x, brain->data->robotPoseToField.y,
+            msg.robotPoseToField.x, msg.robotPoseToField.y,
+            dist
+            ) << RESET_CODE << endl;
         auto tmIdx = msg.playerId - 1;
 
         if (tmIdx < 0 || tmIdx >= HL_MAX_NUM_PLAYERS) { 
