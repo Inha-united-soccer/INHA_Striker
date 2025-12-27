@@ -133,7 +133,8 @@ tuple<double, double, double> Kick::_calcSpeed() {
 
 NodeStatus Kick::onStart(){
 
-    if(brain->tree->getEntry<string>("striker_state") != "kick") return NodeStatus::SUCCESS;
+    // _while로 제어되므로 별도의 state check 불필요
+    // if(brain->tree->getEntry<string>("striker_state") != "kick") return NodeStatus::SUCCESS;
 
     _minRange = brain->data->ball.range;
     _speed = 0.5;
@@ -170,7 +171,7 @@ NodeStatus Kick::onRunning(){
         brain->log->log("debug/Kick", rerun::TextLog(msg));
     };
 
-    if(brain->tree->getEntry<string>("striker_state") != "kick") return NodeStatus::SUCCESS;
+    // if(brain->tree->getEntry<string>("striker_state") != "kick") return NodeStatus::SUCCESS;
 
     // [원본 그대로] 킥 중단 조건 (공이 너무 많이 움직였거나 놓쳤을 때)
     bool enableAbort;
@@ -187,7 +188,7 @@ NodeStatus Kick::onRunning(){
         )
     ) {
         log("ball moved, abort kick");
-        brain->tree->setEntry("striker_state", "chase");
+        // brain->tree->setEntry("striker_state", "chase"); // 상태 변경은 Decide 노드에 맡김
         
         return NodeStatus::SUCCESS;
     }
@@ -221,7 +222,7 @@ NodeStatus Kick::onRunning(){
         brain->client->setVelocity(0, 0, 0);
 
         // 승재욱 추가
-        brain->tree->setEntry("striker_state", "chase");
+        // brain->tree->setEntry("striker_state", "chase");
         
         return NodeStatus::SUCCESS;
     }
@@ -242,6 +243,6 @@ NodeStatus Kick::onRunning(){
 
 void Kick::onHalted(){
     // [원본]
-    brain->tree->setEntry("striker_state", "chase");
+    // brain->tree->setEntry("striker_state", "chase");
     _startTime -= rclcpp::Duration(100, 0);
 }
