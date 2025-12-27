@@ -47,7 +47,7 @@ void BrainCommunication::initGameControllerUnicast()
             << RESET_CODE << endl;
         throw std::runtime_error(strerror(errno));
         }
-        // 配置目标地址
+        // 목표 주소 설정
         string gamecontrol_ip = brain->get_parameter("game_control_ip").as_string();
         cout << GREEN_CODE << format("GameControl IP: %s", gamecontrol_ip.c_str())
             << RESET_CODE << endl;
@@ -92,7 +92,7 @@ void BrainCommunication::initDiscoveryBroadcast()
             throw std::runtime_error(strerror(errno));
         }
 
-        // 设置广播选项
+        // 브로드캐스트 옵션 설정
         int broadcast = 1;
         if (setsockopt(_discovery_send_socket, SOL_SOCKET, SO_BROADCAST, 
                     &broadcast, sizeof(broadcast)) < 0)
@@ -102,7 +102,7 @@ void BrainCommunication::initDiscoveryBroadcast()
             throw std::runtime_error(strerror(errno));
         }
 
-        // 配置广播地址
+        // 브로드캐스트 주소 설정
         _saddr.sin_family = AF_INET;
         _saddr.sin_addr.s_addr = INADDR_BROADCAST;  // 255.255.255.255
         _saddr.sin_port = htons(_discovery_udp_port);
@@ -147,7 +147,7 @@ void BrainCommunication::initDiscoveryReceiver()
             throw std::runtime_error(strerror(errno));
         }
 
-        // 允许地址重用
+        // 주소 재사용 허용
         int reuse = 1;
         if (setsockopt(_discovery_recv_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
         {
@@ -281,14 +281,14 @@ void BrainCommunication::spinDiscoveryReceiver() {
         }
 
         if (msg.playerId == brain->config->playerId) { 
-            // 处理自己的消息
+            // 자신의 메시지 처리
             // cout << YELLOW_CODE <<  format(
             //     "discoveryID: %d, teamId:%d, playerId: %d, address: %s:%d",
             //     msg.communicationId, msg.teamId, msg.playerId, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port))
             //     << RESET_CODE << endl;
             continue;
         } else {
-            // 处理队友消息
+            // 팀원 메시지 처리
             // cout << GREEN_CODE <<  format(
             //     "discoveryID: %d, teamId:%d, playerId: %d, address: %s:%d",
             //     msg.communicationId, msg.teamId, msg.playerId, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port))
@@ -415,8 +415,9 @@ void BrainCommunication::initCommunicationReceiver() {
                 << RESET_CODE << endl;
             throw std::runtime_error(strerror(errno));
         }
-
-        // 允许地址重用
+        
+        // 주소 재사용 허용
+        
         int reuse = 1;
         if (setsockopt(_communication_recv_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
         {
@@ -555,7 +556,7 @@ void BrainCommunication::spinCommunicationReceiver() {
         tmStatus.cmd = msg.cmd; // 명령
         tmStatus.cmdId = msg.cmdId; // 명령 ID
 
-        // 检查是否收到了新的指令
+        // 새로운 명령 수신 확인
         if (msg.cmdId > brain->data->tmCmdId) {
             brain->data->tmCmdId = msg.cmdId;
             brain->data->tmReceivedCmd = msg.cmd;
