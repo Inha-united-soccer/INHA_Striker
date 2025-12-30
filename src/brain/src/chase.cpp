@@ -54,7 +54,7 @@ NodeStatus SimpleChase::tick(){
     return NodeStatus::SUCCESS;
 }
 
-// 원본 Chase
+
 NodeStatus Chase::tick(){
     auto log = [=](string msg) {
         brain->log->setTimeNow();
@@ -111,16 +111,16 @@ NodeStatus Chase::tick(){
         target_f.x = ballPos.x - dist * cos(kickDir);
         target_f.y = ballPos.y - dist * sin(kickDir);
     } 
-    // else {
-    //     targetType = "circle_back";
-    //     double cbDirThreshold = 0.0; 
-    //     cbDirThreshold -= 0.2 * circleBackDir; 
-    //     circleBackDir = toPInPI(theta_br - kickDir) > cbDirThreshold ? 1.0 : -1.0;
-    //     log(format("targetType = circle_back, circleBackDir = %.1f", circleBackDir));
-    //     double tanTheta = theta_br + circleBackDir * acos(min(1.0, safeDist/max(ballRange, 1e-5))); 
-    //     target_f.x = ballPos.x + safeDist * cos(tanTheta);
-    //     target_f.y = ballPos.y + safeDist * sin(tanTheta);
-    // }
+    else {
+        // targetType = "circle_back";
+        double cbDirThreshold = 0.0; 
+        cbDirThreshold -= 0.2 * circleBackDir; 
+        circleBackDir = toPInPI(theta_br - kickDir) > cbDirThreshold ? 1.0 : -1.0;
+        log(format("targetType = circle_back, circleBackDir = %.1f", circleBackDir));
+        double tanTheta = theta_br + circleBackDir * acos(min(1.0, safeDist/max(ballRange, 1e-5))); 
+        target_f.x = ballPos.x + safeDist * cos(tanTheta);
+        target_f.y = ballPos.y + safeDist * sin(tanTheta);
+    }
     target_r = brain->data->field2robot(target_f);
     brain->log->setTimeNow();
     brain->log->logBall("field/chase_target", Point({target_f.x, target_f.y, 0}), 0xFFFFFFFF, false, false);
