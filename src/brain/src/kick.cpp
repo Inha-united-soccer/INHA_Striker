@@ -169,11 +169,11 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
 
     brain->data->kickDir = bestKickDir;
 
-    // 만약 골문이 너무 좁거나(crossThreshold), 확실한 슛 각이 안나오면 cross psss가 된다면 pass로 수정
-     if (goalVisibleAngle < crossThreshold) {
-        kickType = "cross";
-        color = 0xFF00FFFF;
-     }
+     // 만약 골문이 너무 좁거나(crossThreshold) 해도, 일단 슛을 시도합니다 (User Request)
+     // if (goalVisibleAngle < crossThreshold) {
+     //    kickType = "cross";
+     //    color = 0xFF00FFFF;
+     // }
     
     brain->data->kickType = kickType;
 

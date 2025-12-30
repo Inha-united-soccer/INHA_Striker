@@ -63,6 +63,7 @@
                      
                      <!-- Cross (측면 패스) -->
                      <Kick _while="decision == 'cross'" speed_limit="0.4" min_msec_kick="300" kick_type="cross" />
+                     
                   </Sequence>
                </ReactiveSequence>
             </ReactiveSequence>

@@ -113,8 +113,9 @@ NodeStatus StrikerDecide::tick() {
         && !avoidKick
         && ball.range < 1.5
     ) {
-        if (brain->data->kickType == "cross") newDecision = "cross";
-        else newDecision = "kick";      
+        // if (brain->data->kickType == "cross") newDecision = "cross";
+        // else newDecision = "kick";      
+        newDecision = "kick"; // Striker는 Cross 없이 무조건 슛
         color = 0x00FF00FF;
         brain->data->isFreekickKickingOff = false; 
     }
