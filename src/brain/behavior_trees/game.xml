@@ -29,7 +29,7 @@
                     <ReactiveSequence _while="gc_game_sub_state_type=='NONE'" name="Normal_Game">
                         
                         <ReactiveSequence _while="gc_game_state=='INITIAL'" name="Initial">
-                            <SetVelocity x="0.0" y="0.0" theta="0.0" />
+                            <!-- <SetVelocity x="0.0" y="0.0" theta="0.0" /> -->
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
                             <SelfLocateEnterField />
                         </ReactiveSequence>
