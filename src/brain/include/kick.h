@@ -76,6 +76,8 @@ public:
             InputPort<double>("msecs_stablize", 1000, "동작 안정화를 위해 정지 상태로 유지하는 시간(ms)"),
             InputPort<double>("speed_limit", 0.8, "속도의 최대값"),
             InputPort<string>("kick_type", "kick", "킥 종류 (로그용)"),
+            InputPort<double>("vx_limit", 1.0, "X축 속도 제한"),
+            InputPort<double>("vy_limit", 0.4, "Y축 속도 제한"),
         };
     }
 

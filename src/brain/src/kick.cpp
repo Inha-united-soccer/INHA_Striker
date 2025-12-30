@@ -382,14 +382,20 @@ NodeStatus Kick::onRunning(){
     }
 
     // [원본 그대로] 가속 로직 (점점 빨라짐)
-    if (brain->data->ballDetected) { 
-        double angle = brain->data->ball.yawToRobot;
-        // _speed는 멤버 변수
-        _speed += 0.1; 
+    // if (brain->data->ballDetected) { 
+    //     double angle = brain->data->ball.yawToRobot;
+    //     // _speed는 멤버 변수
+    //     _speed += 0.1; 
         
-        // 입력받은 제한 속도와 비교
-        double currentCmdSpeed = min(speedLimit, _speed);
-        brain->client->crabWalk(angle, currentCmdSpeed);
+    //     // 입력받은 제한 속도와 비교
+    //     double currentCmdSpeed = min(speedLimit, _speed);
+    //     brain->client->crabWalk(angle, currentCmdSpeed);
+    // }
+    
+    // 승재욱 추가: _calcSpeed 활용하도록 변경
+    if(brain->data->ballDetected){
+         auto [vx, vy, _] = _calcSpeed();
+         brain->client->setVelocity(vx, vy, 0.0);
     }
 
     return NodeStatus::RUNNING;
