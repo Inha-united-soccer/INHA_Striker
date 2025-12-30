@@ -76,9 +76,8 @@ NodeStatus CalcKickDir::tick(){
         color = 0x00FF00FF;
         brain->data->kickDir = atan2(
             0 - bPos.y,
-            - fd.length/2 - bPos.x // 여기도 - 붙였음
+            - fd.length/2 - bPos.x 
         );
-        // 이것도 - 로 바꿈 + 0에서 M_PI로 바꿈
         if (brain->data->ball.posToField.x < - (brain->config->fieldDimensions.length / 2)) brain->data->kickDir = M_PI; 
     }
 
@@ -110,8 +109,8 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
     vector<GameObject> goalkeepers;
     
     // 골대 주변에 있는 장애물만 골키퍼 후보로 간주
-    double goalX = (brain->config->fieldDimensions.length / 2);
-    goalX = - (brain->config->fieldDimensions.length / 2); 
+    // double goalX = (brain->config->fieldDimensions.length / 2);
+    double goalX = - (brain->config->fieldDimensions.length / 2);
 
     for(const auto& obs : obstacles){
         // 골대 근처 (페널티 박스 + margin)에 있는 로봇을 골키퍼로 인식
