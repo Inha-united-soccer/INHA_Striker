@@ -36,7 +36,7 @@
 
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> 
-                            <CalcKickDir />
+
                             <ReactiveSequence>
                                 <!-- <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" /> -->
                                 <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" />
@@ -46,7 +46,7 @@
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> 
-                            <CalcKickDir />
+
                             <ReactiveSequence>
                                 <!-- <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" /> -->
                                 <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
@@ -56,7 +56,7 @@
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
-                            <CalcKickDir />
+
                             <ReactiveSequence>
                                 <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
                                 <!--<SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" />-->
