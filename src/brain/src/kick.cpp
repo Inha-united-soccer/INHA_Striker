@@ -395,7 +395,8 @@ NodeStatus Kick::onRunning(){
     // 승재욱 추가: _calcSpeed 활용하도록 변경
     if(brain->data->ballDetected){
          auto [vx, vy, _] = _calcSpeed();
-         brain->client->setVelocity(vx, vy, 0.0);
+         double vtheta = brain->data->ball.yawToRobot * 1.5; // P-gain 1.5
+         brain->client->setVelocity(vx, vy, vtheta);
     }
 
     return NodeStatus::RUNNING;
