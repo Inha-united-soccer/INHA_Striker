@@ -105,8 +105,8 @@ NodeStatus StrikerDecide::tick() {
     }
     else if (
         (
-            (angleGoodForKick && !brain->data->isFreekickKickingOff) 
-            || reachedKickDir
+            (reachedKickDir && !brain->data->isFreekickKickingOff) 
+            // || reachedKickDir
         )
         && brain->data->ballDetected
         && fabs(brain->data->ball.yawToRobot) < M_PI / 2.
