@@ -89,12 +89,12 @@ NodeStatus StrikerDecide::tick() {
                 || brain->tree->getEntry<string>("gc_game_sub_state_type") == "THROW_IN")
                 && brain->tree->getEntry<bool>("gc_is_sub_state_kickoff_side")
             )
-            // 세트피스가 아닌 경기에서도 골대를 보고있고 장애물이 없다면 정렬 없이 킥
-            || (
-                angleGoodForKick          // 골대에 각이 있고
-                && !avoidKick             // 장애물이 없고
-                && reachedKickDir         // 킥 방향 정렬도 되어있다면
-            )
+            // 세트피스가 아닌 경기에서도 골대를 보고있고 장애물이 없다면 정렬 없이 킥 
+            // || (
+            //     angleGoodForKick          // 골대에 각이 있고
+            //     && !avoidKick             // 장애물이 없고
+            //     && reachedKickDir         // 킥 방향 정렬도 되어있다면
+            // )
         )
         && brain->data->ballDetected
         && ball.range < 0.5 // 거리가 매우 가까울 때 -> 0.4에서 0.5로 약간 완화
