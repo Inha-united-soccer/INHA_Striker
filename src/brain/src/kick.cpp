@@ -117,6 +117,15 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
         if(obs.posToField.x < goalX + fd.goalAreaLength + goalkeeperMargin){goalkeepers.push_back(obs);}
     }
 
+    // [Safety] Localization Lost Check
+    // 자기 위치 파악이 안 되면 dir이 튀고 골키퍼를 오인할 수 있으므로, GK 회피 로직을 끄고 무조건 중앙을 노림
+    if (brain->msecsSince(brain->data->lastSuccessfulLocalizeTime) > 2000) {
+        if (!goalkeepers.empty()) {
+            brain->log->logToScreen("debug/KickDir", "Loc Lost! Ignoring GK logic", 0xFFA500FF);
+            goalkeepers.clear();
+        }
+    }
+
     // 공 -> 왼쪽 포스트 각도(thetal), 공 -> 오른쪽 포스트 각도(thetar), 골키퍼가 이 사이에 있으면 각도를 좁혀야 함.
     double bestKickDir = 0.0;
     bool isBlocked = false;
@@ -125,8 +134,11 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
 
     // 골키퍼 없으면 기존 로직대로 그냥 킥
     if (goalkeepers.empty()) { 
-        bestKickDir = atan2(0 - bPos.y, goalX - bPos.x);
-        brain->log->logToScreen("debug/KickDir", "No GK! Aiming Center", 0x00FF00FF);
+        // [Fix] Force Negative X Direction (Half Court Goal is at -X)
+        // 공이 골 라인을 살짝 넘어가더라도(노이즈 포함), 반대편(East)을 보지 않고 골대 안쪽(West)으로 차 넣도록 강제
+        // goalX - bPos.x가 양수가 되면 atan2가 0(East)을 반환하므로, -fabs()를 씌워 무조건 West를 보게함
+        bestKickDir = atan2(0 - bPos.y, -fabs(goalX - bPos.x));
+        brain->log->logToScreen("debug/KickDir", "No GK! Aiming Center (Forced West)", 0x00FF00FF);
     } 
     // 골키퍼가 있다면        
     else {        
