@@ -124,7 +124,10 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
     string kickType = "shoot";
 
     // 골키퍼 없으면 기존 로직대로 그냥 킥
-    if (goalkeepers.empty()) { bestKickDir = atan2(0 - bPos.y, goalX - bPos.x);} 
+    if (goalkeepers.empty()) { 
+        bestKickDir = atan2(0 - bPos.y, goalX - bPos.x);
+        brain->log->logToScreen("debug/KickDir", "No GK! Aiming Center", 0x00FF00FF);
+    } 
     // 골키퍼가 있다면        
     else {        
         vector<pair<double, double>> blockedIntervals;
