@@ -21,7 +21,8 @@ brain_node:
       ball_confidence_threshold: 50.0 # 공 인식 신뢰도 임계값
       ball_memory_timeout: 5.0 # 공의 위치를 얼마나 많은 시간동안 기억할지 정하는 파라미터
 
-      # 킥에 사용
+      # 킥에 사용 
+      # 슛 동작 중에 공이 약간이라도 앞으로 나가면 킥을 중단함
       abort_kick_when_ball_moved: false 
       
     chase:  

@@ -53,20 +53,25 @@ NodeStatus StrikerDecide::tick() {
 
     
     double deltaDir = toPInPI(kickDir - dir_rb_f);
+    
+    // 정렬 기준은 deltaDir가 0이 아니라 offset 각도와 일치하는 것
+    double kickYOffset = -0.07; 
+    getInput("kick_y_offset", kickYOffset);
+    
+    double targetAngleOffset = atan2(kickYOffset, ballRange);
+    double errorDir = toPInPI(deltaDir + targetAngleOffset);
+
     auto now = brain->get_clock()->now();
     auto dt = brain->msecsSince(timeLastTick);
     bool reachedKickDir = 
-        deltaDir * lastDeltaDir <= 0 
-        && fabs(deltaDir) < 0.1 // M_PI/6 (30도) -> 0.1 (5.7도)로 강화
+        errorDir * lastDeltaDir <= 0 
+        && fabs(errorDir) < 0.1 // M_PI/6 (30도) -> 0.1 (5.7도)로 강화
         && dt < 100;
-    reachedKickDir = reachedKickDir || fabs(deltaDir) < 0.05; // 0.1 (5.7도) -> 0.05 (2.9도)로 강화
+    reachedKickDir = reachedKickDir || fabs(errorDir) < 0.05; // 0.1 (5.7도) -> 0.05 (2.9도)로 강화
     timeLastTick = now;
     lastDeltaDir = deltaDir;
-    
-    // [Hysteresis] Hysteresis for Kick
-    // If we were already kicking, be more lenient with the angle (up to ~30 deg) to allow the kick action to finish.
-    // This prevents "stuttering" where the robot aborts the kick due to minor vibrations.
-    bool maintainKick = (lastDecision == "kick" && fabs(deltaDir) < 0.5); 
+   
+    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.5); 
 
     string newDecision;
     auto color = 0xFFFFFFFF; 
