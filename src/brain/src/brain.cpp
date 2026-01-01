@@ -910,7 +910,6 @@ void Brain::updateBallMemory(){
         double dist = norm(data->ball.posToField.x - lastBallPos.x, data->ball.posToField.y - lastBallPos.y);
         double speed = dist / dt;
         
-        // Simple Low Pass Filter for speed
         static double filteredSpeed = 0.0;
         filteredSpeed = filteredSpeed * 0.7 + speed * 0.3;
 
@@ -1709,15 +1708,15 @@ void Brain::updateCostToKick() {
 
 
     // if (!data->ballDetected) cost += 2.0;
-    double secsSinceBallDet = msecsSince(data->ball.timePoint) / 1000;
-    cost += secsSinceBallDet;
-    log_(format("ball not dectect cost: %.1f", secsSinceBallDet));
+    // double secsSinceBallDet = msecsSince(data->ball.timePoint) / 1000;
+    // cost += secsSinceBallDet;
+    // log_(format("ball not dectect cost: %.1f", secsSinceBallDet));
 
 
-    if (!tree->getEntry<bool>("ball_location_known")) {
-        cost += 5.0;
-        log_(format("ball lost cost: %.1f", 5.0));
-    }
+    // if (!tree->getEntry<bool>("ball_location_known")) {
+    //     cost += 5.0;
+    //     log_(format("ball lost cost: %.1f", 5.0));
+    // }
 
 
     cost += data->ball.range;
@@ -1725,39 +1724,39 @@ void Brain::updateCostToKick() {
     
     
 
-    if (distToObstacle(data->ball.yawToRobot) < 1.5) {
-        log_(format("obstacle cost: %.1f", 2.0));
-        cost += 2.0;
-    }
+    // if (distToObstacle(data->ball.yawToRobot) < 1.5) {
+    //     log_(format("obstacle cost: %.1f", 2.0));
+    //     cost += 2.0;
+    // }
 
 
-    cost += fabs(data->ball.yawToRobot) / 1.0; 
-    log_(format("ball yaw cost: %.1f", fabs(data->ball.yawToRobot) / 1.0));
+    // cost += fabs(data->ball.yawToRobot) / 1.0; 
+    // log_(format("ball yaw cost: %.1f", fabs(data->ball.yawToRobot) / 1.0));
 
 
 
-    int selfIdx = config->playerId - 1;
-    for (int i = 0; i < HL_MAX_NUM_PLAYERS; i++) {
-        if (i == selfIdx) continue; 
+    // int selfIdx = config->playerId - 1;
+    // for (int i = 0; i < HL_MAX_NUM_PLAYERS; i++) {
+    //     if (i == selfIdx) continue; 
 
-        auto status = data->tmStatus[i]; 
-        if (!status.isAlive) continue; 
+    //     auto status = data->tmStatus[i]; 
+    //     if (!status.isAlive) continue; 
 
-        double theta_tm2ball = atan2(status.ballPosToField.y - status.robotPoseToField.y, status.ballPosToField.x - status.robotPoseToField.x);
-        double range_tm2ball = norm(status.ballPosToField.y - status.robotPoseToField.y, status.ballPosToField.x - status.robotPoseToField.x);
-        double theta_me2ball = data->robotBallAngleToField;
-        double range_me2ball = data->ball.range;
-        double deltaTheta = fabs(toPInPI(theta_tm2ball - theta_me2ball));
+    //     double theta_tm2ball = atan2(status.ballPosToField.y - status.robotPoseToField.y, status.ballPosToField.x - status.robotPoseToField.x);
+    //     double range_tm2ball = norm(status.ballPosToField.y - status.robotPoseToField.y, status.ballPosToField.x - status.robotPoseToField.x);
+    //     double theta_me2ball = data->robotBallAngleToField;
+    //     double range_me2ball = data->ball.range;
+    //     double deltaTheta = fabs(toPInPI(theta_tm2ball - theta_me2ball));
 
-        const double BUMP_DIST = 1.0;
-        if (range_tm2ball < range_me2ball && sin(deltaTheta) * range_tm2ball < BUMP_DIST) {
-            cost += 2.0;
-            log_(format("bump cost: %.1f", 2.0));  
-        }
-    }
+    //     const double BUMP_DIST = 1.0;
+    //     if (range_tm2ball < range_me2ball && sin(deltaTheta) * range_tm2ball < BUMP_DIST) {
+    //         cost += 2.0;
+    //         log_(format("bump cost: %.1f", 2.0));  
+    //     }
+    // }
 
-    cost += fabs(toPInPI(data->kickDir - data->robotBallAngleToField)) * 0.4 / 0.3; 
-    log_(format("ajust cost: %.1f", fabs(toPInPI(data->kickDir - data->robotBallAngleToField)) * 0.4 / 0.3));
+    // cost += fabs(toPInPI(data->kickDir - data->robotBallAngleToField)) * 0.4 / 0.3; 
+    // log_(format("ajust cost: %.1f", fabs(toPInPI(data->kickDir - data->robotBallAngleToField)) * 0.4 / 0.3));
     
 
     if (data->recoveryState == RobotRecoveryState::HAS_FALLEN) {
