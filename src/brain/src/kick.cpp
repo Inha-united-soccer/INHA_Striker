@@ -154,12 +154,13 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
              while(gkDiff < -M_PI) gkDiff += 2*M_PI;
 
             string gapChoice = "Center";
-            if(gkDiff > 0) { // 골키퍼가 중앙보다 왼쪽에 있다면 -> 오른쪽 빈 공간
+            
+            if(gkDiff > 0) { 
+                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.5; 
+                gapChoice = "Left Gap";
+            } else { 
                 targetKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.5;
                 gapChoice = "Right Gap";
-            } else { // 골키퍼가 중앙보다 오른쪽에 있다면 -> 왼쪽 빈 공간
-                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.5;
-                gapChoice = "Left Gap";
             }
             brain->log->logToScreen("debug/KickDir", format("GK Blocking! Aiming: %s", gapChoice.c_str()), 0xFF0000FF);
         }
