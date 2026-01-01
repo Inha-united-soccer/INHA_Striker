@@ -45,7 +45,7 @@ brain_node:
 
       # 킥에 사용
       avoid_during_kick: false 
-      kick_ao_safe_dist: 3.0 
+      kick_ao_safe_dist: 1.0 
       
       obstacle_memory_msecs: 500. # 장애물을 얼마나 오랫동안 기억할지 ms 
       enable_freekick_avoid: false # freekick 중 장애물을 회피할지 여부
