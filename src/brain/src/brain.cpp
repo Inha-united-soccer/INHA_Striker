@@ -901,6 +901,28 @@ void Brain::updateBallMemory(){
     updateRelativePos(data->ball);
     // updateRelativePos(data->tmBall);
 
+    static Point lastBallPos = data->ball.posToField;
+    static rclcpp::Time lastBallTime = data->ball.timePoint;
+
+    // Calculate ball speed
+    double dt = msecsSince(lastBallTime) / 1000.0;
+    if (dt > 0.0 && dt < 1.0 && data->ballDetected) { // Only calculate if reasonable time delta and ball detected
+        double dist = norm(data->ball.posToField.x - lastBallPos.x, data->ball.posToField.y - lastBallPos.y);
+        double speed = dist / dt;
+        
+        // Simple Low Pass Filter for speed
+        static double filteredSpeed = 0.0;
+        filteredSpeed = filteredSpeed * 0.7 + speed * 0.3;
+
+        log->log("debug/ball_speed", rerun::TextLog(format("speed: %.2f m/s", filteredSpeed)));
+        log->log("debug/ball_speed_scalar", rerun::Scalar(filteredSpeed));
+    }
+
+    if (data->ballDetected) {
+        lastBallPos = data->ball.posToField;
+        lastBallTime = data->ball.timePoint;
+    }
+
     tree->setEntry<double>("ball_range", data->ball.range);
 
     // 로그 기록

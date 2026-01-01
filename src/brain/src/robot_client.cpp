@@ -65,7 +65,7 @@ int RobotClient::setVelocity(double x, double y, double theta, bool applyMinX, b
     brain->log->log("debug/cmd_vel", rerun::TextLog(format("vx: %.2f  vy: %.2f  vtheta: %.2f", x, y, theta)));
     brain->log->log("debug/cmd_speed", rerun::TextLog(format("speed: %.2f", norm(x, y))));
 
-    // 速度指令太小时, 给一个最小速度, 以防止不响应 TODO 转为参数化
+    // 속도 명령이 너무 작으면 반응하지 않으므로, 최소 속도를 강제로 준다. (TODO: 이 값은 나중에 파라미터화할 것)
     double minx = 0.05, miny = 0.08, mintheta = 0.05;
     if (applyMinX && fabs(x) < minx && fabs(x) > 1e-5)
         x = x > 0 ? minx : -minx;

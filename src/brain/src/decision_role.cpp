@@ -123,7 +123,7 @@ NodeStatus StrikerDecide::tick() {
         && brain->data->ballDetected
         && fabs(brain->data->ball.yawToRobot) < M_PI / 2.
         && !avoidKick
-        && ball.range < 1.0 // 1.5 -> 0.65로 변경하여 더 가까이서 킥 시작 (타점 개선)
+        && ball.range < 0.7 // 1.5 -> 0.65로 변경하여 더 가까이서 킥 시작 (타점 개선)
     ) {
         // if (brain->data->kickType == "cross") newDecision = "cross";
         // else newDecision = "kick";      
