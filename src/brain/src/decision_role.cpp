@@ -62,6 +62,11 @@ NodeStatus StrikerDecide::tick() {
     reachedKickDir = reachedKickDir || fabs(deltaDir) < 0.05; // 0.1 (5.7도) -> 0.05 (2.9도)로 강화
     timeLastTick = now;
     lastDeltaDir = deltaDir;
+    
+    // [Hysteresis] Hysteresis for Kick
+    // If we were already kicking, be more lenient with the angle (up to ~30 deg) to allow the kick action to finish.
+    // This prevents "stuttering" where the robot aborts the kick due to minor vibrations.
+    bool maintainKick = (lastDecision == "kick" && fabs(deltaDir) < 0.5); 
 
     string newDecision;
     auto color = 0xFFFFFFFF; 
@@ -104,7 +109,6 @@ NodeStatus StrikerDecide::tick() {
         color = 0xFF0000FF; // Red color
     }
     
-    bool maintainKick = (lastDecision == "kick" && fabs(deltaDir) < 0.5); 
 
     else if (
         (
