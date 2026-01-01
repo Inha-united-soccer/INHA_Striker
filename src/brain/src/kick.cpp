@@ -95,146 +95,97 @@ NodeStatus CalcKickDir::tick(){
 }
 
 NodeStatus CalcKickDirWithGoalkeeper::tick(){
-    double crossThreshold;
+    // cross 역할은 수행하지 않을 것이므르 crossThreshold 삭제
     double goalkeeperMargin;
-    getInput("cross_threshold", crossThreshold);
     getInput("goalkeeper_margin", goalkeeperMargin);
 
     auto bPos = brain->data->ball.posToField;
     auto fd = brain->config->fieldDimensions;
-    auto color = 0xFFFFFFFF;
+    
+    string strategy = "shoot";
+    auto color = 0x00FF00FF;
+    
+    // CalcKickDir과 동일한 로직으로 중앙을 default로
+    double goalX = - (brain->config->fieldDimensions.length / 2); 
+    
+    double targetKickDir = atan2(
+        0 - bPos.y,
+        goalX - bPos.x 
+    );
+    
+    // 골라인 뒤쪽에서 180도 돌아가버리는 것 방지
+    if (bPos.x < goalX) targetKickDir = M_PI; 
 
-    // 1. 골키퍼(장애물) 찾기
+    // 기본적으로 중앙을 목표하지만(킥의 부정확함) 그 경로에 opponent가 있다면 회피 로직
     vector<GameObject> obstacles = brain->data->getObstacles();
     vector<GameObject> goalkeepers;
     
-    // 골대 주변에 있는 장애물만 골키퍼 후보로 간주
-    // double goalX = (brain->config->fieldDimensions.length / 2);
-    double goalX = - (brain->config->fieldDimensions.length / 2);
-
+    // 만약 장애물이 골영역에 있다면
     for(const auto& obs : obstacles){
-        // 골대 근처 (페널티 박스 + margin)에 있는 로봇을 골키퍼로 인식
-        if(obs.posToField.x < goalX + fd.goalAreaLength + goalkeeperMargin){goalkeepers.push_back(obs);}
-    }
-
-    // [Safety] Localization Lost Check
-    // 자기 위치 파악이 안 되면 dir이 튀고 골키퍼를 오인할 수 있으므로, GK 회피 로직을 끄고 무조건 중앙을 노림
-    if (brain->msecsSince(brain->data->lastSuccessfulLocalizeTime) > 2000) {
-        if (!goalkeepers.empty()) {
-            brain->log->logToScreen("debug/KickDir", "Loc Lost! Ignoring GK logic", 0xFFA500FF);
-            goalkeepers.clear();
+        if(obs.posToField.x < goalX + fd.goalAreaLength + goalkeeperMargin){
+            goalkeepers.push_back(obs);
         }
     }
-
-    // 공 -> 왼쪽 포스트 각도(thetal), 공 -> 오른쪽 포스트 각도(thetar), 골키퍼가 이 사이에 있으면 각도를 좁혀야 함.
-    double bestKickDir = 0.0;
-    bool isBlocked = false;
-    double maxOpenAngle = 0.0;
-    string kickType = "shoot";
-
-    // 골키퍼 없으면 기존 로직대로 그냥 킥
-    if (goalkeepers.empty()) { 
-        // [Fix] Force Negative X Direction (Half Court Goal is at -X)
-        // 공이 골 라인을 살짝 넘어가더라도(노이즈 포함), 반대편(East)을 보지 않고 골대 안쪽(West)으로 차 넣도록 강제
-        // goalX - bPos.x가 양수가 되면 atan2가 0(East)을 반환하므로, -fabs()를 씌워 무조건 West를 보게함
-        bestKickDir = atan2(0 - bPos.y, -fabs(goalX - bPos.x));
-        brain->log->logToScreen("debug/KickDir", "No GK! Aiming Center (Forced West)", 0x00FF00FF);
-    } 
-    // 골키퍼가 있다면        
-    else {        
-        vector<pair<double, double>> blockedIntervals;
-        for(const auto& gk : goalkeepers){
-            double dist = norm(gk.posToField.x - bPos.x, gk.posToField.y - bPos.y);
-            double angleToGK = atan2(gk.posToField.y - bPos.y, gk.posToField.x - bPos.x);
-            double angularWidth = atan2(goalkeeperMargin, dist);
-            blockedIntervals.push_back({angleToGK - angularWidth, angleToGK + angularWidth});
-        }
-        
-        double angleLeftPost = atan2(fd.goalWidth/2 - bPos.y, goalX - bPos.x);
-        double angleRightPost = atan2(-fd.goalWidth/2 - bPos.y, goalX - bPos.x);
     
+    // locator 실패 시 회피 로직 오작동 방지
+    if (brain->msecsSince(brain->data->lastSuccessfulLocalizeTime) > 2000) {
+        goalkeepers.clear();
+    }
+
+    if(!goalkeepers.empty()){
         auto gk = goalkeepers[0];
-        double gkAngle = atan2(gk.posToField.y - bPos.y, gk.posToField.x - bPos.x);
-        double angleToGoalCenter = atan2(0 - bPos.y, goalX - bPos.x);
+        double distToGK = norm(gk.posToField.x - bPos.x, gk.posToField.y - bPos.y);
+        double angleToGK = atan2(gk.posToField.y - bPos.y, gk.posToField.x - bPos.x);
+        double angularWidth = atan2(goalkeeperMargin, distToGK);
         
-        double diff = gkAngle - angleToGoalCenter;
+        double diff = angleToGK - targetKickDir;
         while(diff > M_PI) diff -= 2*M_PI;
         while(diff < -M_PI) diff += 2*M_PI;
         
-        // 골키퍼가 중심보다 왼쪽에 있음(diff > 0) -> 오른쪽 포스트 쪽으로 슛
-        // diff는 (GK각도 - 골대중심각도) 입니다.
-        // GK가 왼쪽에 있다(diff > 0) -> 오른쪽 공간이 빎 -> 오른쪽 포스트와 중심 사이로 슛
-        // GK가 오른쪽에 있다(diff < 0) -> 왼쪽 공간이 빎 -> 왼쪽 포스트와 중심 사이로 슛
-        
-        string gapChoice = "Center";
-        if(diff > 0) {
-            bestKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.5; // 오른쪽 절반의 중간
-            gapChoice = "Right Gap";
-        } else {
-            bestKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.5; // 왼쪽 절반의 중간
-            gapChoice = "Left Gap";
+        // 빈 공칸 탐지, 왼쪽과 오른쪽을 결정하는 기준은 더 넓은 공칸을 선택함
+        if(fabs(diff) < angularWidth){
+            double angleLeftPost = atan2(fd.goalWidth/2 - bPos.y, goalX - bPos.x);
+            double angleRightPost = atan2(-fd.goalWidth/2 - bPos.y, goalX - bPos.x);
+            
+            double angleToGoalCenter = atan2(0 - bPos.y, goalX - bPos.x);
+            
+            double gkDiff = angleToGK - angleToGoalCenter;
+             while(gkDiff > M_PI) gkDiff -= 2*M_PI;
+             while(gkDiff < -M_PI) gkDiff += 2*M_PI;
+
+            string gapChoice = "Center";
+            if(gkDiff > 0) { // 골키퍼가 중앙보다 왼쪽에 있다면 -> 오른쪽 빈 공간
+                targetKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.5;
+                gapChoice = "Right Gap";
+            } else { // 골키퍼가 중앙보다 오른쪽에 있다면 -> 왼쪽 빈 공간
+                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.5;
+                gapChoice = "Left Gap";
+            }
+            brain->log->logToScreen("debug/KickDir", format("GK Blocking! Aiming: %s", gapChoice.c_str()), 0xFF0000FF);
         }
-        // 만약 골키퍼가 너무 중앙이라 양쪽 다 좁다 or thetal - thetar 자체가 작다면 -> 여기서 바로 cross로 가도 좋을듯
-        
-        brain->log->logToScreen("debug/KickDir", format("GK Detected! Aiming: %s (Diff: %.2f)", gapChoice.c_str(), diff), 0xFF00FFFF);
-        
-        // Debug Visualization for GK logic
-        brain->log->log(
-            "debug/gk_angles",
-            rerun::Arrows2D::from_vectors({
-                {5 * cos(angleLeftPost), -5 * sin(angleLeftPost)}, 
-                {5 * cos(angleRightPost), -5 * sin(angleRightPost)},
-                {5 * cos(gkAngle), -5 * sin(gkAngle)}
-            })
-            .with_origins({{bPos.x, -bPos.y}, {bPos.x, -bPos.y}, {bPos.x, -bPos.y}})
-            .with_colors({0x00FF00FF, 0x00FF00FF, 0xFF0000FF}) // Green=Posts, Red=GK
-            .with_labels({"L-Post", "R-Post", "GK"})
-            .with_radii(0.01)
-        );
     }
 
-    // 최종 결정
-    double angleLeftPost = atan2(fd.goalWidth/2 - bPos.y, goalX - bPos.x);
-    double angleRightPost = atan2(-fd.goalWidth/2 - bPos.y, goalX - bPos.x);
+    brain->data->kickType = strategy;
     
-    double angleDiff = angleLeftPost - angleRightPost;
-    while(angleDiff > M_PI) angleDiff -= 2*M_PI;
-    while(angleDiff < -M_PI) angleDiff += 2*M_PI;
+    // 추가로 부드러운 회전을 위해 필터 적용
+    double prevKickDir = brain->data->kickDir; 
     
-    double goalVisibleAngle = fabs(angleDiff);
+    double diff = targetKickDir - prevKickDir;
+    while(diff > M_PI) diff -= 2*M_PI;
+    while(diff < -M_PI) diff += 2*M_PI;
 
-    // [Stabilization] Low-Pass Filter (LPF) 적용
-    // 이전 값(brain->data->kickDir)과 현재 목표값(bestKickDir)을 섞어서 급격한 변화를 막습니다.
-    double prevKickDir = brain->data->kickDir;
-    double diff = remainder(bestKickDir - prevKickDir, 2.0 * M_PI);
+    brain->data->kickDir = prevKickDir + diff * 0.3;
     
-    // Alpha 값: 0.0에 가까울수록 부드럽게(느리게), 1.0에 가까울수록 즉각적으로(빠르게) 반응
-    // 점프 현상을 막기 위해 0.2 정도로 설정하여 급격한 튀는 값을 억제합니다.
-    const double ALPHA = 0.2; 
+    while(brain->data->kickDir > M_PI) brain->data->kickDir -= 2*M_PI;
+    while(brain->data->kickDir < -M_PI) brain->data->kickDir += 2*M_PI;
     
-    // 만약 차이가 너무 크면(90도 이상), LPF 대신 바로 따라가거나(전략 변경 시) 혹은 무시할 수도 있지만,
-    // 사용자는 "튀는 것"을 싫어하므로 일단 부드럽게 따라가도록 합니다.
-    brain->data->kickDir = prevKickDir + diff * ALPHA;
-    
-    // Normalize -PI ~ PI
-    brain->data->kickDir = remainder(brain->data->kickDir, 2.0 * M_PI);
-
-     // 만약 골문이 너무 좁거나(crossThreshold) 해도, 일단 슛을 시도합니다 (User Request)
-     // if (goalVisibleAngle < crossThreshold) {
-     //    kickType = "cross";
-     //    color = 0xFF00FFFF;
-     // }
-    
-    brain->data->kickType = kickType;
-
-    // 시각화 
     brain->log->setTimeNow();
     brain->log->log(
         "field/kick_dir_gk",
         rerun::Arrows2D::from_vectors({{10 * cos(brain->data->kickDir), -10 * sin(brain->data->kickDir)}})
             .with_origins({{brain->data->ball.posToField.x, -brain->data->ball.posToField.y}})
             .with_colors({color}) 
-            .with_radii(0.02) 
+            .with_radii(0.01) 
             .with_labels({"KickDir"})
             .with_draw_order(32)
     );
