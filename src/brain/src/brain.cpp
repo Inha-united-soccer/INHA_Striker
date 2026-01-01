@@ -46,6 +46,8 @@ Brain::Brain() : rclcpp::Node("brain_node"){
     // 전략 관련 파라미터
     declare_parameter<double>("strategy.ball_confidence_threshold", 50.0);   // 공 인식 신뢰도 임계값
     declare_parameter<double>("strategy.ball_memory_timeout", 5.0); // 공의 위치를 얼마나 많은 시간동안 기억할지 정하는 파라미터 (공의 위치를 알고있다고 판단하는 시간)
+    declare_parameter<double>("strategy.tm_ball_dist_threshold", 3.0); // 공의 위치를 얼마나 많은 시간동안 기억할지 정하는 파라미터 (공의 위치를 알고있다고 판단하는 시간)
+    declare_parameter<double>("strategy.cooperation.ball_control_cost_threshold", 10.0); // 공의 위치를 얼마나 많은 시간동안 기억할지 정하는 파라미터 (공의 위치를 알고있다고 판단하는 시간)
 
     // 킥 관련 파라미터
     declare_parameter<bool>("strategy.abort_kick_when_ball_moved", false);
@@ -189,6 +191,7 @@ void Brain::loadConfig(){
 
     // 전략 관련 파라미터 
     get_parameter("strategy.ball_confidence_threshold", config->ballConfidenceThreshold);  // 공 탐지 신뢰도 임계값
+    get_parameter("strategy.tm_ball_dist_threshold", config->tmBallDistThreshold); // 공의 위치를 얼마나 많은 시간동안 기억할지 정하는 파라미터 (공의 위치를 알고있다고 판단하는 시간)
 
     // chase 관련 파라미터
     get_parameter("chase.limit_near_ball_speed", config->limitNearBallSpeed);
