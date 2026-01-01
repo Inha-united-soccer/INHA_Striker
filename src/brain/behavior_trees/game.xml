@@ -48,7 +48,7 @@
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
-                            <SetVelocity x="0.0" y="0.0" theta="0.0" />
+                            
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
                             <!-- <CalcKickDir /> -->
                             <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.5" />       
@@ -63,7 +63,7 @@
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
                             <!-- <CalcKickDir /> -->
-                            <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.5" />       
+                            <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.3" />       
 
                             <ReactiveSequence>
                                 <!-- <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" /> -->
