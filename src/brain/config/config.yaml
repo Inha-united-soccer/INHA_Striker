@@ -22,7 +22,7 @@ brain_node:
       ball_memory_timeout: 5.0 # 공의 위치를 얼마나 많은 시간동안 기억할지 정하는 파라미터
 
       # 킥에 사용
-      abort_kick_when_ball_moved: true 
+      abort_kick_when_ball_moved: false 
       
     chase:  
       limit_near_ball_speed: false # 가까워질수록 속도를 줄일 지 -> 실제론 다가갈 때도 속도가 줄어들음
