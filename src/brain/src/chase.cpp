@@ -216,16 +216,12 @@ NodeStatus DribbleChase::tick() {
     double dist = brain->data->ball.range;
     double ballYaw = brain->data->ball.yawToRobot;
 
-    // Slow -> Fast -> Slow
-    double targetSpeed = minSpeed;
+    // Fast -> Slow -> Fast -> Slow
+    double targetSpeed = maxSpeed;
     if (dist > slowDistFar) {
-         // 멀리 있을 때는 천천히 접근
-        targetSpeed = minSpeed;
-        log("Phase: Far (Slow)");
-    } else if (dist > slowDistNear) {
-        // 중간 거리에서는 빠르게 접근 (드리블)
+         // 멀리 있을 때는 빠르게 접근
         targetSpeed = maxSpeed;
-        log("Phase: Mid (Fast)");
+        log("Phase: Far (Fast)");
     } else {
         // 가까워지면 다시 천천히
         targetSpeed = minSpeed;
