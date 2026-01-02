@@ -114,7 +114,7 @@ NodeStatus StrikerDecide::tick() {
             brain->data->ballDetected
             && ball.range < 0.5 
             && fabs(brain->data->ball.yawToRobot) < 0.3 
-            && norm(brain->data->robotPoseToField.x - brain->config->fieldDimensions.length/2, brain->data->robotPoseToField.y) < 2.0 
+            && norm(brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length/2), brain->data->robotPoseToField.y) < 2.0 
         )
     ) {
         newDecision = "one_touch";
