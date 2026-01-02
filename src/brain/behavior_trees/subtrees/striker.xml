@@ -35,7 +35,7 @@
                   
                   <!-- 킥 방향 개선 (골키퍼 고려) -->
                   <!-- <CalcKickDir /> -->
-                  <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.6" />
+                  <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" />
                   
                   <Sequence>
                      
@@ -54,7 +54,7 @@
                      <Chase _while="decision == 'chase'" vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.4" safe_dist="0.5" />
                      
                      <!-- Adjust -->
-                     <Adjust _while="decision == 'adjust'" turn_threshold="0.5" range="0.6" vx_limit="0.7" vy_limit="0.6" vtheta_limit="1.5" vtheta_factor="1.5" tangential_speed_far="0.7" tangential_speed_near="0.15" kick_y_offset="-0.08" />
+                     <Adjust _while="decision == 'adjust'" turn_threshold="0.5" range="0.4" vx_limit="0.7" vy_limit="0.6" vtheta_limit="1.5" vtheta_factor="1.5" tangential_speed_far="0.7" tangential_speed_near="0.15" kick_y_offset="-0.08" />
                      
                      <!-- 일반 킥 -->
                      <Kick _while="decision == 'kick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.3" min_msec_kick="1000" msecs_stablize="1000" kick_type="kick" />

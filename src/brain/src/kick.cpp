@@ -141,17 +141,19 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
             
             double angleToGoalCenter = atan2(0 - bPos.y, goalX - bPos.x);
             
+            // 각도 정규화
             double gkDiff = angleToGK - angleToGoalCenter;
-             while(gkDiff > M_PI) gkDiff -= 2*M_PI;
-             while(gkDiff < -M_PI) gkDiff += 2*M_PI;
+            // while(gkDiff > M_PI) gkDiff -= 2*M_PI;
+            // while(gkDiff < -M_PI) gkDiff += 2*M_PI;
+            gkDiff = atan2(sin(gkDiff), cos(gkDiff));
 
             string gapChoice = "Center";
             
             if(gkDiff > 0) { 
-                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.5; 
+                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.25; 
                 gapChoice = "Left Gap";
             } else { 
-                targetKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.5;
+                targetKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.25;
                 gapChoice = "Right Gap";
             }
             brain->log->logToScreen("debug/KickDir", format("GK Blocking! Aiming: %s", gapChoice.c_str()), 0xFF0000FF);

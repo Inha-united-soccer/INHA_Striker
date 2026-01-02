@@ -40,7 +40,7 @@ NodeStatus Adjust::tick(){
     getInput("vtheta_limit", vthetaLimit);
     getInput("range", range);
     double kickYOffset;
-    if(!getInput("kick_y_offset", kickYOffset)) kickYOffset = 0.0; // [Offset] 킥 오프셋 파라미터 읽기 (기본값 0.0)
+    if(!getInput("kick_y_offset", kickYOffset)) kickYOffset = -0.08; // [Offset] 킥 오프셋 파라미터 읽기 (기본값 0.0)
 
     log(format("ballX: %.1f ballY: %.1f ballYaw: %.1f", brain->data->ball.posToRobot.x, brain->data->ball.posToRobot.y, brain->data->ball.yawToRobot));
     double NO_TURN_THRESHOLD, TURN_FIRST_THRESHOLD;

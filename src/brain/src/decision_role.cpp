@@ -55,7 +55,7 @@ NodeStatus StrikerDecide::tick() {
     double deltaDir = toPInPI(kickDir - dir_rb_f);
     
     // 정렬 기준은 deltaDir가 0이 아니라 offset 각도와 일치하는 것
-    double kickYOffset = -0.07; 
+    double kickYOffset = -0.08; 
     getInput("kick_y_offset", kickYOffset);
     
     double targetAngleOffset = atan2(kickYOffset, ballRange);
@@ -123,7 +123,7 @@ NodeStatus StrikerDecide::tick() {
         && brain->data->ballDetected
         && fabs(brain->data->ball.yawToRobot) < M_PI / 2.
         && !avoidKick
-        && ball.range < 0.7 // 1.5 -> 0.65로 변경하여 더 가까이서 킥 시작 (타점 개선)
+        && ball.range < 0.75 // 1.5 -> 0.65로 변경하여 더 가까이서 킥 시작 (타점 개선)
     ) {
         // if (brain->data->kickType == "cross") newDecision = "cross";
         // else newDecision = "kick";      
