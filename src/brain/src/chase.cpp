@@ -305,20 +305,27 @@ NodeStatus OfftheballPosition::tick()
         vY_field = 0.0;
     }
 
-    double vx_robot = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
-    double vy_robot = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
-
-    // 골대 바라보기
+    // 5. 방향 제어 (골대 바라보기)
     double angleToGoal = atan2(0.0 - robotY, goalX - robotX);
     double angleDiff = toPInPI(angleToGoal - robotTheta);
-    double vtheta = angleDiff * 1.0;
+    double vtheta = angleDiff * 0.5; // Gain reduced 1.0 -> 0.5
 
-    // 방향 Deadzone
+    // 방향 Deadzone (약 3도)
     if (fabs(angleDiff) < 0.05) {
         vtheta = 0.0;
     }
+    
+    // [Stability] 각도가 많이 틀어졌으면(30도 이상) 제자리 회전 먼저 수행
+    if (fabs(angleDiff) > 0.5) {
+        vX_field = 0.0;
+        vY_field = 0.0;
+    }
 
-    // vtheta 제한 및 NaN 체크
+    // 4. 로봇 좌표계 변환 (속도 계산 후 변환)
+    double vx_robot = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
+    double vy_robot = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
+
+    // [Safety] vtheta 제한 및 NaN 체크
     if (!isfinite(vtheta) || !isfinite(vx_robot)) {
         brain->log->logToScreen("error/Offtheball", "NaN/Inf detected", 0xFF0000FF);
         vtheta = 0.0; vx_robot = 0.0; vy_robot = 0.0;
