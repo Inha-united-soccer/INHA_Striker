@@ -101,6 +101,16 @@ NodeStatus Chase::tick(){
     static string targetType = "direct"; 
     static double circleBackDir = 1.0; 
     double dirThreshold = M_PI / 2;
+
+    // one_touch 상황이라면 몸을 골대쪽으로 할 수 있게
+    double distToGoal = norm(
+        brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length / 2),
+        brain->data->robotPoseToField.y
+    );
+    if (distToGoal < 2.0) {
+        dirThreshold = M_PI / 6; // 30 degrees
+    }
+
     if (targetType == "direct") dirThreshold *= 1.2;
 
 

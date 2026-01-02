@@ -115,6 +115,8 @@ NodeStatus StrikerDecide::tick() {
             && ball.range < 0.5 
             && fabs(brain->data->ball.yawToRobot) < 0.3 
             && norm(brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length/2), brain->data->robotPoseToField.y) < 2.0 
+            // 킥 방향(kickDir)과 로봇 방향(dir_rb_f)이 대략적으로 일치할 때 one_touch 실행
+            // && fabs(toPInPI(brain->data->kickDir - brain->data->robotBallAngleToField)) < 0.5
         )
     ) {
         newDecision = "one_touch";
