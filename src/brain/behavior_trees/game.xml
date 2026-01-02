@@ -37,7 +37,7 @@
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
                             <!-- test -->
-                            <DribbleChase min_speed="0.2" max_speed="1.0" slow_dist_far="0.6" slow_dist_near="0.4" vx_limit="0.6" vy_limit="0.4" vtheta_limit="1.0" />
+                            <DribbleChase min_speed="0.2" max_speed="1.0" slow_dist_far="0.6" slow_dist_near="0.4" vx_limit="1.0" vy_limit="0.6" vtheta_limit="1.0" />
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
