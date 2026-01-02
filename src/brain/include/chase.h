@@ -52,3 +52,27 @@ private:
     string _state;     
     double _dir = 1.0; 
 };
+
+class DribbleChase : public SyncActionNode
+{
+public:
+    DribbleChase(const string &name, const NodeConfig &config, Brain *_brain) : SyncActionNode(name, config), brain(_brain) {}
+
+    static PortsList providedPorts()
+    {
+        return {
+            InputPort<double>("min_speed", 0.2, "Minimum approach speed"),
+            InputPort<double>("max_speed", 0.8, "Maximum approach speed (dribble run)"),
+            InputPort<double>("slow_dist_far", 0.8, "Distance to start speeding up"),
+            InputPort<double>("slow_dist_near", 0.3, "Distance to start slowing down"),
+            InputPort<double>("vx_limit", 0.6, "Max X speed limit"),
+            InputPort<double>("vy_limit", 0.4, "Max Y speed limit"),
+            InputPort<double>("vtheta_limit", 1.0, "Max Turn speed limit"),
+        };
+    }
+
+    NodeStatus tick() override;
+
+private:
+    Brain *brain;
+};

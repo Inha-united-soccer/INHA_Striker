@@ -15,6 +15,7 @@
 void RegisterChaseNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
     REGISTER_CHASE_BUILDER(SimpleChase) // obstacle 없이 chase만 
     REGISTER_CHASE_BUILDER(Chase) // obstacle 추가된 chase
+    REGISTER_CHASE_BUILDER(DribbleChase) // 드리블 전용 chase
 }
 
 NodeStatus SimpleChase::tick(){
@@ -177,6 +178,83 @@ NodeStatus Chase::tick(){
     return NodeStatus::SUCCESS;
 }
 
+
+// DribbleChase
+NodeStatus DribbleChase::tick() {
+    auto log = [=](string msg) {
+        brain->log->setTimeNow();
+        brain->log->log("debug/DribbleChase", rerun::TextLog(msg));
+    };
+    log("ticked");
+
+    double minSpeed, maxSpeed, slowDistFar, slowDistNear;
+    double vxLimit, vyLimit, vthetaLimit;
+    
+    getInput("min_speed", minSpeed);
+    getInput("max_speed", maxSpeed);
+    getInput("slow_dist_far", slowDistFar);
+    getInput("slow_dist_near", slowDistNear);
+    getInput("vx_limit", vxLimit);
+    getInput("vy_limit", vyLimit);
+    getInput("vtheta_limit", vthetaLimit);
+
+    if (!brain->tree->getEntry<bool>("ball_location_known")){
+        brain->client->setVelocity(0, 0, 0);
+        return NodeStatus::FAILURE;
+    }
+
+    double dist = brain->data->ball.range;
+    double ballYaw = brain->data->ball.yawToRobot;
+
+    // Slow -> Fast -> Slow
+    double targetSpeed = minSpeed;
+    if (dist > slowDistFar) {
+         // 멀리 있을 때는 천천히 접근
+        targetSpeed = minSpeed;
+        log("Phase: Far (Slow)");
+    } else if (dist > slowDistNear) {
+        // 중간 거리에서는 빠르게 접근 (드리블)
+        targetSpeed = maxSpeed;
+        log("Phase: Mid (Fast)");
+    } else {
+        // 가까워지면 다시 천천히
+        targetSpeed = minSpeed;
+        log("Phase: Near (Slow)");
+    }
+
+    // 목표 속도 벡터 계산 (공 방향으로)
+    double vx = targetSpeed * cos(ballYaw);
+    double vy = targetSpeed * sin(ballYaw);
+    
+    double vtheta = ballYaw; 
+
+    // 회전이 많이 필요하면 전진 속도 줄임
+    if (fabs(ballYaw) > 0.5) {
+        vx *= 0.5;
+        vy *= 0.5;
+    }
+
+    // 다만 로봇 좌표계 기준이므로:
+    vx = brain->data->ball.posToRobot.x;
+    vy = brain->data->ball.posToRobot.y;
+    
+    // 정규화 후 targetSpeed 적용
+    double currDist = norm(vx, vy);
+    if (currDist > 1e-5) {
+        vx = (vx / currDist) * targetSpeed;
+        vy = (vy / currDist) * targetSpeed;
+    }
+
+    vx = cap(vx, vxLimit, -vxLimit);
+    vy = cap(vy, vyLimit, -vyLimit);
+    vtheta = cap(vtheta, vthetaLimit, -vthetaLimit);
+
+    brain->client->setVelocity(vx, vy, vtheta);
+
+    log(format("dist: %.2f, speed: %.2f", dist, targetSpeed));
+
+    return NodeStatus::SUCCESS;
+}
 
 // // 승재욱 - 직접 만든 Chase
 // NodeStatus Chase::tick(){
@@ -370,3 +448,4 @@ NodeStatus Chase::tick(){
     
 //     return NodeStatus::SUCCESS;
 // }
+
