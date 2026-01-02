@@ -301,14 +301,22 @@ NodeStatus OfftheballPosition::tick()
     double vy_robot = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
 
     // 로봇 위치에서 골대(-length/2, 0)를 바라보는 각도 계산
+    // goalX: -fd.length/2.0
+    // robotX: 현재 로봇 X
+    // vector: (goalX - robotX, 0 - robotY)
     double angleToGoal = atan2(0.0 - robotY, -(fd.length/2.0) - robotX);
     
     // 로봇이 angleToGoal을 향하도록 제어
-    double vtheta = toPInPI(angleToGoal - robotTheta) * 1.5;
+    double angleDiff = toPInPI(angleToGoal - robotTheta);
+    double vtheta = angleDiff * 1.5;
 
     brain->client->setVelocity(vx_robot, vy_robot, vtheta);
     
-    // Debug Log
+    // Debug Log (Rerun + Screen)
+    brain->log->setTimeNow();
+    brain->log->log("debug/offtheball/target_pos", rerun::Points2D({{(float)targetX, (float)targetY}}).with_colors({0x00FFFFFF}).with_radii({0.1f}).with_labels({"SupportTarget"}));
+    brain->log->log("debug/offtheball/angles", rerun::TextLog(format("GoalAngle: %.2f RobotTheta: %.2f Diff: %.2f vtheta: %.2f", angleToGoal, robotTheta, angleDiff, vtheta)));
+    
     brain->log->logToScreen(
         "debug/Offtheball", 
         format("Target: (%.1f, %.1f) Dist: %.2f", targetX, targetY, dist), 
