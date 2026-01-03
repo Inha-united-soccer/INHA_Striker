@@ -263,33 +263,131 @@ NodeStatus DribbleChase::tick() {
     return NodeStatus::SUCCESS;
 }
 
-// 패스 받기 전 오프더볼 무브 추후 오프사이드 보완해야함 (opponent보다는 앞으로 가지 않도록)
+// 패스 받기 전 오프더볼 무브 추후, 오프사이드 보완해야함 (opponent보다는 앞으로 가지 않도록)
 NodeStatus OfftheballPosition::tick()
 {
+    // 기본 설정값
     auto fd = brain->config->fieldDimensions;
     double distFromGoal = 2.0; 
     if (!getInput("dist_from_goal", distFromGoal)) {
-        // failed to get input, use default
         distFromGoal = 2.0;
     }
     
-    // 목표 위치 : 골대 중앙에서 2m
+    // 기본 목표 선언 -> 골대 앞 2m
     double goalX = -(fd.length / 2.0);
-    double targetX = goalX + distFromGoal;
-    double targetY = 0.0;
+    double baseX = goalX + distFromGoal; 
 
-    // 현재 상태 가져오기
+    // 공 위치
+    Point ballPos = brain->data->ball.posToField;
+
+    // max는 경기장 폭 기준 가장자리 마진 준 영역으로
+    double maxY = fd.width / 2.0 - 0.5;
+    double bestY = 0.0;
+    double maxScore = -1e9;
+    
+    auto obstacles = brain->data->getObstacles();
+
+    // 계속 해서 움직이는 걸 막기 위해서 -> 이미 좋은 자리라면 가중치 크게
+    static double lastBestY = 0.0;
+    
+    for (double y = -maxY; y <= maxY; y += 0.2) { // 폭 0.2m 마다
+        // 패스 경로가 안전한지 : Ball -> Target점을 잇는 선과 장애물 사이 거리 측정
+        double laneClearance = 100.0;
+        
+        for (const auto& obs : obstacles) { // obstacle 마다
+            double obsX = obs.posToField.x;
+            double obsY = obs.posToField.y;
+            
+            // 점과 선 사이의 거리 dx, dy
+            double dx = baseX - ballPos.x;
+            double dy = y - ballPos.y;
+            
+            // 공과 타겟이 겹치면 패스 불가능 -> 무시
+            if (hypot(dx, dy) < 1e-3) continue; 
+
+            // 투영 계수 t 계산 (0.0 ~ 1.0 범위로 클램핑)
+            double t = ((obsX - ballPos.x) * dx + (obsY - ballPos.y) * dy) / (dx*dx + dy*dy);
+            t = max(0.0, min(1.0, t));
+            
+            // t를 반영한 선 위의 가장 가까운 점
+            double closestX = ballPos.x + t * dx;
+            double closestY = ballPos.y + t * dy;
+            
+            // 장애물과 패스 경로 사이의 거리
+            double d = hypot(obsX - closestX, obsY - closestY);
+            if (d < laneClearance) laneClearance = d;
+        }
+
+        // 위치 안전성 -> 현재 서있는 자리 자체가 장애물과 얼마나 떨어져 있는지
+        double posClearance = 100.0;
+        for (const auto& obs : obstacles) {
+             double d = hypot(baseX - obs.posToField.x, y - obs.posToField.y);
+             if (d < posClearance) posClearance = d;
+        }
+
+        // 점수 계산
+        // 1. Lane Clearance: 제일 중요 (패스 길 확보) -> 가중치 2.0
+        // 2. Pos Clearance: 중요 (몸싸움 방지) -> 가중치 1.0
+        // 3. Center Bias: 슛 쏘기 좋은 중앙 선호 -> 중앙에서 멀어질수록 감점 (0.3)
+        // 4. Stability: 이전 위치와 가까울수록 선호 -> 흔들림 방지 (0.5)
+        
+        double score = (laneClearance * 2.0) // 패스길 확보 -> 가중치 높게
+                     + (posClearance * 1.0) // 위치 안전성
+                     - (fabs(y) * 0.3) // 중앙 선호 -> 실험적으로 패스 받기 좋은 위치가 중앙이라 우선 중앙 선호 추가
+                     - (fabs(y - lastBestY) * 0.5); // 안정성 -> 현재 위치에 가중치
+                     
+        if (score > maxScore) {
+            maxScore = score;
+            bestY = y;
+        }
+    }
+    
+    // 스무딩, 목표 위치가 튀지 않도록 필터 적용
+    lastBestY = lastBestY * 0.9 + bestY * 0.1;
+    
+    double targetX = baseX;
+    double targetY = lastBestY;
+    
+    // 로봇 위치
     double robotX = brain->data->robotPoseToField.x;
     double robotY = brain->data->robotPoseToField.y;
     double robotTheta = brain->data->robotPoseToField.theta;
 
-    // 위치 오차 및 속도 계산 (P제어)
+    // 이동 속도 계산
     double errX = targetX - robotX;
     double errY = targetY - robotY;
-    double dist = norm(errX, errY);
+    double dist = norm(errX, errY); // 목표 지점까지의 거리
 
     double vX_field = errX * 1.0;
     double vY_field = errY * 1.0;
+
+    // 골대 충돌 방지 -> 로봇이 골대 기둥 0.5m 안에 가면 밀어내게
+    double postX = -(fd.length / 2.0);
+    double postY_left = fd.goalWidth / 2.0;
+    double postY_right = -fd.goalWidth / 2.0;
+
+    // 왼쪽 기둥 회피
+    double distToLeftPost = norm(postX - robotX, postY_left - robotY);
+    if (distToLeftPost < 0.5) { 
+        double pushX = robotX - postX;
+        double pushY = robotY - postY_left;
+        double pushDist = norm(pushX, pushY);
+        if (pushDist > 1e-3) {
+             vX_field += (pushX / pushDist) * 1.5 * (0.5 - distToLeftPost);
+             vY_field += (pushY / pushDist) * 1.5 * (0.5 - distToLeftPost);
+        }
+    }
+    // 오른쪽 기둥 회피
+    double distToRightPost = norm(postX - robotX, postY_right - robotY);
+    if (distToRightPost < 0.5) {
+        double pushX = robotX - postX;
+        double pushY = robotY - postY_right;
+        double pushDist = norm(pushX, pushY);
+        if (pushDist > 1e-3) {
+             vX_field += (pushX / pushDist) * 1.5 * (0.5 - distToRightPost);
+             vY_field += (pushY / pushDist) * 1.5 * (0.5 - distToRightPost);
+        }
+    }
 
     // 속도 제한
     double vLimit = 0.6;
@@ -309,14 +407,17 @@ NodeStatus OfftheballPosition::tick()
     double vx_robot = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
     double vy_robot = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
 
-    // 방향 거리가 멀면 이동 방향(Target)을 봄. 가까우면 골대(Goal)를 봄.
+    // 방향 제어
     double targetTheta;
     string headingMode;
     
+    // 거리가 있으면 이동 방향을 보고 걸음
     if (dist > 0.5) {
         targetTheta = atan2(errY, errX);
         headingMode = "FaceTarget";
-    } else {
+    } 
+    // 가까우면 골대를 보고 슛 바로 할 수 있도록
+    else {
         double angleToGoal = atan2(0.0 - robotY, goalX - robotX);
         targetTheta = angleToGoal;
         headingMode = "FaceGoal";
@@ -325,31 +426,30 @@ NodeStatus OfftheballPosition::tick()
     double angleDiff = toPInPI(targetTheta - robotTheta);
     double vtheta = angleDiff * 1.0; 
 
-    // 방향 Deadzone
+    // 방향 Deadzone (약 5도 이내 정지)
     if (fabs(angleDiff) < 0.1) {
         vtheta = 0.0;
     }
     
-    // 각도가 많이 틀어졌으면 제자리 회전 먼저 수행
+    // 각도가 45도 이상 틀어져 있으면 멈추고 제자리 회전
     if (fabs(angleDiff) > M_PI / 4) {
-        vX_field = 0.0;
-        vY_field = 0.0;
-        // Re-calculate robot frame vel (should be 0)
         vx_robot = 0.0; vy_robot = 0.0;
     }
 
+    // 안전장치
     if (!isfinite(vtheta) || !isfinite(vx_robot)) {
         static int errCount = 0;
         if (errCount++ % 50 == 0) brain->log->logToScreen("error/Offtheball", "NaN/Inf detected", 0xFF0000FF);
         vtheta = 0.0; vx_robot = 0.0; vy_robot = 0.0;
     } else {
-        // Cap vtheta
+        // 회전 속도 제한 (1.0 rad/s)
         if (vtheta > 1.0) vtheta = 1.0;
         if (vtheta < -1.0) vtheta = -1.0;
     }
     
     brain->client->setVelocity(vx_robot, vy_robot, vtheta);
     
+    // 디버그 로그
     static int tickCount = 0;
     if (tickCount++ % 30 == 0) {
         brain->log->setTimeNow();
