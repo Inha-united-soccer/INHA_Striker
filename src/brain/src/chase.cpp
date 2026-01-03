@@ -278,20 +278,20 @@ NodeStatus OfftheballPosition::tick()
     double targetX = goalX + distFromGoal;
     double targetY = 0.0;
 
-    // 2. 현재 상태 가져오기
+    // 현재 상태 가져오기
     double robotX = brain->data->robotPoseToField.x;
     double robotY = brain->data->robotPoseToField.y;
     double robotTheta = brain->data->robotPoseToField.theta;
 
-    // 3. 위치 오차 및 속도 계산 (P제어)
+    // 위치 오차 및 속도 계산 (P제어)
     double errX = targetX - robotX;
     double errY = targetY - robotY;
     double dist = norm(errX, errY);
 
-    double vX_field = errX * 1.0; // P-Gain 1.0
+    double vX_field = errX * 1.0;
     double vY_field = errY * 1.0;
 
-    // 속도 제한 
+    // 속도 제한
     double vLimit = 0.6;
     if (dist > 0.01 && norm(vX_field, vY_field) > vLimit) {
         double scale = vLimit / norm(vX_field, vY_field);
@@ -305,48 +305,63 @@ NodeStatus OfftheballPosition::tick()
         vY_field = 0.0;
     }
 
-    // 5. 방향 제어 (골대 바라보기)
-    double angleToGoal = atan2(0.0 - robotY, goalX - robotX);
-    double angleDiff = toPInPI(angleToGoal - robotTheta);
-    double vtheta = angleDiff * 0.5; // Gain reduced 1.0 -> 0.5
-
-    // 방향 Deadzone (약 3도)
-    if (fabs(angleDiff) < 0.05) {
-        vtheta = 0.0;
-    }
-    
-    // [Stability] 각도가 많이 틀어졌으면(30도 이상) 제자리 회전 먼저 수행
-    if (fabs(angleDiff) > 0.5) {
-        vX_field = 0.0;
-        vY_field = 0.0;
-    }
-
-    // 4. 로봇 좌표계 변환 (속도 계산 후 변환)
+    // 로봇 좌표계 변환
     double vx_robot = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
     double vy_robot = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
 
-    // [Safety] vtheta 제한 및 NaN 체크
+    // 방향 거리가 멀면 이동 방향(Target)을 봄. 가까우면 골대(Goal)를 봄.
+    double targetTheta;
+    string headingMode;
+    
+    if (dist > 0.5) {
+        targetTheta = atan2(errY, errX);
+        headingMode = "FaceTarget";
+    } else {
+        double angleToGoal = atan2(0.0 - robotY, goalX - robotX);
+        targetTheta = angleToGoal;
+        headingMode = "FaceGoal";
+    }
+
+    double angleDiff = toPInPI(targetTheta - robotTheta);
+    double vtheta = angleDiff * 1.0; 
+
+    // 방향 Deadzone
+    if (fabs(angleDiff) < 0.1) {
+        vtheta = 0.0;
+    }
+    
+    // 각도가 많이 틀어졌으면 제자리 회전 먼저 수행
+    if (fabs(angleDiff) > M_PI / 4) {
+        vX_field = 0.0;
+        vY_field = 0.0;
+        // Re-calculate robot frame vel (should be 0)
+        vx_robot = 0.0; vy_robot = 0.0;
+    }
+
     if (!isfinite(vtheta) || !isfinite(vx_robot)) {
-        brain->log->logToScreen("error/Offtheball", "NaN/Inf detected", 0xFF0000FF);
+        static int errCount = 0;
+        if (errCount++ % 50 == 0) brain->log->logToScreen("error/Offtheball", "NaN/Inf detected", 0xFF0000FF);
         vtheta = 0.0; vx_robot = 0.0; vy_robot = 0.0;
     } else {
         // Cap vtheta
-        if (vtheta > 1.5) vtheta = 1.5;
-        if (vtheta < -1.5) vtheta = -1.5;
+        if (vtheta > 1.0) vtheta = 1.0;
+        if (vtheta < -1.0) vtheta = -1.0;
     }
     
     brain->client->setVelocity(vx_robot, vy_robot, vtheta);
     
-    // Debug Log
-    brain->log->setTimeNow();
-    brain->log->log("debug/offtheball/target_pos", rerun::Points2D({{(float)targetX, (float)targetY}}).with_colors({0x00FFFFFF}).with_radii({0.1f}).with_labels({"Offtheball"}));
-    brain->log->log("debug/offtheball/data", rerun::TextLog(format("DistFromGoal: %.2f Tgt: (%.2f, %.2f) Err: (%.2f, %.2f) Dist: %.2f", distFromGoal, targetX, targetY, errX, errY, dist)));
-    
-    brain->log->logToScreen(
-        "debug/Offtheball", 
-        format("Tgt:(%.1f,%.1f) Err:%.2f AngErr:%.2f", targetX, targetY, dist, angleDiff), 
-        0x00FFFFFF
-    );
+    static int tickCount = 0;
+    if (tickCount++ % 30 == 0) {
+        brain->log->setTimeNow();
+        brain->log->log("debug/offtheball/target_pos", rerun::Points2D({{(float)targetX, (float)targetY}}).with_colors({0x00FFFFFF}).with_radii({0.1f}).with_labels({"Offtheball"}));
+        brain->log->log("debug/offtheball/data", rerun::TextLog(format("Mode:%s Dist:%.2f Tgt:(%.1f,%.1f) Err:(%.1f,%.1f) AngErr:%.2f", headingMode.c_str(), dist, targetX, targetY, errX, errY, angleDiff)));
+        
+        brain->log->logToScreen(
+            "debug/Offtheball", 
+            format("Mode:%s D:%.1f AngErr:%.1f", headingMode.c_str(), dist, angleDiff), 
+            0x00FFFFFF
+        );
+    }
 
     return NodeStatus::RUNNING;
 }
