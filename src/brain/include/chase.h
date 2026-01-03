@@ -90,6 +90,11 @@ public:
             BT::InputPort<double>("vy_limit", 0.5, "y velocity limit"),
             BT::InputPort<double>("vtheta_limit", 1.0, "theta velocity limit"),
             BT::InputPort<double>("dist_to_goal", 2.0, "stop distance from goal"),
+            // Dribble Speed Params
+            BT::InputPort<double>("min_speed", 0.3, "Minimum approach speed"),
+            BT::InputPort<double>("max_speed", 0.8, "Maximum approach speed"),
+            BT::InputPort<double>("slow_dist_far", 0.8, "Distance to start speeding up"),
+            BT::InputPort<double>("slow_dist_near", 0.4, "Distance to start slowing down"),
         };
     }
 

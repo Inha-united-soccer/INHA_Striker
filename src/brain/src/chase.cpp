@@ -273,10 +273,16 @@ NodeStatus DribbleToGoal::tick() {
     log("ticked");
 
     double vxLimit, vyLimit, vthetaLimit, distToGoalThresh;
+    double minSpeed, maxSpeed, slowDistFar, slowDistNear;
+    
     getInput("vx_limit", vxLimit);
     getInput("vy_limit", vyLimit);
     getInput("vtheta_limit", vthetaLimit);
     getInput("dist_to_goal", distToGoalThresh);
+    getInput("min_speed", minSpeed);
+    getInput("max_speed", maxSpeed);
+    getInput("slow_dist_far", slowDistFar);
+    getInput("slow_dist_near", slowDistNear);
 
     if (!brain->tree->getEntry<bool>("ball_location_known")){
         brain->client->setVelocity(0, 0, 0);
@@ -290,7 +296,44 @@ NodeStatus DribbleToGoal::tick() {
 
     // 골대 목표 및 거리 확인
     double goalX = -(fd.length / 2.0);
-    double goalY = 0.0;
+    vector<double> candidatesY = {0.0, fd.goalWidth/2.0 - 0.5, -fd.goalWidth/2.0 + 0.5};
+    double targetGoalY = 0.0;
+    double maxClearance = -1.0;
+    
+    auto obstacles = brain->data->getObstacles();
+    
+    // 가장 장애물이 없는 경로 찾기
+    for(double candY : candidatesY) {
+        double clearance = 100.0;
+        // Ball -> (GoalX, candY) 경로 검사
+        double dx = goalX - ballPos.x;
+        double dy = candY - ballPos.y;
+        
+        for(const auto& obs : obstacles) {
+             // 공보다 뒤에 있는 장애물 무시 (이미 지난 것)
+             if (obs.posToField.x > ballPos.x) continue; // Goals are at negative X
+             
+             // 선분 거리 계산 (t projection)
+             double t = ((obs.posToField.x - ballPos.x) * dx + (obs.posToField.y - ballPos.y) * dy) / (dx*dx + dy*dy);
+             t = max(0.0, min(1.0, t));
+             
+             double closestX = ballPos.x + t * dx;
+             double closestY = ballPos.y + t * dy;
+             double d = hypot(obs.posToField.x - closestX, obs.posToField.y - closestY);
+             
+             if (d < clearance) clearance = d;
+        }
+        
+        // 중앙 선호 (Center Bias 0.2m)
+        if (candY == 0.0) clearance += 0.2;
+        
+        if (clearance > maxClearance) {
+            maxClearance = clearance;
+            targetGoalY = candY;
+        }
+    }
+
+    double goalY = targetGoalY;
     
     // 공과 골대 사이의 거리
     double ballDistToGoal = hypot(goalX - ballPos.x, goalY - ballPos.y);
@@ -303,56 +346,70 @@ NodeStatus DribbleToGoal::tick() {
     }
 
     // 정렬 상태 확인
-    // Goalpost <- Ball <- Robot 순서로 서야 함.
+    // Goalpost <- Ball <- Robot 순서로 서야함
     double angleBallToGoal = atan2(goalY - ballPos.y, goalX - ballPos.x);
     double angleRobotToBall = atan2(ballPos.y - robotPos.y, ballPos.x - robotPos.x);
     
-    // 정렬 오차 (로봇이 공 뒤에 잘 섰는가?)
+    // 정렬 오차 로봇이 공 뒤에 잘 섰나
     double alignmentError = fabs(toPInPI(angleBallToGoal - angleRobotToBall));
     
     double vx = 0, vy = 0, vtheta = 0;
     string phase = "Align";
 
-    // 정렬이 안되어 있으면 (오차 > 60도), 공 뒤로 돌아가기 (Circle Back)
+    // 드리블 속도 조절 -> dribblechase와 똑같이
+    double ballRange = brain->data->ball.range;
+    double targetSpeed = maxSpeed;
+    if (ballRange > slowDistFar) {
+         // 멀리 있을 때는 빠르게 접근
+        targetSpeed = maxSpeed;
+        log("Phase: Far (Fast)");
+    } else {
+        // 가까워지면 다시 천천히
+        targetSpeed = minSpeed;
+        log("Phase: Near (Slow)");
+    }
+
+    // 드리블 로직
     if (alignmentError > deg2rad(60)) {
         phase = "CircleBack";
-        // 목표 위치: 공 뒤 50cm 지점 (골대 반대 방향)
+        // 목표 : 공 뒤 50cm 위치 + 골대 반대 방향
         double targetX = ballPos.x - 0.5 * cos(angleBallToGoal);
         double targetY = ballPos.y - 0.5 * sin(angleBallToGoal);
         
-        // 로봇 기준 이동 벡터
         double errX = targetX - robotPos.x;
         double errY = targetY - robotPos.y;
-        double dist = hypot(errX, errY);
- 
-        double vX_field = errX * 1.5;
-        double vY_field = errY * 1.5;
         
-        // 로봇 좌표계 변환
+        // P-Control for CircleBack
+        double vX_field = errX * 2.0;
+        double vY_field = errY * 2.0;
+        
+        // 속도 제한 (CircleBack은 빠르게)
+        double speed = hypot(vX_field, vY_field);
+        if (speed > maxSpeed) {
+             vX_field *= (maxSpeed / speed);
+             vY_field *= (maxSpeed / speed);
+        }
+
         vx = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
         vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
+        vtheta = brain->data->ball.yawToRobot * 2.0;
         
-        // 공을 바라보게 회전
-        vtheta = brain->data->ball.yawToRobot * 1.5;
-        
-        // 공과 너무 가까우면 뒤로 물러나면서 돌기
-        if (brain->data->ball.range < 0.3) {
-            vx = -0.3; 
-        }
+        if (ballRange < 0.3) vx = -0.3; // 너무 가까우면 후진
     } 
-    // 정렬 후 전진 드리블
     else {
         phase = "Push";
         // 공 방향으로 전진
-        vx = brain->data->ball.posToRobot.x; // P-Gain 1.0 implicitly
-        vy = brain->data->ball.posToRobot.y + (brain->data->ball.yawToRobot * 0.5); // 약간의 조향 보정
-        vtheta = brain->data->ball.yawToRobot * 2.0; // 공 중심 맞추기
+        double pushDir = atan2(brain->data->ball.posToRobot.y, brain->data->ball.posToRobot.x);
         
-        // 너무 빠르지 않게
-        double speed = hypot(vx, vy);
-        if (speed > 0.8) { // Max Dribble Speed
-             vx *= (0.8 / speed);
-             vy *= (0.8 / speed);
+        // 정렬 오차만큼 보정 추가
+        vx = targetSpeed * cos(pushDir);
+        vy = targetSpeed * sin(pushDir);
+        vtheta = pushDir * 2.0; // 공 중심 맞추기
+        
+        // 정렬이 완벽하지 않으면 속도 감속
+        if (alignmentError > deg2rad(10)) {
+            vx *= 0.7;
+            vy *= 0.7;
         }
     }
 
