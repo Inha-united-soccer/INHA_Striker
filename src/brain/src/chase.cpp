@@ -296,7 +296,11 @@ NodeStatus DribbleToGoal::tick() {
 
     // 골대 목표 및 거리 확인
     double goalX = -(fd.length / 2.0);
+
+    // 후보지 목록 : (0,0), 중앙, 왼쪽 오른쪽 끝
     vector<double> candidatesY = {0.0, fd.goalWidth/2.0 - 0.5, -fd.goalWidth/2.0 + 0.5};
+
+    // 최종 선택된 좌표
     double targetGoalY = 0.0;
     double maxClearance = -1.0;
     
@@ -304,6 +308,8 @@ NodeStatus DribbleToGoal::tick() {
     
     // 가장 장애물이 없는 경로 찾기
     for(double candY : candidatesY) {
+
+        // 후보지로 가는 길에 장애물과 얼마나 떨어져있는지 여유공간 계산
         double clearance = 100.0;
         // Ball -> (GoalX, candY) 경로 검사
         double dx = goalX - ballPos.x;
@@ -324,7 +330,7 @@ NodeStatus DribbleToGoal::tick() {
              if (d < clearance) clearance = d;
         }
         
-        // 중앙 선호 (Center Bias 0.2m)
+        // 중앙을 선호하게
         if (candY == 0.0) clearance += 0.2;
         
         if (clearance > maxClearance) {
@@ -345,12 +351,14 @@ NodeStatus DribbleToGoal::tick() {
         return NodeStatus::SUCCESS;
     }
 
-    // 정렬 상태 확인
-    // Goalpost <- Ball <- Robot 순서로 서야함
+    // 정렬 상태 확인 공에서 골대를 보는 각도(최적 슛 방향) Goalpost <- Ball <- Robot 순서로 서야함
+    // CalcKickDirWithGoalkeeper을 고려해서 계산하면 개선 많이 될 수도?
     double angleBallToGoal = atan2(goalY - ballPos.y, goalX - ballPos.x);
+
+    // 로봇에서 공을 보는 각도
     double angleRobotToBall = atan2(ballPos.y - robotPos.y, ballPos.x - robotPos.x);
     
-    // 정렬 오차 로봇이 공 뒤에 잘 섰나
+    // 두 각도 차이 -> 0에 가까울 수록 일직선이라는 뜻이됨
     double alignmentError = fabs(toPInPI(angleBallToGoal - angleRobotToBall));
     
     double vx = 0, vy = 0, vtheta = 0;
@@ -371,7 +379,9 @@ NodeStatus DribbleToGoal::tick() {
 
     // 드리블 로직
     if (alignmentError > deg2rad(60)) {
+        // 공 뒤에 제대로 서지 못했다면 CircleBack으로 공뒤로 이동할 수 있게
         phase = "CircleBack";
+
         // 목표 : 공 뒤 50cm 위치 + 골대 반대 방향
         double targetX = ballPos.x - 0.5 * cos(angleBallToGoal);
         double targetY = ballPos.y - 0.5 * sin(angleBallToGoal);
@@ -397,8 +407,9 @@ NodeStatus DribbleToGoal::tick() {
         if (ballRange < 0.3) vx = -0.3; // 너무 가까우면 후진
     } 
     else {
+        // 정렬이 잘 되었다면 Push로 공 방향으로 전진
         phase = "Push";
-        // 공 방향으로 전진
+
         double pushDir = atan2(brain->data->ball.posToRobot.y, brain->data->ball.posToRobot.x);
         
         // 정렬 오차만큼 보정 추가

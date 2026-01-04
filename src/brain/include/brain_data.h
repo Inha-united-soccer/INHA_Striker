@@ -97,7 +97,7 @@ struct BrainData {
     int tmMyCmd = 0; 
     int tmMyCmdId = 0; 
     int tmReceivedCmd = 0; 
-    bool tmImLead = false; 
+    bool tmImLead = true; 
     bool tmImAlive = true; 
     double tmMyCost = 0.;
     
