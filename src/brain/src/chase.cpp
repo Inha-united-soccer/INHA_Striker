@@ -291,7 +291,7 @@ NodeStatus DribbleToGoal::tick() {
 
     auto fd = brain->config->fieldDimensions;
     Point ballPos = brain->data->ball.posToField;
-    Point robotPos = brain->data->robotPoseToField.toPoint();
+    Point robotPos = {brain->data->robotPoseToField.x, brain->data->robotPoseToField.y, 0.0};
     double robotTheta = brain->data->robotPoseToField.theta;
 
     // 골대 목표 및 거리 확인
