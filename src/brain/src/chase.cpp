@@ -310,12 +310,13 @@ NodeStatus DribbleToGoal::onRunning() {
 
     // CalcKickDirWithGoalkeeper가 계산한 킥 방향도 후보에 추가
     double kickDir = brain->data->kickDir;
-    
+    double kickDirTargetY = 1000.0; // 초기화 (유효하지 않은 값)
+
     // tan값이 폭발하지 않는 안전한 경우에만 계산
     if (isfinite(tan(kickDir))) {
         // kickDir을 이용해 골라인(x=goalX) 상의 y좌표 계산
     // 로봇 위치 기준이 아니라 공 위치 기준으로 투영
-        double kickDirTargetY = ballPos.y + tan(kickDir) * (goalX - ballPos.x);
+        kickDirTargetY = ballPos.y + tan(kickDir) * (goalX - ballPos.x);
         
     // 골대 벗어나지 않게 클램핑 (골키퍼가 막고 있어서 킥 방향이 골대 밖일 수도 있으므로 주의)
     // 하지만 CalcKickDirWithGoalkeeper가 골대 안쪽을 가리킨다고 가정

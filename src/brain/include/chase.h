@@ -109,7 +109,7 @@ private:
 class OfftheballPosition : public StatefulActionNode
 {
 public:
-    OfftheballPosition(const string &name, const NodeConfig &config, Brain *_brain) : SyncActionNode(name, config), brain(_brain) {}
+    OfftheballPosition(const string &name, const NodeConfig &config, Brain *_brain) : StatefulActionNode(name, config), brain(_brain) {}
 
     static PortsList providedPorts()
     {
