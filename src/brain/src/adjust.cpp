@@ -40,7 +40,7 @@ NodeStatus Adjust::tick(){
     getInput("vtheta_limit", vthetaLimit);
     getInput("range", range);
     double kickYOffset;
-    if(!getInput("kick_y_offset", kickYOffset)) kickYOffset = -0.13;
+    if(!getInput("kick_y_offset", kickYOffset)) kickYOffset = 0.13;
 
     log(format("ballX: %.1f ballY: %.1f ballYaw: %.1f", brain->data->ball.posToRobot.x, brain->data->ball.posToRobot.y, brain->data->ball.yawToRobot));
     double NO_TURN_THRESHOLD, TURN_FIRST_THRESHOLD;
@@ -50,20 +50,18 @@ NodeStatus Adjust::tick(){
 
     double vx = 0, vy = 0, vtheta = 0;
     double kickDir = brain->data->kickDir;
-    // double dir_rb_f = brain->data->robotBallAngleToField; 
-    double theta_robot_f = brain->data->robotPoseToField.theta;
-    double headingError = toPInPI(kickDir - theta_robot_f);
-    double ballYaw = brain->data->ball.yawToRobot;
+    double dir_rb_f = brain->data->robotBallAngleToField; 
+    // double deltaDir = toPInPI(kickDir - dir_rb_f);
+    double deltaDirVal = toPInPI(kickDir - dir_rb_f);
     double ballRange = brain->data->ball.range;
 
     // 한 발로 차기 위해 공을 로봇 중심보다 옆(kickYOffset)에 두도록 정렬
-    // ballYaw에 offset을 직접 더해줌으로써 가상의 공(Virtual Ball)을 목표로 삼음
+    // deltaDir 각도 에러 수정
     double targetAngleOffset = atan2(kickYOffset, ballRange);
-    ballYaw -= targetAngleOffset; // Virtual Ball Yaw
+    double deltaDir = toPInPI(kickDir - dir_rb_f + targetAngleOffset);
 
-    // deltaDir = headingError - VirtualBallYaw
-    double deltaDir = toPInPI(headingError - ballYaw);
-
+    double ballYaw = brain->data->ball.yawToRobot;
+    // double st = cap(fabs(deltaDir), st_far, st_near);
     double st = st_far; 
     double R = ballRange; 
     double r = range; 
@@ -74,16 +72,26 @@ NodeStatus Adjust::tick(){
     if (fabs(deltaDir) * R < NEAR_THRESHOLD) {
         log("use near speed");
         st = st_near;
+        // sr = 0.;
+        // vxLimit = 0.1;
     }
-    double thetat_r = ballYaw + M_PI / 2 * (deltaDir > 0 ? -1.0 : 1.0);
-    double thetar_r = ballYaw;
+
+    double theta_robot_f = brain->data->robotPoseToField.theta; 
+    double thetat_r = dir_rb_f + M_PI / 2 * (deltaDir > 0 ? -1.0 : 1.0) - theta_robot_f; 
+    double thetar_r = dir_rb_f - theta_robot_f; 
 
     vx = st * cos(thetat_r) + sr * cos(thetar_r); 
     vy = st * sin(thetat_r) + sr * sin(thetar_r); 
+    // vtheta = toPInPI(ballYaw + st / R * (deltaDir > 0 ? 1.0 : -1.0)); 
+    // vtheta = ballYaw;
     
+    // 오프셋 킥 사용 시, 로봇이 공을 바라보는 것이 아니라(ballYaw=0), 
+    // 킥 방향(골대)과 평행하게 서야 함. (kickDir - robotTheta = Heading Error)
+    double headingError = toPInPI(kickDir - theta_robot_f);
     vtheta = headingError;
     vtheta *= vtheta_factor; 
-    
+    // if (fabs(ballYaw) < NO_TURN_THRESHOLD) vtheta = 0.;
+    // 회전 제어 조건도 ballYaw(공 방향)가 아닌 headingError(골대 방향) 기준으로 변경
     if (fabs(headingError) < NO_TURN_THRESHOLD) vtheta = 0.; 
     
     // 방향이 많이 틀어졌거나 위치가 많이 벗어났으면 일단 제자리 회전
@@ -109,10 +117,8 @@ NodeStatus Adjust::tick(){
     if (adjustDone){
         // brain->tree->setEntry("striker_state", "kick");
         log("adjust -> kick (ready)");
-        return NodeStatus::SUCCESS;
     }
     log(format("deltaDir = %.1f", deltaDir));
 
-    // test_kick 사용 시에만 running으로 -> decision을 사용할 시에는 success로 변경
     return NodeStatus::SUCCESS;
 }
