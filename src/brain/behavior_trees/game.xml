@@ -38,8 +38,8 @@
 
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
-                            <!-- <CalcKickDir /> -->
-                            <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" />       
+
+                            <!-- <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" /> -->       
 
                             <ReactiveSequence>
                                 <SubTree ID="TestKick" _autoremap="true" />
