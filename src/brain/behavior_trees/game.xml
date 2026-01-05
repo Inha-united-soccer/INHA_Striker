@@ -6,6 +6,7 @@
     <include path="./subtrees/striker.xml" />
     <include path="./subtrees/defender.xml" />
     <include path="./subtrees/test_kick.xml" />
+    <include path="./subtrees/find_ball.xml" />
 
 
     <!-- 시작 -->
@@ -42,7 +43,8 @@
                             <!-- <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" /> -->       
 
                             <ReactiveSequence>
-                                <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" />
+                                <!-- <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" /> -->
+                                <CamFindBall />
                             </ReactiveSequence>
                             <SubTree ID="Locate" _autoremap="true" />
                             
