@@ -117,8 +117,9 @@ NodeStatus Adjust::tick(){
     if (adjustDone){
         // brain->tree->setEntry("striker_state", "kick");
         log("adjust -> kick (ready)");
+        return NodeStatus::SUCCESS;
     }
     log(format("deltaDir = %.1f", deltaDir));
 
-    return NodeStatus::SUCCESS;
+    return NodeStatus::RUNNING;
 }
