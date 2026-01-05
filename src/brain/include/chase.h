@@ -114,7 +114,7 @@ public:
     static PortsList providedPorts()
     {
         return {
-            InputPort<double>("dist_from_goal", 2.0, "goal 앞에서 대기할 거리"),
+            InputPort<double>("dist_from_goal", 1.5, "goal 앞에서 대기할 거리"),
         };
     }
 
