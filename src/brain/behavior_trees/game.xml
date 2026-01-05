@@ -12,10 +12,11 @@
         <Sequence name="root">
             <RunOnce><Script code="control_state=1" /></RunOnce>
 
+            <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+
             <ReactiveSequence _while="control_state==1">
 
-                <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
-                <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" />       
+                <SubTree ID="CamFindAndTrackBall" _autoremap="true" />     
 
                 <ReactiveSequence>
                         <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
