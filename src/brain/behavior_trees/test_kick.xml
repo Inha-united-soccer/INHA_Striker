@@ -4,7 +4,7 @@
     <include path="./subtrees/locate.xml" />
     <include path="./subtrees/find_ball.xml" />
 
-    <BehaviorTree ID="TestKick">
+    <BehaviorTree ID="MainTree">
         <ReactiveSequence>
             <!-- Vision & Localization -->
             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
