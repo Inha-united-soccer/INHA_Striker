@@ -122,5 +122,5 @@ NodeStatus Adjust::tick(){
     log(format("deltaDir = %.1f", deltaDir));
 
     // test_kick 사용 시에만 running으로 -> decision을 사용할 시에는 success로 변경
-    return NodeStatus::RUNNING;
+    return NodeStatus::SUCCESS;
 }
