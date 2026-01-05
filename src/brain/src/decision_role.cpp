@@ -173,8 +173,8 @@ NodeStatus StrikerDecide::tick() {
         }
     }
 
-    // 2.5m 보다 멀거나 1.5m보다 멀면서 슛길이 막혀있으면 -> 드리블
-    if (distToGoal > 2.5 || (!isShotPathClear && distToGoal > 1.5))
+    // 1.8m 보다 멀거나 1.5m보다 멀면서 슛길이 막혀있으면 -> 드리블
+    if (distToGoal > 1.8 || (!isShotPathClear && distToGoal > 1.5))
     {
         newDecision = "dribble";
         color = 0x00FFFF00; 
