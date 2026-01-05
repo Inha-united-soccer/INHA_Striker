@@ -56,7 +56,6 @@ NodeStatus StrikerDecide::tick() {
     
     // 정렬 기준은 deltaDir가 0이 아니라 offset 각도와 일치하는 것
     double kickYOffset = 0.13; 
-    double kickYOffset = 0.13; 
     getInput("kick_y_offset", kickYOffset);
 
     double oneTouchGoalDist = 1.2;
@@ -174,12 +173,12 @@ NodeStatus StrikerDecide::tick() {
         }
     }
 
-    // 2.5m 보다 멀거나 1.6m보다 멀면서 슛길이 막혀있으면 -> 드리블
-        if (distToGoal > 2.5 || (!isShotPathClear && distToGoal > 1.5))
-        {
-            newDecision = "dribble";
-            color = 0x00FFFF00; 
-        } 
+    // 2.5m 보다 멀거나 1.5m보다 멀면서 슛길이 막혀있으면 -> 드리블
+    if (distToGoal > 2.5 || (!isShotPathClear && distToGoal > 1.5))
+    {
+        newDecision = "dribble";
+        color = 0x00FFFF00; 
+    } 
 
     else if (
         (
@@ -189,7 +188,7 @@ NodeStatus StrikerDecide::tick() {
         && brain->data->ballDetected
         && fabs(brain->data->ball.yawToRobot) < M_PI / 2.
         && !avoidKick
-        && ball.range < 0.8 // 1.5 -> 0.65로 변경하여 더 가까이서 킥 시작 (타점 개선)
+        && ball.range < 0.8
     ) {
         // if (brain->data->kickType == "cross") newDecision = "cross";
         // else newDecision = "kick";      
