@@ -55,7 +55,7 @@ NodeStatus StrikerDecide::tick() {
     double deltaDir = toPInPI(kickDir - dir_rb_f);
     
     // 정렬 기준은 deltaDir가 0이 아니라 offset 각도와 일치하는 것
-    double kickYOffset = -0.12; 
+    double kickYOffset = 0.13; 
     getInput("kick_y_offset", kickYOffset);
     
     double targetAngleOffset = atan2(kickYOffset, ballRange);
