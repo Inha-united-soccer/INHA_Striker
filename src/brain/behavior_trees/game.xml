@@ -14,6 +14,14 @@
 
             <ReactiveSequence _while="control_state==1">
 
+                <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+                <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" />       
+
+                <ReactiveSequence>
+                        <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
+                </ReactiveSequence>
+                <SubTree ID="Locate" _autoremap="true" />
+
                 <ReactiveSequence _while="gc_is_under_penalty" name="Penalty">
                     <SetVelocity x="0.0" y="0.0" theta="0.0" />
                     <SelfLocateEnterField />
