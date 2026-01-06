@@ -261,7 +261,16 @@ tuple<double, double, double> Kick::_calcSpeed() {
     double yawOffset = brain->config->yawOffset; 
 
 
-    double adjustedYaw = brain->data->ball.yawToRobot + yawOffset;
+    double kickYOffset;
+    getInput("kick_y_offset", kickYOffset);
+
+    // [중요 수정] 이제 Offset을 고려해서 목표 Yaw를 설정함
+    // 단순 yawToRobot이 0이 되도록 하는게 아니라, Offset 위치로 공이 오도록 함
+    double targetYaw = atan2(kickYOffset, brain->data->ball.range);
+    double errorYaw = brain->data->ball.yawToRobot - targetYaw;
+
+    // errorYaw를 줄이는 방향으로 ty 생성
+    double adjustedYaw = errorYaw + yawOffset; 
     double tx = cos(adjustedYaw) * brain->data->ball.range; 
     double ty = sin(adjustedYaw) * brain->data->ball.range;
 
@@ -382,7 +391,7 @@ NodeStatus Kick::onRunning(){
         return NodeStatus::SUCCESS;
     }
 
-    // [원본 그대로] 시간 체크 및 종료 처리
+    // 시간 체크 및 종료 처리
     double msecs = getInput<double>("min_msec_kick").value();
     double speedLimit = getInput<double>("speed_limit").value(); // speed 변수명 겹침 주의해서 speedLimit으로 변경 권장하나 원본 유지
     
@@ -409,10 +418,14 @@ NodeStatus Kick::onRunning(){
     //     brain->client->crabWalk(angle, currentCmdSpeed);
     // }
     
-    // 승재욱 추가: _calcSpeed 활용하도록 변경
+     // 승재욱 추가: _calcSpeed 활용하도록 변경
     if(brain->data->ballDetected){
          auto [vx, vy, _] = _calcSpeed();
-         double vtheta = brain->data->ball.yawToRobot * 1.5; // P-gain 1.5
+         
+         // 공을 보지 말고, 골대를 봐야 함
+         double headingError = toPInPI(brain->data->kickDir - brain->data->robotPoseToField.theta);
+         double vtheta = headingError * 1.5; // P-gain 1.5
+         
          brain->client->setVelocity(vx, vy, vtheta);
     }
 
