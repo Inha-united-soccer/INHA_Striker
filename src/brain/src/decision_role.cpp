@@ -109,7 +109,7 @@ NodeStatus StrikerDecide::tick() {
             && ball.range < 0.5 
             && fabs(brain->data->ball.yawToRobot) < 0.3 
         )
-        || // 일반 경기 + 골대 근처
+        // || // 일반 경기 + 골대 근처
         // (
         //     brain->data->ballDetected
         //     && ball.range < 0.5 
