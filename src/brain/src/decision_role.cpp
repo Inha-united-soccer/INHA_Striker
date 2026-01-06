@@ -67,14 +67,13 @@ NodeStatus StrikerDecide::tick() {
 
     auto now = brain->get_clock()->now();
     auto dt = brain->msecsSince(timeLastTick);
-    // 로봇이 골대를 바라보는 각도 오차 (Heading Error)
-    // 30도 이상 틀어져서 차는 현상 방지 (Robot Heading vs Kick Direction)
+    
     double headingError = toPInPI(kickDir - brain->data->robotPoseToField.theta);
 
     // 킥 정렬 조건 강화
     bool reachedKickDir = 
         fabs(errorDir) < 0.05 // 2.9도 이내 정밀 정렬 (위치)
-        && fabs(headingError) < 0.2 // 약 11도 이내 방향 정렬 (자세)
+        && fabs(headingError) < 0.1 // 약 5.7도 이내 방향 정렬 (자세) - Impact 개선
         && dt < 100;
     
     // reachedKickDir = reachedKickDir || fabs(errorDir) < 0.02; 
@@ -83,7 +82,8 @@ NodeStatus StrikerDecide::tick() {
     lastDeltaDir = deltaDir;
    
     // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화
-    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.1 && fabs(headingError) < 0.3); 
+    // 0.2 rad = 약 11도
+    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.1 && fabs(headingError) < 0.2); 
 
     string newDecision;
     auto color = 0xFFFFFFFF; 
@@ -106,8 +106,8 @@ NodeStatus StrikerDecide::tick() {
                     && brain->tree->getEntry<bool>("gc_is_sub_state_kickoff_side")
                 )
                 || (
-                     angleGoodForKick          
-                     && !avoidKick             
+                    angleGoodForKick          
+                    && !avoidKick             
                 )
             )
             && brain->data->ballDetected
@@ -176,8 +176,8 @@ NodeStatus StrikerDecide::tick() {
     brain->log->logToScreen(
         "tree/Decide",
         format(
-            "Decision: %s dist: %.2f ballrange: %.2f kickDir: %.2f angles: %d lead: %d", 
-            newDecision.c_str(), distToGoal, ballRange, kickDir, angleGoodForKick, brain->data->tmImLead
+            "Decision: %s dist: %.2f errPos: %.2f errHead: %.2f kickDir: %.2f", 
+            newDecision.c_str(), distToGoal, errorDir, headingError, kickDir
         ),
         color
     );
