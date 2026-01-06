@@ -72,8 +72,8 @@ NodeStatus StrikerDecide::tick() {
 
 
     bool reachedKickDir = 
-        fabs(errorDir) < 0.08 // 2.3도 이내 (위치)
-        && fabs(headingError) < 0.10 // 2.9도 이내 (방향)
+        fabs(errorDir) < 0.08
+        && fabs(headingError) < 0.10
         && dt < 100;
     
     // reachedKickDir = reachedKickDir || fabs(errorDir) < 0.02; 
