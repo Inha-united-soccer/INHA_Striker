@@ -40,7 +40,7 @@
                   <Sequence>
                      
                      <ReactiveSequence>
-                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.85" kick_y_offset="-0.10" one_touch_goal_dist="1.0" />
+                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.6" kick_y_offset="-0.10" one_touch_goal_dist="1.0" />
                         
                         <!-- 공 찾기 -->
                         <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
@@ -60,7 +60,7 @@
                      <Chase _while="decision == 'chase'" vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.65" safe_dist="1.0" />
 
                      <!-- Adjust -->
-                     <Adjust _while="decision == 'adjust'" no_turn_threshold="0.01" turn_threshold="0.5" turn_first_threshold="0.5" range="0.7" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="2.5" tangential_speed_far="0.7" tangential_speed_near="0.15" near_threshold="0.3" kick_y_offset="-0.10" />
+                     <Adjust _while="decision == 'adjust'" no_turn_threshold="0.01" turn_threshold="0.2" turn_first_threshold="0.2" range="0.8" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="2.5" tangential_speed_far="0.7" tangential_speed_near="0.05" near_threshold="1.0" kick_y_offset="-0.10" />
                      <!--
                      no_turn_threshold     : 0.1, "각도 오차가 이 값보다 작으면 회전을 수행하지 않는다"
                      turn_threshold        : 3.25, "공의 각도가 이 값보다 크면 먼저 회전하여 공을 정면으로 바라보고 이동은 중단한다"
