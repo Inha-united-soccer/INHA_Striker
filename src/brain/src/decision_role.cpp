@@ -72,8 +72,8 @@ NodeStatus StrikerDecide::tick() {
 
 
     bool reachedKickDir = 
-        fabs(errorDir) < 0.04 // 2.3도 이내 - 초정밀 정렬 (위치)
-        && fabs(headingError) < 0.05 // 2.9도 이내 - 초정밀 정렬 (방향 - Perfect)
+        fabs(errorDir) < 0.04 // 2.3도 이내 (위치)
+        && fabs(headingError) < 0.05 // 2.9도 이내 (방향)
         && dt < 100;
     
     // reachedKickDir = reachedKickDir || fabs(errorDir) < 0.02; 
@@ -81,8 +81,8 @@ NodeStatus StrikerDecide::tick() {
     timeLastTick = now;
     lastDeltaDir = deltaDir;
    
-    // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화
-    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.15 && fabs(headingError) < 0.2); 
+    // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화, 기본값보다는 크게 줘야함 -> 얼마나? (추가된 로직)
+    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.08 && fabs(headingError) < 0.08); 
 
     string newDecision;
     auto color = 0xFFFFFFFF; 
@@ -149,10 +149,7 @@ NodeStatus StrikerDecide::tick() {
         } 
 
     else if (
-        (
-            ( (reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
-            // || reachedKickDir
-        )
+        ((reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
         && brain->data->ballDetected
         && fabs(brain->data->ball.yawToRobot) < M_PI / 2.
         && !avoidKick

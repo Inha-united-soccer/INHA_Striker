@@ -76,7 +76,7 @@
                      kick_y_offset         : -0.13, "킥 시 공을 로봇 중심에서 y축으로 얼마나 오프셋 시킬지 결정" -> 현재 왼발 강제
                      -->
                      <!-- 일반 킥 -->
-                     <Kick _while="decision == 'kick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.3" min_msec_kick="1000" msecs_stablize="500" kick_type="kick" />
+                     <Kick _while="decision == 'kick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.3" min_msec_kick="1000" msecs_stablize="1000" kick_type="kick" />
                      
                      <!-- 원터치 킥 (세트피스 킥) -->
                      <!-- <Kick _while="decision == 'one_touch'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.3" min_msec_kick="300" msecs_stablize="100" kick_type="one_touch" /> -->
