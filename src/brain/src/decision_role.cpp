@@ -84,7 +84,7 @@ NodeStatus StrikerDecide::tick() {
     lastDeltaDir = deltaDir;
    
     // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화, 기본값보다는 크게 줘야함 -> 얼마나? (추가된 로직)
-    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.14 && fabs(headingError) < 0.14); 
+    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.10 && fabs(headingError) < 0.10); 
 
     string newDecision;
     auto color = 0xFFFFFFFF; 
