@@ -66,6 +66,7 @@ NodeStatus StrikerDecide::tick() {
     double errorDir = toPInPI(deltaDir + targetAngleOffset);
 
     auto now = brain->get_clock()->now();
+    auto dt = brain->msecsSince(timeLastTick);
     // 킥 정렬 조건 강화
     bool reachedKickDir = 
         fabs(errorDir) < 0.05 // 2.9도 이내 정밀 정렬
