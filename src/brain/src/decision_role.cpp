@@ -66,16 +66,18 @@ NodeStatus StrikerDecide::tick() {
     double errorDir = toPInPI(deltaDir + targetAngleOffset);
 
     auto now = brain->get_clock()->now();
-    auto dt = brain->msecsSince(timeLastTick);
+    // 킥 정렬 조건 강화
     bool reachedKickDir = 
-        errorDir * lastDeltaDir <= 0 
-        && fabs(errorDir) < 0.05 // 0.1 (5.7도) -> 0.05 (2.9도)로 강화
+        fabs(errorDir) < 0.05 // 2.9도 이내 정밀 정렬
         && dt < 100;
-    reachedKickDir = reachedKickDir || fabs(errorDir) < 0.02; // 0.05 (2.9도) -> 0.02 (1.1도)로 강화
+    
+    // reachedKickDir = reachedKickDir || fabs(errorDir) < 0.02; 
+
     timeLastTick = now;
     lastDeltaDir = deltaDir;
    
-    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.5); 
+    // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화
+    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.1); 
 
     string newDecision;
     auto color = 0xFFFFFFFF; 
