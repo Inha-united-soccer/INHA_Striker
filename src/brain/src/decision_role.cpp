@@ -131,49 +131,9 @@ NodeStatus StrikerDecide::tick() {
     else {
         // 골대 중앙과 로봇 사이 거리 계산
         double distToGoal = norm(brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length/2), brain->data->robotPoseToField.y);
-        // 골대를 향하는 직선거리에 장애물이 있나
-        bool isShotPathClear = false;
+        // 골대를 향하는 직선거리에 장애물이 있나 확인하는 로직 제거됨 (사용자 요청)
 
-        // 슛 경로 확인 (4m 이내일 때만 체크)
-        if (distToGoal < 4) {
-        isShotPathClear = true;
-        auto obstacles = brain->data->getObstacles();
-        Point goalPos = {-brain->config->fieldDimensions.length / 2.0, 0.0, 0.0}; // 골대 위치
-        Point myPos = {brain->data->robotPoseToField.x, brain->data->robotPoseToField.y, 0.0};
-        
-        double pathDx = goalPos.x - ball.posToField.x;
-        double pathDy = goalPos.y - ball.posToField.y;
-        double pathLen = hypot(pathDx, pathDy); // 공에서 골대까지 거리
-        
-        for(const auto& obs : obstacles) {
-             if (obs.posToField.x > ball.posToField.x) continue;
-             
-             // 공위치에서 각 obstacle까지 벡터
-             double obsDx = obs.posToField.x - ball.posToField.x;
-             double obsDy = obs.posToField.y - ball.posToField.y;
-             
-             // 투영비율 -> obstacle을 공과 골대 직선 위에 두고 그 위치가 선분 사이에 어디쯤인지 비율로 계산
-             // 0<t<1일 때 장애물이 공과 골대사이에 위치하므로 고려
-             double t = (obsDx * pathDx + obsDy * pathDy) / (pathLen * pathLen);
-             
-             if (t > 0.0 && t < 1.0) {
-                // 공 - 골대 직선 위에서 장애물이랑 가장 가까운 점 좌표 구하기
-                 double closestX = ball.posToField.x + t * pathDx;
-                 double closestY = ball.posToField.y + t * pathDy;
-
-                 // 실제 장애물 위치와 경로상 가까운 closest 사이 거리
-                 double dist = hypot(obs.posToField.x - closestX, obs.posToField.y - closestY);
-                 
-                 // 슛 경로가 막혔다고 판단하는 거리
-                 if (dist < 0.6) {
-                     isShotPathClear = false;
-                     break;
-                 }
-             }
-        }
-    }
-
-    // 1.8m 보다 멀거나 1.5m보다 멀면서 슛길이 막혀있으면 -> 드리블
+    // 2.0m 보다 멀거나 1.5m보다 멀면서 슛길이 막혀있으면 -> 드리블
     if (distToGoal > 2.0)// || (!isShotPathClear && distToGoal > 1.5))
     {
         newDecision = "dribble";
