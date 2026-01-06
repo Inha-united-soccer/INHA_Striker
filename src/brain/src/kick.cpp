@@ -108,26 +108,26 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
     // CalcKickDir과 동일한 로직으로 중앙을 default로
     double goalX = - (brain->config->fieldDimensions.length / 2); 
     
-    // 기본 킥 방향을 중앙이 아닌, 로봇(공)과 가까운 구석으로 설정
-    double targetGoalY = (bPos.y > 0) 
-        ? (fd.goalWidth / 2.0 - 0.2) 
-        : (-fd.goalWidth / 2.0 + 0.2);
+    // 중앙선 넘을 때 튀는 현상 제거 -> 무조건 중앙(0.0)을 기본 목표로
+    _targetGoalY = 0.0; 
 
-    brain->log->logToScreen("debug/KickCalc", 
-        format("GW: %.2f bY: %.2f tGY: %.2f", fd.goalWidth, bPos.y, targetGoalY), 0x00FFFFFF);
+    // 공이 골대 라인보다 뒤에 있는 경우(또는 매우 근접), atan2가 뒤집히지 않도록 X 차이를 최소값으로 고정
+    // goalX - bPos.x 가 양수(뒤쪽)가 되면 방향이 반대(우리 진영)로 튐. 이를 음수로 강제함
+    double dx = goalX - bPos.x;
+    if (dx > -0.5) dx = -0.5; // 최소 50cm 앞을 보는 각도로 고정
 
     double targetKickDir = atan2(
-        targetGoalY - bPos.y,
-        goalX - bPos.x 
+        _targetGoalY - bPos.y,
+        dx
     );
     
     // 기본적으로 중앙을 목표하지만(킥의 부정확함) 그 경로에 opponent가 있다면 회피 로직
     vector<GameObject> obstacles = brain->data->getObstacles();
     vector<GameObject> goalkeepers;
     
-    // 만약 장애물이 골영역에 있다면
+    // 만약 장애물이 골영역 근처에 있다면 (범위 약간 여유있게)
     for(const auto& obs : obstacles){
-        if(obs.posToField.x < goalX + fd.goalAreaLength + goalkeeperMargin){
+        if(obs.posToField.x < goalX + fd.goalAreaLength + goalkeeperMargin + 0.5){ // +0.5 여유
             goalkeepers.push_back(obs);
         }
     }
@@ -140,41 +140,63 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
         
         double diff = toPInPI(angleToGK - targetKickDir);
         
-        // 빈 공칸 탐지, 왼쪽과 오른쪽을 결정하는 기준은 더 넓은 공칸을 선택함
-        if(fabs(diff) < angularWidth){
-            double angleLeftPost = atan2(fd.goalWidth/2 - bPos.y, goalX - bPos.x);
-            double angleRightPost = atan2(-fd.goalWidth/2 - bPos.y, goalX - bPos.x);
+        // 이미 피하고 있는 방향이 있다면(_lastGapSide != 0), 그 방향을 유지하기 위한 조건을 완화해줌
+        double currentAngularWidth = angularWidth;
+        if (_lastGapSide != 0) currentAngularWidth *= 0.8; // 한 번 피하기 시작했으면 유지하려는 성질 (Threshold 낮춤)
+
+        // GK가 킥 경로를 막고 있다면
+        if(fabs(diff) < currentAngularWidth){
+            double angleLeftPost = atan2(fd.goalWidth/2 - bPos.y, dx);
+            double angleRightPost = atan2(-fd.goalWidth/2 - bPos.y, dx);
+            double angleToGoalCenter = atan2(0 - bPos.y, dx);
             
-            double angleToGoalCenter = atan2(0 - bPos.y, goalX - bPos.x);
-            
-            // 각도 정규화
+            // GK가 중앙보다 왼쪽에 있나 오른쪽에 있나?
             double gkDiff = angleToGK - angleToGoalCenter;
-            // while(gkDiff > M_PI) gkDiff -= 2*M_PI;
-            // while(gkDiff < -M_PI) gkDiff += 2*M_PI;
             gkDiff = atan2(sin(gkDiff), cos(gkDiff));
 
             string gapChoice = "Center";
             
-            if(gkDiff > 0) { 
-                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.4; 
+            // 기존 선택 유지 경향성 추가
+            bool aimLeft = (gkDiff > 0);
+
+            double distToLeftPost = fabs(toPInPI(angleToGK - angleLeftPost));
+            double distToRightPost = fabs(toPInPI(angleToGK - angleRightPost));
+            
+            
+            if (_lastGapSide == 1) distToLeftPost += 0.2; 
+            else if (_lastGapSide == -1) distToRightPost += 0.2;
+
+            if (distToLeftPost > distToRightPost) {
+                // 왼쪽 포스트가 GK로부터 더 멀다 -> 왼쪽 틈으로 슛
+                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.4;
                 gapChoice = "Left Gap";
-            } else { 
+                _lastGapSide = 1;
+            } else {
+                // 오른쪽 틈으로 슛
                 targetKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.4;
                 gapChoice = "Right Gap";
+                _lastGapSide = -1;
             }
             brain->log->logToScreen("debug/KickDir", format("GK Blocking! Aiming: %s", gapChoice.c_str()), 0xFF0000FF);
+        } else {
+            _lastGapSide = 0; // 안 막혀있으면 리셋
         }
+    } else {
+        _lastGapSide = 0;
     }
 
     brain->data->kickType = strategy;
     
-    // 추가로 부드러운 kickdir 움직임을 위해 필터 적용
+    // 필터 강도 조절 (0.5 -> 0.1) : 갑작스러운 튐 방지
+    // chase_threshold 밖에서는 필터링을 강하게, 안에서는 약하게? 
+    // 일단 전체적으로 부드럽게
     double prevKickDir = brain->data->kickDir; 
     
+    // 골키퍼가 움직이는 각도 어느정도 무시
     double diff = toPInPI(targetKickDir - prevKickDir);
+    if(fabs(diff) < 0.05) diff = 0.0; 
 
-    brain->data->kickDir = prevKickDir + diff * 0.5;
-    
+    brain->data->kickDir = prevKickDir + diff * 0.1;
     brain->data->kickDir = toPInPI(brain->data->kickDir);
     
     brain->log->setTimeNow();

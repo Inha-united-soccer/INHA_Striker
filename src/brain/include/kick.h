@@ -46,6 +46,8 @@ public:
 
 private:
     Brain *brain;
+    int _lastGapSide = 0; // 0: Center, 1: Left, -1: Right
+    double _targetGoalY = 0.0;
 };
 
 class CalcPassDir : public SyncActionNode {
