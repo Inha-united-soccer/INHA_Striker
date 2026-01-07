@@ -467,8 +467,8 @@ NodeStatus DribbleToGoal::onRunning() {
         
         // 정렬이 완벽하지 않으면 속도 감속
         if (alignmentError > deg2rad(10)) {
-            vx *= 0.7;
-            vy *= 0.7;
+            vx *= 0.5;
+            vy *= 0.5;
         }
     }
 

@@ -84,7 +84,7 @@ NodeStatus StrikerDecide::tick() {
     timeLastTick = now;
     lastDeltaDir = deltaDir;
    
-    // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화, 기본값보다는 크게 줘야함 -> 얼마나? (추가된 로직)
+    // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화, 기본값보다는 크게 줘야함 -> 얼마나? (추가된 로직) 1.5배에서 2배가 적당, 너무 작으면 슛을 못하고 버벅일 가능성 있음
     bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.10 && fabs(headingError) < 0.10); 
 
     string newDecision;
@@ -145,7 +145,7 @@ NodeStatus StrikerDecide::tick() {
 
         // 2.0m 보다 멀거나 1.5m보다 멀면서 슛길이 막혀있으면 -> 드리블
         bool shotPathBlocked = false; // 현재 경로 계산은 제거되었으므로 항상 false
-        if (distToGoal > 22.0)
+        if (distToGoal > 3.0)
         {
             newDecision = "dribble";
             color = 0x00FFFF00; 
