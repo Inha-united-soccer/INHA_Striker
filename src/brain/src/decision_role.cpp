@@ -132,8 +132,8 @@ NodeStatus StrikerDecide::tick() {
             && fabs(brain->data->ball.yawToRobot) < 0.8  // 약 45도로 완화 (0.7 -> 0.8)
             && norm(brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length/2), brain->data->robotPoseToField.y) < oneTouchGoalDist
             
-            // 골대 방향과 공 방향이 어느정도 일치해야 함 (엉뚱한 방향 슛 방지)
-            && fabs(toPInPI(brain->data->kickDir - brain->data->robotBallAngleToField)) < 0.8 // 정렬 조건 완화 (0.5 -> 0.8)
+            // 골대 방향과 공 방향이 어느정도 일치해야 함 (엉뚱한 방향 슛 방지) -> 정렬 조건 삭제 (킥이 안나가는 문제 해결 우선)
+            // && fabs(toPInPI(brain->data->kickDir - brain->data->robotBallAngleToField)) < 0.8
         )
     ) {
         newDecision = "one_touch";
