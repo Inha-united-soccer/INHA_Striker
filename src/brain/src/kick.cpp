@@ -99,6 +99,9 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
     double goalkeeperMargin;
     getInput("goalkeeper_margin", goalkeeperMargin);
 
+    double goalAreaBuffer = 0.5; // Default value
+    getInput("goal_area_buffer", goalAreaBuffer);
+
     auto bPos = brain->data->ball.posToField;
     auto fd = brain->config->fieldDimensions;
     
@@ -127,7 +130,7 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
     
     // 만약 장애물이 골영역 근처에 있다면 (범위 약간 여유있게)
     for(const auto& obs : obstacles){
-        if(obs.posToField.x < goalX + fd.goalAreaLength + goalkeeperMargin + 0.5){ // +0.5 여유
+        if(obs.posToField.x < goalX + fd.goalAreaLength + goalkeeperMargin + goalAreaBuffer){ 
             goalkeepers.push_back(obs);
         }
     }
@@ -168,12 +171,12 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
 
             if (distToLeftPost > distToRightPost) {
                 // 왼쪽 포스트가 GK로부터 더 멀다 -> 왼쪽 틈으로 슛
-                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.4;
+                targetKickDir = angleLeftPost + (angleToGoalCenter - angleLeftPost) * 0.4; //1.0이 중앙, 0.0이 기둥
                 gapChoice = "Left Gap";
                 _lastGapSide = 1;
             } else {
                 // 오른쪽 틈으로 슛
-                targetKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.4;
+                targetKickDir = angleRightPost + (angleToGoalCenter - angleRightPost) * 0.4; //1.0이 중앙, 0.0이 기둥
                 gapChoice = "Right Gap";
                 _lastGapSide = -1;
             }
@@ -196,7 +199,7 @@ NodeStatus CalcKickDirWithGoalkeeper::tick(){
     double diff = toPInPI(targetKickDir - prevKickDir);
     if(fabs(diff) < 0.05) diff = 0.0; 
 
-    brain->data->kickDir = prevKickDir + diff * 0.1;
+    brain->data->kickDir = prevKickDir + diff * 0.3; // 회피 반응속도 0.1은 거의 변화가 없어버림
     brain->data->kickDir = toPInPI(brain->data->kickDir);
     
     brain->log->setTimeNow();
