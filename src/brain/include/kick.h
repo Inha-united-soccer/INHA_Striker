@@ -38,7 +38,8 @@ public:
     static PortsList providedPorts(){
         return {
             InputPort<double>("cross_threshold", 0.5, "득점 가능한 각도 범위가 이 값보다 작으면 크로스(패스)로 전환"),
-            InputPort<double>("goalkeeper_margin", 0.2, "골키퍼 회피 마진 (m)")
+            InputPort<double>("goalkeeper_margin", 0.2, "골키퍼 회피 마진 (m)"),
+            InputPort<double>("goal_area_buffer", 0.5, "골키퍼 전진 감지 버퍼 (m)")
         };
     }
 
