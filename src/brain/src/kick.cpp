@@ -451,8 +451,8 @@ NodeStatus Kick::onRunning(){
          double kickYOffset;
          getInput("kick_y_offset", kickYOffset);
          double targetAngleOffset = atan2(kickYOffset, brain->data->ball.range); // Kick::_calcSpeed의 targetYaw와 유사
-         double headingBias = -targetAngleOffset * 0.3; 
-         double desiredHeading = brain->data->kickDir + headingBias;
+         double headingBias = -targetAngleOffset * 0.3; // 0.3은 공기준 -> 공을 차기 위한 각도와 현재 로봇 각도 차이를 얼마나 보정할지 : 골대와 볼 기준 점 정하기
+         double desiredHeading = brain->data->kickDir + headingBias; // 몸통이 바라볼 최종 각도
          
          double headingError = toPInPI(desiredHeading - brain->data->robotPoseToField.theta);
          double vtheta = headingError * 1.5; // P-gain 1.5
