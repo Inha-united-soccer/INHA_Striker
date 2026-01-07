@@ -113,8 +113,8 @@ NodeStatus StrikerDecide::tick() {
                 )
             )
             && brain->data->ballDetected
-            && ball.range < 0.5 
-            && fabs(brain->data->ball.yawToRobot) < 0.3 
+            && ball.range < 0.6 
+            && fabs(brain->data->ball.yawToRobot) < 1.5  // 약 85도까지 허용 (옆에서 오는 패스도 반응) 
         )
         || // 일반 경기 + 골대 근처
         (

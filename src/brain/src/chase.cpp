@@ -647,8 +647,8 @@ NodeStatus OfftheballPosition::onRunning()
         vY_field *= scale;
     }
     
-    // 위치 Deadzone (10cm 이내면 정지)
-    if (dist < 0.1) {
+    // 위치 Deadzone (20cm 이내면 정지) - 기존 10cm에서 완화하여 불필요한 움직임 감소
+    if (dist < 0.20) {
         vX_field = 0.0;
         vY_field = 0.0;
     }
@@ -666,7 +666,7 @@ NodeStatus OfftheballPosition::onRunning()
         targetTheta = atan2(errY, errX);
         headingMode = "FaceTarget";
     } 
-    // 가까우면 골대를 보고 슛 바로 할 수 있도록
+    // 가까우면 골대를 보고 슛 바로 할 수 있도록 (One-touch 준비)
     else {
         double angleToGoal = atan2(0.0 - robotY, goalX - robotX);
         targetTheta = angleToGoal;
@@ -675,10 +675,18 @@ NodeStatus OfftheballPosition::onRunning()
 
     double angleDiff = toPInPI(targetTheta - robotTheta);
     double vtheta = angleDiff * 1.0; 
-
-    // 방향 Deadzone (약 5도 이내 정지)
-    if (fabs(angleDiff) < 0.1) {
+    
+    // 방향 Deadzone (약 5도 -> 3도 정도로 완화하되, 위치가 잡혔으면 더 관대하게)
+    if (fabs(angleDiff) < 0.05) { 
         vtheta = 0.0;
+    }
+    
+    // 위치도 잡히고 각도도 잡혔으면 정지
+    if (dist < 0.20 && fabs(angleDiff) < 0.1) {
+        vx_robot = 0.0;
+        vy_robot = 0.0;
+        vtheta = 0.0;
+        brain->client->setVelocity(0, 0, 0); // 강제 정지
     }
     
     // 각도가 45도 이상 틀어져 있으면 멈추고 제자리 회전
