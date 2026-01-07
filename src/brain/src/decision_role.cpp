@@ -127,7 +127,6 @@ NodeStatus StrikerDecide::tick() {
         (
             brain->data->ballDetected
             && (brain->data->tmImLead || ball.range < 0.5) //리더이거나, 혹은 공이 발앞(0.5m)까지 왔으면 리더 여부 상관없이 슛
-            && ball.range < 1.0 
             && fabs(brain->data->ball.yawToRobot) < 0.8  // 약 45도로 완화 (0.7 -> 0.8)
             && norm(brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length/2), brain->data->robotPoseToField.y) < oneTouchGoalDist
             
