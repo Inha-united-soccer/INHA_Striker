@@ -585,8 +585,13 @@ NodeStatus OfftheballPosition::onRunning()
     // LOGGING LOOP DONE
     brain->log->logToScreen("debug/Offtheball", "Loop Done", 0xFFFFFFFF);
 
-    // 스무딩, 목표 위치가 튀지 않도록 필터 적용
-    lastBestY = lastBestY * 0.9 + bestY * 0.1;
+    // 목표 위치가 0.5m 이상 차이나면 업데이트
+    if (fabs(bestY - lastBestY) > 1.0) {
+        lastBestY = bestY;
+        brain->log->logToScreen("debug/Offtheball", "Target Updated (Significant Change)", 0x00FF00FF);
+    } else {
+        // lastBestY 유지
+    }
     
     double targetX = baseX;
     double targetY = lastBestY;
