@@ -158,7 +158,6 @@ NodeStatus StrikerDecide::tick() {
 
         brain->log->logToScreen("debug/DistCheck", format("DistToGoal: %.2f (Vis: %.2f)", distToGoal, visibleMinDist), 0x00FFFF00);
 
-        bool shotPathBlocked = false;
         if (distToGoal > 3.0) // 실제 경기 드리블에도 정렬이 필요할까? dribbleadjust를 만든다
         {
             newDecision = "dribble";
