@@ -57,7 +57,7 @@
                      <OfftheballPosition _while="decision == 'offtheball'" dist_from_goal="1.5" />
 
                      <!-- Chase -->
-                     <Chase _while="decision == 'chase'" vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.6" safe_dist="1.0" />
+                     <Chase _while="decision == 'chase'" vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.4" safe_dist="1.0" />
 
                      <!-- Adjust -->
                      <Adjust _while="decision == 'adjust'" no_turn_threshold="0.01" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.02" near_threshold="0.3" kick_y_offset="-0.077" />

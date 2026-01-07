@@ -145,7 +145,7 @@ NodeStatus StrikerDecide::tick() {
 
         // 2.0m 보다 멀거나 1.5m보다 멀면서 슛길이 막혀있으면 -> 드리블
         bool shotPathBlocked = false; // 현재 경로 계산은 제거되었으므로 항상 false
-        if (distToGoal > 3.3) // 실제 경기 드리블에도 정렬이 필요할까? dribbleadjust를 만든다
+        if (distToGoal > 3.1) // 실제 경기 드리블에도 정렬이 필요할까? dribbleadjust를 만든다
         {
             newDecision = "dribble";
             color = 0x00FFFF00; 
