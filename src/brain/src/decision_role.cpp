@@ -122,11 +122,11 @@ NodeStatus StrikerDecide::tick() {
             brain->data->ballDetected
             && (brain->data->tmImLead || ball.range < 0.5) //리더이거나, 혹은 공이 발앞(0.5m)까지 왔으면 리더 여부 상관없이 슛
             && ball.range < 1.0 
-            && fabs(brain->data->ball.yawToRobot) < 0.7  // 약 40도로 제한 (너무 옆에 있으면 Adjust로 회전 유도)
+            && fabs(brain->data->ball.yawToRobot) < 0.8  // 약 45도로 완화 (0.7 -> 0.8)
             && norm(brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length/2), brain->data->robotPoseToField.y) < oneTouchGoalDist
             
             // 골대 방향과 공 방향이 어느정도 일치해야 함 (엉뚱한 방향 슛 방지)
-            && fabs(toPInPI(brain->data->kickDir - brain->data->robotBallAngleToField)) < 0.5
+            && fabs(toPInPI(brain->data->kickDir - brain->data->robotBallAngleToField)) < 0.8 // 정렬 조건 완화 (0.5 -> 0.8)
         )
     ) {
         newDecision = "one_touch";

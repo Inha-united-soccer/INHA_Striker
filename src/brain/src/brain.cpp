@@ -1709,7 +1709,7 @@ void Brain::updateCostToKick() {
     double cost = 0.;
 
 
-    // if (!data->ballDetected) cost += 2.0;
+    if (!data->ballDetected) cost += 5.0; // 공 안보이면 리더 권한 강하게 놓기 (2.0 -> 5.0)
     // double secsSinceBallDet = msecsSince(data->ball.timePoint) / 1000;
     // cost += secsSinceBallDet;
     // log_(format("ball not dectect cost: %.1f", secsSinceBallDet));
