@@ -97,6 +97,13 @@ NodeStatus StrikerDecide::tick() {
         color = 0xFFFFFFFF;
     } 
     //세트피스 상황이거나, 일반 경기에서도 골대랑 가까우면 one_touch
+    ); // logging end
+
+    // [Hysteresis] 한 번 one_touch가 시작되면, 공이 사라지거나 너무 멀어지지 않는 한 계속 유지 (Kick 완료 보장)
+    if (lastDecision == "one_touch" && brain->data->ballDetected && ball.range < 1.2) {
+        newDecision = "one_touch";
+        color = 0xFF0000FF;
+    }
     else if (
         (
             (
