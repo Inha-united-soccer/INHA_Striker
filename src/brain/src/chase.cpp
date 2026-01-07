@@ -571,8 +571,8 @@ NodeStatus OfftheballPosition::onRunning()
              if (d < posClearance) posClearance = d;
         }
         
-        double score = (laneClearance * 2.0) // 패스길 확보 -> 가중치 높게
-                     + (posClearance * 1.0) // 위치 안전성
+        double score = 0.0 // (laneClearance * 2.0) // 패스길 확보 -> 가중치 높게
+                     // + (posClearance * 1.0) // 위치 안전성 -> 장애물 없음 가정으로 삭제
                      - (fabs(y) * 0.3) // 중앙 선호 -> 실험적으로 패스 받기 좋은 위치가 중앙이라 우선 중앙 선호 추가
                      - (fabs(y - lastBestY) * 2.0); // 안정성 -> 현재 목표 위치 유지하려는 관성 크게 (0.5 -> 2.0)
                      
