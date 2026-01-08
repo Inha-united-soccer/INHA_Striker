@@ -18,10 +18,10 @@ void RegisterDecisionRoleNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
 }
 
 NodeStatus StrikerDecide::tick() {
-    // auto log = [=](string msg) {
-    //     brain->log->setTimeNow();
-    //     brain->log->log("debug/striker_decide", rerun::TextLog(msg));
-    // };
+    auto log = [=](string msg) {
+        brain->log->setTimeNow();
+        brain->log->log("debug/striker_decide", rerun::TextLog(msg));
+    };
 
     double chaseRangeThreshold;
     getInput("chase_threshold", chaseRangeThreshold);
@@ -109,22 +109,24 @@ NodeStatus StrikerDecide::tick() {
         // [Kick Conditions] 거리(SetPiece)에 따라 허용 오차 다르게 적용
         // "공이 발 옆에 있나"를 각도(Yaw)가 아니라 실제 거리(Lateral Error)로 판단 -> 더 정확함
         double kickTolerance = 0.05; // 기본: 3도 (정렬 오차)
-        double latTolerance = 0.15;  // 15cm (발 중심에서의 좌우 오차 허용 범위)
+        double latTolerance = 0.04;  // 4cm (매우 엄격: 발 중심에서 4cm 이내여야 슛)
         
         if (distToGoal < setPieceGoalDist) {
             kickTolerance = 0.15; // 가까우면 8도까지 허용
-            latTolerance = 0.25;  // 가까우면 25cm까지 허용 (좀 더 관대하게)
+            latTolerance = 0.08;  // 가까우면 8cm까지 허용 (절대 10cm를 넘지 않게)
         }
 
         auto now = brain->get_clock()->now();
         auto dt = brain->msecsSince(timeLastTick);
-        bool reachedKickDir = fabs(errorDir) < kickTolerance && fabs(headingError) < kickTolerance && dt < 100; // 정렬 완료 상태 bool 값
+        bool reachedKickDir = fabs(errorDir) < kickTolerance && fabs(headingError) < kickTolerance && dt < 100;
         bool maintainKick = (lastDecision == "kick" || lastDecision == "kick_quick") && fabs(errorDir) < 0.10 && fabs(headingError) < 0.10;
 
         timeLastTick = now;
         lastDeltaDir = deltaDir;
         
         double latError = ball.range * sin(ballYaw - targetAngleOffset);
+
+        log(format("LatCheck: Err=%.3f Tol=%.3f Range=%.2f", latError, latTolerance, ball.range));
 
         /* ----------------- 6. Kick 정렬 완료 & 장애물 없음 & 공 가까움 ----------------- */
         if (
