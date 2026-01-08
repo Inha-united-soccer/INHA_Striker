@@ -36,7 +36,7 @@ NodeStatus StrikerDecide::tick() {
     double ballYaw = ball.yawToRobot;
     double ballX = ball.posToRobot.x;
     double ballY = ball.posToRobot.y;
-    double distToGoal = 0.0; // Initialize for logging logging scope
+    double distToGoal = 0.0;
     
     const double goalpostMargin = 0.3; 
     bool angleGoodForKick = brain->isAngleGood(goalpostMargin, "kick");
@@ -73,9 +73,8 @@ NodeStatus StrikerDecide::tick() {
     double headingError = toPInPI(desiredHeading - brain->data->robotPoseToField.theta);
 
 
-    // [수정] 거리 상관없이 항상 정밀하게(0.05rad 약 3도) 정렬 확인 후 킥
+    // 거리 상관없이 항상 정밀하게(0.05rad 약 3도) 정렬 확인 후 킥
     double kickTolerance = 0.05;
-    // if (distToGoal < oneTouchGoalDist) kickTolerance = 0.15; // Quick Adjust 폐기로 삭제
 
     // 킥으로 넘어가는(정렬 종료) 조건
     bool reachedKickDir = 
@@ -99,10 +98,10 @@ NodeStatus StrikerDecide::tick() {
     {
         newDecision = "find";
         color = 0xFFFFFFFF;
-    } 
+    }
     //세트피스 상황이거나, 일반 경기에서도 골대랑 가까우면 one_touch
 
-    // [Hysteresis] 한 번 one_touch가 시작되면, 공이 사라지거나 너무 멀어지지 않는 한 계속 유지 (Kick 완료 보장)
+    // 한 번 one_touch가 시작되면, 공이 사라지거나 너무 멀어지지 않는 한 계속 유지 (Kick 완료 보장)
     /*
     if (lastDecision == "one_touch" && brain->data->ballDetected && ball.range < 1.2) {
         newDecision = "one_touch";
@@ -146,7 +145,8 @@ NodeStatus StrikerDecide::tick() {
     if (!brain->data->tmImLead) {
         newDecision = "offtheball";
         color = 0x00FFFFFF;
-    } else if (ballRange > chaseRangeThreshold * (lastDecision == "chase" ? 0.9 : 1.0))
+    } 
+    else if (ballRange > chaseRangeThreshold * (lastDecision == "chase" ? 0.9 : 1.0))
     {
         newDecision = "chase";
         color = 0x0000FFFF;
@@ -193,8 +193,8 @@ NodeStatus StrikerDecide::tick() {
     }
     else
     {
-        // 골대와 가까우면(2.5m) 정밀 조준보다는 빠른 슈팅을 위한 Quick Adjust 사용 -> 원터치 포기, 정렬 사용
         /*
+        
         if (distToGoal < oneTouchGoalDist) {
             newDecision = "adjust_quick";
             color = 0xFFFF00FF;
