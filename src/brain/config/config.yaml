@@ -84,7 +84,7 @@ brain_node:
       enable_tcp: false # 리런에 연결 할 지
 
       server_ip: "192.168.50.67:9876" 
-      enable_file: true  # 리런 로그 파일을 만들지
+      enable_file: false  # 리런 로그 파일을 만들지
       log_dir: "/home/booster/Workspace/rrlog" # 리런 로그 파일 저장 경로
       max_log_file_mins: 5.0 # 리런 로그 파일 최대 길이 (분)
       img_interval: 1 # 리런 로그 파일 이미지 저장 간격
