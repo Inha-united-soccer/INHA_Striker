@@ -51,7 +51,8 @@
                      <!-- <Assist _while="decision == 'assist'" vx_limit="0.2" vy_limit="0.2" /> -->
 
                      <!-- Dribble To Goal -->
-                     <DribbleToGoal _while="decision == 'dribble'" vx_limit="1.0" vy_limit="0.5" vtheta_limit="1.0" dist_to_goal="3.0" min_speed="0.2" max_speed="0.8" slow_dist_far="0.4" circle_back_dist="0.7" />
+                     <!-- <DribbleToGoal _while="decision == 'dribble'" vx_limit="1.0" vy_limit="0.5" vtheta_limit="1.0" dist_to_goal="3.0" min_speed="0.2" max_speed="0.8" slow_dist_far="0.4" circle_back_dist="0.7" /> -->
+                     <DribbleToGoal _while="decision == 'dribble'" vx_limit="1.3" vy_limit="0.5" vtheta_limit="1.0" dist_to_goal="3.0" min_speed="1.0" max_speed="0.8" slow_dist_far="0.4" circle_back_dist="0.7" />
                      
                      <!-- Off the ball -->
                      <OfftheballPosition _while="decision == 'offtheball'" dist_from_goal="2.0" />
