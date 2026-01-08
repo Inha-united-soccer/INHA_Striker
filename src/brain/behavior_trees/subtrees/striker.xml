@@ -40,7 +40,7 @@
                   <ReactiveSequence>
                      
                      <ReactiveSequence>
-                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.80" kick_y_offset="-0.077" set_piece_goal_dist="1.0" />
+                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.80" kick_y_offset="-0.077" set_piece_goal_dist="2.0" />
                         
                         <!-- 공 찾기 -->
                         <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
@@ -64,8 +64,7 @@
                      <Adjust _while="decision == 'adjust'" no_turn_threshold="0.05" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.02" near_threshold="0.3" kick_y_offset="-0.077" />
                      
                      <!-- Adjust: adjust_quick -->
-                     <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.1" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="1.0" vy_limit="0.3" vtheta_limit="1.0" vtheta_factor="2.0" tangential_speed_far="0.5" tangential_speed_near="0.2" near_threshold="0.4" kick_y_offset="-0.077" />
-                     
+                     <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.5" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="1.0" vy_limit="0.6" vtheta_limit="1.0" vtheta_factor="2.0" tangential_speed_far="0.7" tangential_speed_near="0.2" near_threshold="0.4" kick_y_offset="-0.077" />
                      <!--
                      no_turn_threshold     : 0.1     각도 오차가 이 값보다 작으면 회전을 수행하지 않는다
                      turn_threshold        : 3.25    공의 각도가 이 값보다 크면 먼저 회전하여 공을 정면으로 바라보고 이동은 중단한다 -> 사용중 x
