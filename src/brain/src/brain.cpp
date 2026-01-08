@@ -1603,7 +1603,7 @@ void Brain::handleCooperation() {
     double BALL_CONTROL_COST_THRESHOLD = 3.0;
     get_parameter("strategy.cooperation.ball_control_cost_threshold", BALL_CONTROL_COST_THRESHOLD);
 
-    if (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost) {
+    if (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost && data->ball.range > 1.0) {
     // [TEST] 강제로 리더가 아님(False)으로 고정하여 Offtheball 테스트
     //if (true || (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost)) {
 
@@ -1723,8 +1723,8 @@ void Brain::updateCostToKick() {
 
     cost += data->ball.range;
     
-    // [Possession Bonus] 공을 소유하고 있으면(0.5m 이내) 코스트를 대폭 낮춤 -> Striker 유지
-    if (data->ball.range < 0.5) {
+    // [Possession Bonus] 공을 소유하고 있으면(1.0m 이내) 코스트를 대폭 낮춤 -> Striker 유지 (OffTheBall 0.9m보다 크게 잡음)
+    if (data->ball.range < 1.0) {
         cost -= 10.0;
     }
 

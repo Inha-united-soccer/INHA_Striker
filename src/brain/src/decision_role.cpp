@@ -91,7 +91,8 @@ NodeStatus StrikerDecide::tick() {
     }
     
     /* ----------------- 2. OffTheBall ----------------- */
-    else if (!brain->data->tmImLead && ballRange > 0.9) {
+    // [Explicit Prevention] 리더이거나 공을 소유중(1.0m 이내)이면 절대로 OffTheBall 하지 않음
+    else if (!brain->data->tmImLead && ballRange > 0.9 && ballRange >= 1.0) {
         newDecision = "offtheball";
         color = 0x00FFFFFF;
     } 
@@ -110,8 +111,7 @@ NodeStatus StrikerDecide::tick() {
 
     /* ----------------- 5. 공 슛/정렬 ----------------- */
     else {
-        // [Kick Conditions] 거리(SetPiece)에 따라 허용 오차 다르게 적용
-        // 가까우면(SetPiece) 좀 더 관대하게(빨리 차게), 멀면 정밀하게
+        // 거리(SetPiece)에 따라 허용 오차 다르게 적용 - 가까우면(SetPiece) 좀 더 관대하게(빨리 차게), 멀면 정밀하게
         double kickTolerance = 0.05; // 기본: 3도
         double yawTolerance = 0.35;  // 기본: 20도
         
@@ -168,8 +168,8 @@ NodeStatus StrikerDecide::tick() {
     brain->log->logToScreen(
         "tree/Decide",
         format(
-            "Decision: %s dist: %.2f errPos: %.2f errHead: %.2f kicking: %d", 
-            newDecision.c_str(), distToGoal, errorDir, headingError, (lastDecision.find("kick") != string::npos)
+            "Decision: %s dist: %.2f errPos: %.2f errHead: %.2f kicking: %d lead: %d", 
+            newDecision.c_str(), distToGoal, errorDir, headingError, (lastDecision.find("kick") != string::npos), brain->data->tmImLead
         ),
         color
     );
