@@ -62,6 +62,12 @@ NodeStatus StrikerDecide::tick() {
     double setPieceGoalDist = 2.0;
     getInput("set_piece_goal_dist", setPieceGoalDist);
 
+    // 절대값으로 양발
+    if (kickYOffset > 0) {
+        if (brain->data->ball.posToRobot.y > 0) kickYOffset = fabs(kickYOffset);
+        else kickYOffset = -fabs(kickYOffset);
+    }
+
     // [Quick Kick Mode] 골대 근처에서는 OffTheBall(0.9m) 이후 바로 Adjust로 넘어가기 위해 Chase 임계값을 높임
     if (distToGoal < setPieceGoalDist + 0.5) {
         if (chaseRangeThreshold < 1.0) chaseRangeThreshold = 1.0;
@@ -111,11 +117,11 @@ NodeStatus StrikerDecide::tick() {
     /* ----------------- 5. 공 슛/정렬 ----------------- */
     else {
         // 거리(SetPiece)에 따라 허용 오차 다르게 적용 - 가까우면(SetPiece) 좀 더 관대하게(빨리 차게), 멀면 정밀하게
-        double kickTolerance = 0.5;
+        double kickTolerance = 0.3;
         double yawTolerance = 0.5;  
         
         if (distToGoal < setPieceGoalDist + 1.0) {
-            kickTolerance = 0.3; 
+            kickTolerance = 0.2; 
             yawTolerance = 0.3;
         }
 

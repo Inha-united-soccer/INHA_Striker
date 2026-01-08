@@ -42,6 +42,11 @@ NodeStatus Adjust::tick(){
     double kickYOffset;
     if(!getInput("kick_y_offset", kickYOffset)) kickYOffset = -0.077;
 
+    if (kickYOffset > 0) {
+        if (brain->data->ball.posToRobot.y > 0) kickYOffset = fabs(kickYOffset);
+        else kickYOffset = -fabs(kickYOffset);
+    }
+
     log(format("ballX: %.1f ballY: %.1f ballYaw: %.1f", brain->data->ball.posToRobot.x, brain->data->ball.posToRobot.y, brain->data->ball.yawToRobot));
     double NO_TURN_THRESHOLD, TURN_FIRST_THRESHOLD;
     getInput("no_turn_threshold", NO_TURN_THRESHOLD);

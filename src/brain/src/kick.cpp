@@ -288,6 +288,10 @@ tuple<double, double, double> Kick::_calcSpeed() {
 
     double kickYOffset;
     getInput("kick_y_offset", kickYOffset);
+    if (kickYOffset > 0) {
+        if (brain->data->ball.posToRobot.y > 0) kickYOffset = fabs(kickYOffset);
+        else kickYOffset = -fabs(kickYOffset);
+    }
 
     double targetYaw = atan2(kickYOffset, brain->data->ball.range);
     double errorYaw = brain->data->ball.yawToRobot - targetYaw;
@@ -466,6 +470,10 @@ NodeStatus Kick::onRunning(){
          // 공을 보지 말고, 골대(KickDir)를 봐야 함 -> Bias 적용 (Adjust와 동일)
          double kickYOffset;
          getInput("kick_y_offset", kickYOffset);
+         if (kickYOffset > 0) {
+            if (brain->data->ball.posToRobot.y > 0) kickYOffset = fabs(kickYOffset);
+            else kickYOffset = -fabs(kickYOffset);
+         }
          double targetAngleOffset = atan2(kickYOffset, brain->data->ball.range); // Kick::_calcSpeed의 targetYaw와 유사
          double headingBias = -targetAngleOffset * 0.3; // 0.3은 공기준 -> 공을 차기 위한 각도와 현재 로봇 각도 차이를 얼마나 보정할지 : 골대와 볼 기준 점 정하기
          double desiredHeading = brain->data->kickDir + headingBias; // 몸통이 바라볼 최종 각도
