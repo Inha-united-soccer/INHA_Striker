@@ -92,7 +92,7 @@ NodeStatus StrikerDecide::tick() {
     
     /* ----------------- 2. OffTheBall ----------------- */
     // [Explicit Prevention] 리더이거나 공을 소유중(1.0m 이내)이면 절대로 OffTheBall 하지 않음
-    else if (!brain->data->tmImLead && ballRange > 0.9 && ballRange >= 1.0) {
+    else if (!brain->data->tmImLead && ballRange >= 1.0) {
         newDecision = "offtheball";
         color = 0x00FFFFFF;
     } 
