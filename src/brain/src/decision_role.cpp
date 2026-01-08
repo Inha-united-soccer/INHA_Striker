@@ -38,9 +38,18 @@ NodeStatus StrikerDecide::tick() {
     double ballY = ball.posToRobot.y;
     double distToGoal = 0.0;
     
-    const double goalpostMargin = 0.3; 
-    bool angleGoodForKick = brain->isAngleGood(goalpostMargin, "kick");
+    // 거리 계산 (Localization vs Vision)
+    distToGoal = norm(ball.posToField.x - (-brain->config->fieldDimensions.length/2), ball.posToField.y);
+    auto gps = brain->data->getGoalposts();
+    double visibleMinDist = 999.0;
+    for(const auto& gp : gps){
+        if (gp.posToRobot.x > 0 && gp.range < visibleMinDist) visibleMinDist = gp.range;
+    }
+    if(visibleMinDist < 10.0 && visibleMinDist < distToGoal) distToGoal = visibleMinDist;
+    brain->log->logToScreen("debug/DistCheck", format("DistToGoal: %.2f (Vis: %.2f)", distToGoal, visibleMinDist), 0x00FFFF00);
 
+
+    // 장애물 회피 로직
     bool avoidPushing;
     double kickAoSafeDist;
     brain->get_parameter("obstacle_avoidance.avoid_during_kick", avoidPushing);
@@ -49,172 +58,94 @@ NodeStatus StrikerDecide::tick() {
         && brain->data->robotPoseToField.x < brain->config->fieldDimensions.length / 2 - brain->config->fieldDimensions.goalAreaLength
         && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
 
-    log(format("ballRange: %.2f, ballYaw: %.2f, ballX:%.2f, ballY: %.2f kickDir: %.2f, dir_rb_f: %.2f, angleGoodForKick: %d",
-        ballRange, ballYaw, ballX, ballY, kickDir, dir_rb_f, angleGoodForKick));
 
-    
-    double deltaDir = toPInPI(kickDir - dir_rb_f);
-    
-    // 정렬 기준은 deltaDir가 0이 아니라 offset 각도와 일치하는 것
+    // 변수 로드
     double kickYOffset = -0.077; 
     getInput("kick_y_offset", kickYOffset);
-
     double setPieceGoalDist = 2.0;
     getInput("set_piece_goal_dist", setPieceGoalDist);
     
+    // 정렬 오차 계산
+    double deltaDir = toPInPI(kickDir - dir_rb_f);
     double targetAngleOffset = atan2(kickYOffset, ballRange);
     double errorDir = toPInPI(deltaDir + targetAngleOffset);
-
-    auto now = brain->get_clock()->now();
-    auto dt = brain->msecsSince(timeLastTick);
-    
-    double headingBias = -targetAngleOffset * 0.3; // Adjust와 동일하게 30% 보정
+    double headingBias = -targetAngleOffset * 0.3; 
     double desiredHeading = kickDir + headingBias;
     double headingError = toPInPI(desiredHeading - brain->data->robotPoseToField.theta);
 
 
-    // 거리 상관없이 항상 정밀하게(0.05rad 약 3도) 정렬 확인 후 킥
-    double kickTolerance = 0.05;
-
-    // 킥으로 넘어가는(정렬 종료) 조건
-    bool reachedKickDir = 
-        fabs(errorDir) < kickTolerance
-        && fabs(headingError) < kickTolerance
-        && dt < 100;
-    
-    // reachedKickDir = reachedKickDir || fabs(errorDir) < 0.02; 
-
-    timeLastTick = now;
-    lastDeltaDir = deltaDir;
-   
-    // 킥 동작 중이라도 틀어지면 멈추고 다시 정렬하도록 강화, 기본값보다는 크게 줘야함 -> 얼마나? (추가된 로직) 1.5배에서 2배가 적당, 너무 작으면 슛을 못하고 버벅일 가능성 있음
-    bool maintainKick = (lastDecision == "kick" && fabs(errorDir) < 0.10 && fabs(headingError) < 0.10); 
-
-    string newDecision;
-    auto color = 0xFFFFFFFF; 
     bool iKnowBallPos = brain->tree->getEntry<bool>("ball_location_known");
     bool tmBallPosReliable = brain->tree->getEntry<bool>("tm_ball_pos_reliable");
-    if (!(iKnowBallPos || tmBallPosReliable))
-    {
+    string newDecision;
+    auto color = 0xFFFFFFFF; 
+
+
+    /* ----------------- 1. 공 찾기 ----------------- */ 
+    if (!(iKnowBallPos || tmBallPosReliable)) {
         newDecision = "find";
         color = 0xFFFFFFFF;
     }
-    //세트피스 상황이거나, 일반 경기에서도 골대랑 가까우면 one_touch
-
-    // 한 번 one_touch가 시작되면, 공이 사라지거나 너무 멀어지지 않는 한 계속 유지 (Kick 완료 보장)
-    /*
-    if (lastDecision == "one_touch" && brain->data->ballDetected && ball.range < 1.2) {
-        newDecision = "one_touch";
-        color = 0xFF0000FF;
-    }
-    else if (
-        (
-            (
-                (
-                    (brain->tree->getEntry<string>("gc_game_sub_state_type") == "CORNER_KICK"
-                    || brain->tree->getEntry<string>("gc_game_sub_state_type") == "GOAL_KICK"
-                    || brain->tree->getEntry<string>("gc_game_sub_state_type") == "DIRECT_FREE_KICK"
-                    || brain->tree->getEntry<string>("gc_game_sub_state_type") == "THROW_IN")
-                    && brain->tree->getEntry<bool>("gc_is_sub_state_kickoff_side")
-                )
-                || (
-                    angleGoodForKick          
-                    && !avoidKick             
-                )
-            )
-            && brain->data->tmImLead
-            && brain->data->ballDetected
-            && ball.range < 0.6 
-            && fabs(brain->data->ball.yawToRobot) < 1.5  // 약 85도까지 허용 (옆에서 오는 패스도 반응) 
-        )
-        || // 일반 경기 + 골대 근처
-        (
-            brain->data->ballDetected
-            && (brain->data->tmImLead || ball.range < 0.9) 
-            && fabs(brain->data->ball.yawToRobot) < 0.35 // 0.7 -> 0.35 (약 20도) 정밀화: 공이 정면에 있어야 함
-            && norm(brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length/2), brain->data->robotPoseToField.y) < setPieceGoalDist
-            
-            // 골대 방향과 공 방향이 어느정도 일치해야 함 (엉뚱한 방향 슛 방지) -> 정렬 조건 부활 (adjust_quick이 있으므로)
-            && fabs(toPInPI(brain->data->kickDir - brain->data->robotBallAngleToField)) < 0.6 // 0.6 (약 35도) 이내일 때만 바로 슛
-        )
-    ) {
-        newDecision = "one_touch";
-        color = 0xFF0000FF; // Red color
-    } 
-    else */ 
-    // 내가 리드가 아니면 무조건 오프더볼 vs 내가 리드가 아니고 거리도 멀어야 오프더볼 and라 거리 조건 안맞으면 바로 풀릴 수 있게되나
-    if (!brain->data->tmImLead && ballRange > 0.9) {
+    
+    /* ----------------- 2. OffTheBall ----------------- */
+    else if (!brain->data->tmImLead && ballRange > 0.9) {
         newDecision = "offtheball";
         color = 0x00FFFFFF;
     } 
-    else if (ballRange > chaseRangeThreshold * (lastDecision == "chase" ? 0.9 : 1.0))
-    {
+
+    /* ----------------- 3. 공 chase ----------------- */
+    else if (ballRange > chaseRangeThreshold * (lastDecision == "chase" ? 0.9 : 1.0)) {
         newDecision = "chase";
         color = 0x0000FFFF;
     } 
-    // 공 소유하고 있고 골대와 멀면 드리블 : 골대와 거리가 멀어도 슈팅 각이 있으면 드리블 대신 슛(Adjust -> Kick) 시도
-    // 반대로 이미 세트피스 범위라면 adjust 생략 가능
-    
+
+    /* ----------------- 4. 공 드리블 ----------------- */
+    else if (distToGoal > 3.0) {
+        newDecision = "dribble";
+        color = 0x00FFFF00; 
+    }
+
+    /* ----------------- 5. 공 슛/정렬 ----------------- */
     else {
-        distToGoal = norm(ball.posToField.x - (-brain->config->fieldDimensions.length/2), ball.posToField.y);
+        double kickTolerance = 0.05;
+        auto now = brain->get_clock()->now();
+        auto dt = brain->msecsSince(timeLastTick);
+        bool reachedKickDir = fabs(errorDir) < kickTolerance && fabs(headingError) < kickTolerance && dt < 100;
+        bool maintainKick = (lastDecision == "kick" || lastDecision == "kick_quick") && fabs(errorDir) < 0.10 && fabs(headingError) < 0.10;
 
-        // 로봇 기준으로 보정 추가 -> 골대가 눈에 보이고, 그 거리가 Localization 계산보다 작다면(더 가깝다면) 눈을 믿도록
-        auto gps = brain->data->getGoalposts();
-        double visibleMinDist = 999.0;
-        for(const auto& gp : gps){
-            if (gp.posToRobot.x > 0) { // 정면에 있는 골대만 신뢰 (후면에 있는건 혼동 가능성)
-                if(gp.range < visibleMinDist) visibleMinDist = gp.range;
-            }
+        timeLastTick = now;
+        lastDeltaDir = deltaDir;
+
+        // 정렬 완료 & 장애물 없음 & 공 가까움
+        if (
+            ((reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
+            && brain->data->ballDetected
+            && fabs(brain->data->ball.yawToRobot) < M_PI / 2.
+            && !avoidKick
+            && ball.range < 0.8
+        ) {
+            // 골대 거리(setPieceGoalDist)에 따라 Quick vs Normal Kick 결정
+            if (distToGoal < setPieceGoalDist) newDecision = "kick_quick"; 
+            else newDecision = "kick";      
+            
+            color = 0x00FF00FF;
+            brain->data->isFreekickKickingOff = false; 
         }
-        //시각이 더 확실하다면 덮어씀
-        if(visibleMinDist < 10.0 && visibleMinDist < distToGoal){
-             distToGoal = visibleMinDist;
-        }
 
-        brain->log->logToScreen("debug/DistCheck", format("DistToGoal: %.2f (Vis: %.2f)", distToGoal, visibleMinDist), 0x00FFFF00);
-
-        if (distToGoal > 3.0) // 실제 경기 드리블에도 정렬이 필요할까? dribbleadjust를 만든다
-        {
-            newDecision = "dribble";
-            color = 0x00FFFF00; 
-        } 
-
-    else if (
-        ((reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
-        && brain->data->ballDetected
-        && fabs(brain->data->ball.yawToRobot) < M_PI / 2.
-        && !avoidKick
-        && ball.range < 0.8
-    ) {
-        if (brain->data->kickType == "cross") newDecision = "cross";
         else {
-             // 가까우면(2.5m) 딜레이 적은 kick_quick 사용
-             if (distToGoal < setPieceGoalDist) newDecision = "kick_quick"; 
-             else newDecision = "kick";      
-        }
-        // newDecision = "kick"; // Striker는 Cross 없이 무조건 슛
-        color = 0x00FF00FF;
-        brain->data->isFreekickKickingOff = false; 
-    }
-    else
-    {
-        // 골대와 가까우면(2.5m) 정밀 조준보다는 빠른 슈팅을 위한 Quick Adjust 사용 -> 원터치 포기, 정렬 사용
-        if (distToGoal < setPieceGoalDist) {
-            newDecision = "adjust_quick";
-            color = 0xFFFF00FF;
-        } else {
-            newDecision = "adjust";
+            // 골대 거리에 따라 Quick vs Normal Adjust 결정
+            if (distToGoal < setPieceGoalDist) newDecision = "adjust_quick";
+            else newDecision = "adjust";
+
             color = 0xFFFF00FF;
         }
-    }
     }
 
     setOutput("decision_out", newDecision);
     brain->log->logToScreen(
         "tree/Decide",
         format(
-            "Decision: %s dist: %.2f errPos: %.2f errHead: %.2f kickDir: %.2f", 
-            newDecision.c_str(), distToGoal, errorDir, headingError, kickDir
+            "Decision: %s dist: %.2f errPos: %.2f errHead: %.2f kicking: %d", 
+            newDecision.c_str(), distToGoal, errorDir, headingError, (lastDecision.find("kick") != string::npos)
         ),
         color
     );
