@@ -498,10 +498,12 @@ NodeStatus DribbleToGoal::onRunning() {
 
 // 패스 받기 전 오프더볼 무브 추후, 오프사이드 보완해야함 (opponent보다는 앞으로 가지 않도록)
 NodeStatus OfftheballPosition::onStart() {
+    _is_holding = false;
     return NodeStatus::RUNNING;
 }
 
 void OfftheballPosition::onHalted() {
+    _is_holding = false;
 }
 
 NodeStatus OfftheballPosition::onRunning()
@@ -585,10 +587,11 @@ NodeStatus OfftheballPosition::onRunning()
     // LOGGING LOOP DONE
     brain->log->logToScreen("debug/Offtheball", "Loop Done", 0xFFFFFFFF);
 
-    // 목표 위치가 0.5m 이상 차이나면 업데이트
-    if (fabs(bestY - lastBestY) > 0.3) {
+    // 목표 위치가 0.3m 이상 차이나거나, 공이 가까우면(2.5m 이내) 즉시 업데이트
+    bool forceUpdate = brain->data->ball.range < 2.5; 
+    if (forceUpdate || fabs(bestY - lastBestY) > 0.3) {
         lastBestY = bestY;
-        brain->log->logToScreen("debug/Offtheball", "Target Updated (Significant Change)", 0x00FF00FF);
+        brain->log->logToScreen("debug/Offtheball", "Target Updated", 0x00FF00FF);
     } else {
         // lastBestY 유지
     }
@@ -693,20 +696,12 @@ NodeStatus OfftheballPosition::onRunning()
         brain->log->logToScreen("debug/Offtheball", "Holding Position (Brake ON)", 0x00FF00FF);
     }
     
-    // 2. 탈출 조건: 위치 40cm 이상 벗어나거나, 각도가 10도 이상 틀어졌을 때 (큰 변화 필요)
-    if (_is_holding && (dist > 0.40 || fabs(angleDiff) > 0.2)) {
+    // 2. 탈출 조건: 위치 15cm 이상 벗어나거나, 각도가 6도 이상 틀어졌을 때 (작은 변화에도 반응하게 수정)
+    if (_is_holding && (dist > 0.15 || fabs(angleDiff) > 0.1)) {
         _is_holding = false;
         brain->log->logToScreen("debug/Offtheball", "Moving to New Position (Brake OFF)", 0x00FF00FF);
     }
 
-    // 3. Holding 상태면 강제 정지
-    if (_is_holding) {
-        vx_robot = 0.0;
-        vy_robot = 0.0;
-        vtheta = 0.0;
-        brain->client->setVelocity(0, 0, 0); 
-    }
-    
     // 각도가 45도 이상 틀어져 있으면 멈추고 제자리 회전
     if (fabs(angleDiff) > M_PI / 4) {
         vx_robot = 0.0; vy_robot = 0.0;
