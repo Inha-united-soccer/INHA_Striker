@@ -61,6 +61,11 @@ NodeStatus StrikerDecide::tick() {
     getInput("kick_y_offset", kickYOffset);
     double setPieceGoalDist = 2.0;
     getInput("set_piece_goal_dist", setPieceGoalDist);
+
+    // 골대 근처에서는 OffTheBall 이후 바로 Adjust로 넘어가기 위해 Chase 임계값을 높임
+    // if (distToGoal < setPieceGoalDist) {
+    //     if (chaseRangeThreshold < 1.0) chaseRangeThreshold = 1.0;
+    // }
     
     // 정렬 오차 계산
 

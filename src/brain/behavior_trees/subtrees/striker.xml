@@ -86,8 +86,17 @@
                      <!-- 빠른 킥 -->
                      <Kick _while="decision == 'kick_quick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.5" min_msec_kick="300" msecs_stablize="100" kick_type="kick" kick_y_offset="-0.077" />
                      
-                     <!-- Cross (측면 패스) -->
-                     <!-- <Kick _while="decision == 'cross'" speed_limit="0.4" min_msec_kick="300" kick_type="cross" /> -->
+                     <!-- Cross (측면 패스)
+                     <Kick _while="decision == 'cross'" speed_limit="0.4" min_msec_kick="300" kick_type="cross" /> -->
+
+                     <!-- 
+                     speed_limit="1.3"      : 로봇의 전체 이동 속도 제한 (m/s)
+                     vx_limit="1.3"         : 킥 동작 중 전진(x방향) 속도 제한
+                     vy_limit="0.3"         : 킥 동작 중 횡이동(y방향) 속도 제한 (킥 할 때는 좌우 움직임을 줄여 안정성을 높임)
+                     min_msec_kick="300"    : 킥 상태를 유지하는 최소 시간(ms) (너무 빨리 킥 상태가 끝나는 것을 방지)   
+                     msecs_stablize="100"   : 킥 직전/직후에 자세를 안정화하기 위해 대기하는 시간(ms)
+                     kick_type="one_touch"  : 킥 종류 지정 
+                     -->
 
                   </Sequence>
                </ReactiveSequence>
