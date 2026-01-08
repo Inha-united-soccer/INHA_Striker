@@ -9,7 +9,7 @@
          <SelfLocate mode="trust_direction" />
          
          <!-- 공 위치 알 때만 로컬라이제이션(공 위치에 대한 find상태가 아님을 의미)-->
-         <SubTree ID="Locate" _autoremap="true" _while="decision!='find'" />
+         <SubTree ID="Locate" _autoremap="true" />
          
          <!-- 상대 킥오프 대기 -->
          <ReactiveSequence _while="wait_for_opponent_kickoff" name="상대 팀 킥오프 대기">
@@ -37,7 +37,7 @@
                   <CalcKickDir />
                   <!-- <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" /> -->
                   
-                  <Sequence>
+                  <ReactiveSequence>
                      
                      <ReactiveSequence>
                         <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.80" kick_y_offset="-0.077" set_piece_goal_dist="1.0" />
@@ -99,7 +99,7 @@
                      kick_type            : kick      킥 종류 지정 
                      -->
 
-                  </Sequence>
+                  </ReactiveSequence>
                </ReactiveSequence>
             </ReactiveSequence>
          </ReactiveSequence>
