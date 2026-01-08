@@ -18,10 +18,7 @@ void RegisterDecisionRoleNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
 }
 
 NodeStatus StrikerDecide::tick() {
-    auto log = [=](string msg) {
-        brain->log->setTimeNow();
-        brain->log->log("debug/striker_decide", rerun::TextLog(msg));
-    };
+
 
     double chaseRangeThreshold;
     getInput("chase_threshold", chaseRangeThreshold);
