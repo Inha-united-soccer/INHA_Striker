@@ -112,11 +112,11 @@ NodeStatus StrikerDecide::tick() {
     else {
         // 거리(SetPiece)에 따라 허용 오차 다르게 적용 - 가까우면(SetPiece) 좀 더 관대하게(빨리 차게), 멀면 정밀하게
         double kickTolerance = 0.5; // 기본: 3도
-        double yawTolerance = 0.7;  // 기본: 20도
+        double yawTolerance = 1.4;  // 기본: 20도
         
-        if (distToGoal < setPieceGoalDist + 0.5) {
-            kickTolerance = 1.0; // 가까우면 8도 정도까지 허용
-            yawTolerance = 1.2;   // 가까우면 23도 정도까지 허용 (공이 약간 옆에 있어도 슛)
+        if (distToGoal < setPieceGoalDist + 1.0) {
+            kickTolerance = 1.5; // 가까우면 8도 정도까지 허용
+            yawTolerance = 1.5;   // 가까우면 23도 정도까지 허용 (공이 약간 옆에 있어도 슛)
         }
 
 
@@ -129,8 +129,8 @@ NodeStatus StrikerDecide::tick() {
         lastDeltaDir = deltaDir;
 
         /* ----------------- 6. Kick 정렬 완료 & 장애물 없음 & 공 가까움 ----------------- */
-        double kickRange = 0.7;
-        if (distToGoal < setPieceGoalDist + 0.5) kickRange = 0.95;
+        double kickRange = 1.0;
+        if (distToGoal < setPieceGoalDist + 0.5) kickRange = 3.0;
 
         if (
             ((reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
