@@ -611,7 +611,7 @@ NodeStatus OfftheballPosition::onRunning()
 
     brain->log->log("field/offtheball_target", 
         rerun::Points2D({{static_cast<float>(targetX), static_cast<float>(targetY)}})
-        .with_colors({0x00FFFF00}) // Cyan/Yellow mix?
+        .with_colors({0x00FFFFFF}) // offthe ball 최종 위치
         .with_radii({0.05})
         .with_labels({"Target"})
     );
