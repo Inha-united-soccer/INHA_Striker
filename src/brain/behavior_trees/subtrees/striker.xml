@@ -63,7 +63,7 @@
                      <Adjust _while="decision == 'adjust'" no_turn_threshold="0.01" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.02" near_threshold="0.3" kick_y_offset="-0.077" />
                      
                      <!-- Adjust: adjust_quick -->
-                     <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.1" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="1.0" vy_limit="0.6" vtheta_limit="1.5" vtheta_factor="2.0" tangential_speed_far="0.7" tangential_speed_near="0.5" near_threshold="0.4" kick_y_offset="-0.077" />
+                     <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.1" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="1.0" vy_limit="0.4" vtheta_limit="1.5" vtheta_factor="2.0" tangential_speed_far="0.4" tangential_speed_near="0.5" near_threshold="0.4" kick_y_offset="-0.077" />
                      
                      <!--
                      no_turn_threshold     : 0.1, "각도 오차가 이 값보다 작으면 회전을 수행하지 않는다"

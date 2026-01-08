@@ -106,7 +106,15 @@ NodeStatus StrikerDecide::tick() {
 
     /* ----------------- 5. 공 슛/정렬 ----------------- */
     else {
-        double kickTolerance = 0.05; // 로봇 골대 정렬 각도
+        // 거리(SetPiece)에 따라 허용 오차 다르게 적용 -> 가까우면(SetPiece) 좀 더 관대하게(빨리 차게), 멀면 정밀하게
+        double kickTolerance = 0.05; // 기본: 3도 // 로봇 골대 정렬 각도
+        double yawTolerance = 0.35;  // 기본: 20도
+        
+        if (distToGoal < setPieceGoalDist) {
+            kickTolerance = 0.15; // 가까우면 8도 정도까지 허용
+            yawTolerance = 0.6;   // 가까우면 35도 정도까지 허용 (공이 약간 옆에 있어도 슛)
+        }
+
         auto now = brain->get_clock()->now();
         auto dt = brain->msecsSince(timeLastTick);
         bool reachedKickDir = fabs(errorDir) < kickTolerance && fabs(headingError) < kickTolerance && dt < 100; // 정렬 완료 상태 bool 값
@@ -119,7 +127,7 @@ NodeStatus StrikerDecide::tick() {
         if (
             ((reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
             && brain->data->ballDetected
-            && fabs(brain->data->ball.yawToRobot) < 0.35 // 0.35 (약 20도) 공이 정면에 있어야 슛
+            && fabs(brain->data->ball.yawToRobot) < yawTolerance // [수정] 동적 허용 오차 적용
             && !avoidKick
             && ball.range < 0.7
         ) {

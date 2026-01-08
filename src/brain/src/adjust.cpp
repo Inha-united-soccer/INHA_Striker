@@ -77,9 +77,9 @@ NodeStatus Adjust::tick(){
         // vxLimit = 0.1;
     }
 
-    double theta_robot_f = brain->data->robotPoseToField.theta; 
-    double thetat_r = dir_rb_f + M_PI / 2 * (deltaDir > 0 ? -1.0 : 1.0) - theta_robot_f; 
-    double thetar_r = dir_rb_f - theta_robot_f; 
+    double theta_robot_f = brain->data->robotPoseToField.theta; // 이동 방향 계산용
+    double thetat_r = dir_rb_f + M_PI / 2 * (deltaDir > 0 ? -1.0 : 1.0) - theta_robot_f; // 공을 중심으로 회전하는 방향 각도 이 방향으로 st(회전속도) 만큼 움직여서 공 뒤쪽으로 돌아감
+    double thetar_r = dir_rb_f - theta_robot_f;  // 로봇 -> 공 각도 이 방향으로 sr(접근속도) 만큼 움직여서 공이랑 거리 맞춤
 
     vx = st * cos(thetat_r) + sr * cos(thetar_r); 
     vy = st * sin(thetat_r) + sr * sin(thetar_r); 
