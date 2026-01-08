@@ -40,7 +40,7 @@
                   <Sequence>
                      
                      <ReactiveSequence>
-                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.65" kick_y_offset="-0.077" set_piece_goal_dist="1.0" />
+                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.80" kick_y_offset="-0.077" set_piece_goal_dist="1.0" />
                         
                         <!-- 공 찾기 -->
                         <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
