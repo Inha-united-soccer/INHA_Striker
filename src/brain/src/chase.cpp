@@ -586,7 +586,7 @@ NodeStatus OfftheballPosition::onRunning()
     brain->log->logToScreen("debug/Offtheball", "Loop Done", 0xFFFFFFFF);
 
     // 목표 위치가 0.5m 이상 차이나면 업데이트
-    if (fabs(bestY - lastBestY) > 1.0) {
+    if (fabs(bestY - lastBestY) > 0.3) {
         lastBestY = bestY;
         brain->log->logToScreen("debug/Offtheball", "Target Updated (Significant Change)", 0x00FF00FF);
     } else {
