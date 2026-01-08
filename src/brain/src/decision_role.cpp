@@ -109,7 +109,7 @@ NodeStatus StrikerDecide::tick() {
         // [Kick Conditions] 거리(SetPiece)에 따라 허용 오차 다르게 적용
         // "공이 발 옆에 있나"를 각도(Yaw)가 아니라 실제 거리(Lateral Error)로 판단 -> 더 정확함
         double kickTolerance = 0.05; // 기본: 3도 (정렬 오차)
-        double latTolerance = 0.04;  // 4cm (매우 엄격: 발 중심에서 4cm 이내여야 슛)
+        double latTolerance = 0.04;  // 4cm
         
         if (distToGoal < setPieceGoalDist) {
             kickTolerance = 0.15; // 가까우면 8도까지 허용
