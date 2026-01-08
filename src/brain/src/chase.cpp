@@ -498,12 +498,7 @@ NodeStatus DribbleToGoal::onRunning() {
 
 // 패스 받기 전 오프더볼 무브 추후, 오프사이드 보완해야함 (opponent보다는 앞으로 가지 않도록)
 NodeStatus OfftheballPosition::onStart() {
-    _is_holding = false;
     return NodeStatus::RUNNING;
-}
-
-void OfftheballPosition::onHalted() {
-    _is_holding = false;
 }
 
 NodeStatus OfftheballPosition::onRunning()
@@ -690,21 +685,17 @@ NodeStatus OfftheballPosition::onRunning()
     }
 
     // 1. 진입 조건: 위치 15cm 이내, 각도 3도 이내 (아주 안정적일 때)
-    if (!_is_holding && dist < 0.15 && fabs(angleDiff) < 0.05) {
-        _is_holding = true;
-        brain->log->logToScreen("debug/Offtheball", "Holding Position (Brake ON)", 0x00FF00FF);
-    }
+    // _is_holding 관련 로직 삭제
+    // 1. 진입 조건: 위치 15cm 이내, 각도 3도 이내
+    // if (!_is_holding && dist < 0.15 && fabs(angleDiff) < 0.05) { ... }
     
-    // 2. 탈출 조건: 위치 15cm 이상 벗어나거나, 각도가 6도 이상 틀어졌을 때 (작은 변화에도 반응하게 수정)
-    if (_is_holding && (dist > 0.15 || fabs(angleDiff) > 0.1)) {
-        _is_holding = false;
-        brain->log->logToScreen("debug/Offtheball", "Moving to New Position (Brake OFF)", 0x00FF00FF);
-    }
+    // 2. 탈출 조건: 위치 15cm 이상 벗어나거나, 각도가 6도 이상 틀어졌을 때
+    // if (_is_holding && (dist > 0.15 || fabs(angleDiff) > 0.1)) { ... }
 
     // 각도가 45도 이상 틀어져 있으면 멈추고 제자리 회전
-    if (fabs(angleDiff) > M_PI / 4) {
-        vx_robot = 0.0; vy_robot = 0.0;
-    }
+    // if (fabs(angleDiff) > M_PI / 4) {
+    //     vx_robot = 0.0; vy_robot = 0.0;
+    // }
 
     // 안전장치
     // if (!isfinite(vtheta) || !isfinite(vx_robot)) {

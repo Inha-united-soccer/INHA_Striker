@@ -121,9 +121,8 @@ public:
 
     NodeStatus onStart() override;
     NodeStatus onRunning() override;
-    void onHalted() override;
+
 
 private:
     Brain *brain;
-    bool _is_holding = false;
 };
