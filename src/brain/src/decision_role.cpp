@@ -117,7 +117,7 @@ NodeStatus StrikerDecide::tick() {
         
         if (distToGoal < setPieceGoalDist) {
             kickTolerance = 0.15; // 가까우면 8도 정도까지 허용
-            yawTolerance = 0.4;   // 가까우면 23도 정도까지 허용 (공이 약간 옆에 있어도 슛)
+            yawTolerance = 0.6;   // 가까우면 23도 정도까지 허용 (공이 약간 옆에 있어도 슛)
         }
 
 
@@ -134,9 +134,9 @@ NodeStatus StrikerDecide::tick() {
             ((reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
             && brain->data->ballDetected
 
-            && fabs(brain->data->ball.yawToRobot) < yawTolerance // 
+            && fabs(brain->data->ball.yawToRobot) < yawTolerance 
 
-            && !avoidKick
+            // && !avoidKick
             && ball.range < 0.7
         ) {
             // 골대 거리(setPieceGoalDist)에 따라 Quick vs Normal Kick 결정
