@@ -66,21 +66,19 @@ NodeStatus StrikerDecide::tick() {
     getInput("set_piece_goal_dist", setPieceGoalDist);
     
     // 정렬 오차 계산
-<<<<<<< HEAD
+
     double deltaDir = toPInPI(kickDir - dir_rb_f); // 로봇이 공 뒤에 일직선으로 서있으면 0으로 계산됨
     double targetAngleOffset = atan2(kickYOffset, ballRange); // 오른 발로 차야하니까 공보다 약간 왼쪽에 있어야함 - 그 왼쪽에 해당하는 각도
     double errorDir = toPInPI(deltaDir + targetAngleOffset); // 공을 차기 위한 위치인가 - 최종 위치 오차
     double headingBias = -targetAngleOffset * 0.3; // 오른발로 차기에 골대를 정면으로 보는 것보단 몸을 살짝 안쪽으로 돌리고 차야함 targetAngleOffset의 30퍼센트만큼 (휴리스틱이니 해보고 수정..)
     double desiredHeading = kickDir + headingBias; // 바라봐야할 이상적인 헤딩 각도
     double headingError = toPInPI(desiredHeading - brain->data->robotPoseToField.theta); // 로봇이 골대를 정확히 보고있나 - 최종 각도 오차
-=======
     double deltaDir = toPInPI(kickDir - dir_rb_f);
     double targetAngleOffset = atan2(kickYOffset, ballRange);
     double errorDir = toPInPI(deltaDir + targetAngleOffset); // 공을 차기 위한 위치인가
     double headingBias = -targetAngleOffset * 0.3; 
     double desiredHeading = kickDir + headingBias;
     double headingError = toPInPI(desiredHeading - brain->data->robotPoseToField.theta); // 로봇이 골대를 정확히 보고있나
->>>>>>> 885b19e (quick decision)
 
 
     bool iKnowBallPos = brain->tree->getEntry<bool>("ball_location_known");
@@ -115,7 +113,6 @@ NodeStatus StrikerDecide::tick() {
 
     /* ----------------- 5. 공 슛/정렬 ----------------- */
     else {
-<<<<<<< HEAD
         // [Kick Conditions] 거리(SetPiece)에 따라 허용 오차 다르게 적용
         // 가까우면(SetPiece) 좀 더 관대하게(빨리 차게), 멀면 정밀하게
         double kickTolerance = 0.05; // 기본: 3도
@@ -123,12 +120,10 @@ NodeStatus StrikerDecide::tick() {
         
         if (distToGoal < setPieceGoalDist) {
             kickTolerance = 0.15; // 가까우면 8도 정도까지 허용
-            yawTolerance = 0.61;   // 가까우면 35도 정도까지 허용 (공이 약간 옆에 있어도 슛)
+            yawTolerance = 0.4;   // 가까우면 23도 정도까지 허용 (공이 약간 옆에 있어도 슛)
         }
 
-=======
         double kickTolerance = 0.05; // 로봇 골대 정렬 각도
->>>>>>> 885b19e (quick decision)
         auto now = brain->get_clock()->now();
         auto dt = brain->msecsSince(timeLastTick);
         bool reachedKickDir = fabs(errorDir) < kickTolerance && fabs(headingError) < kickTolerance && dt < 100; // 정렬 완료 상태 bool 값
@@ -141,11 +136,9 @@ NodeStatus StrikerDecide::tick() {
         if (
             ((reachedKickDir || maintainKick) && !brain->data->isFreekickKickingOff) 
             && brain->data->ballDetected
-<<<<<<< HEAD
+
             && fabs(brain->data->ball.yawToRobot) < yawTolerance // 
-=======
             && fabs(brain->data->ball.yawToRobot) < 0.35 // 0.35 (약 20도) 공이 정면에 있어야 슛
->>>>>>> 885b19e (quick decision)
             && !avoidKick
             && ball.range < 0.7
         ) {

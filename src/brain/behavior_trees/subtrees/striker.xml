@@ -40,7 +40,7 @@
                   <Sequence>
                      
                      <ReactiveSequence>
-                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.85" kick_y_offset="-0.077" set_piece_goal_dist="2.0" />
+                        <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="0.85" kick_y_offset="-0.05" set_piece_goal_dist="2.0" />
                         
                         <!-- 공 찾기 -->
                         <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
@@ -60,10 +60,10 @@
                      <Chase _while="decision == 'chase'" vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.4" safe_dist="1.0" />
 
                      <!-- Adjust -->
-                     <Adjust _while="decision == 'adjust'" no_turn_threshold="0.01" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.02" near_threshold="0.3" kick_y_offset="-0.077" />
+                     <Adjust _while="decision == 'adjust'" no_turn_threshold="0.01" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.02" near_threshold="0.3" kick_y_offset="-0.05" />
                      
                      <!-- Adjust: adjust_quick -->
-                     <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.1" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="1.0" vy_limit="0.3" vtheta_limit="1.0" vtheta_factor="2.0" tangential_speed_far="0.5" tangential_speed_near="0.4" near_threshold="0.4" kick_y_offset="-0.077" />
+                     <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.1" turn_threshold="0.5" turn_first_threshold="0.5" range="0.6" vx_limit="1.0" vy_limit="0.3" vtheta_limit="1.0" vtheta_factor="2.0" tangential_speed_far="0.5" tangential_speed_near="0.4" near_threshold="0.4" kick_y_offset="-0.05" />
                      
                      <!--
                      no_turn_threshold     : 0.1, "각도 오차가 이 값보다 작으면 회전을 수행하지 않는다"
@@ -81,10 +81,10 @@
                      -->
 
                      <!-- 일반 킥 -->
-                     <Kick _while="decision == 'kick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.3" min_msec_kick="1000" msecs_stablize="1000" kick_type="kick" kick_y_offset="-0.077" />
+                     <Kick _while="decision == 'kick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.3" min_msec_kick="1000" msecs_stablize="1000" kick_type="kick" kick_y_offset="-0.05" />
 
                      <!-- 빠른 킥 -->
-                     <Kick _while="decision == 'kick_quick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.5" min_msec_kick="300" msecs_stablize="100" kick_type="kick" kick_y_offset="-0.077" />
+                     <Kick _while="decision == 'kick_quick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.5" min_msec_kick="300" msecs_stablize="100" kick_type="kick" kick_y_offset="-0.05" />
                      
                      <!-- Cross (측면 패스) -->
                      <!-- <Kick _while="decision == 'cross'" speed_limit="0.4" min_msec_kick="300" kick_type="cross" /> -->
