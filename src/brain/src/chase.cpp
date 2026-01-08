@@ -501,6 +501,10 @@ NodeStatus OfftheballPosition::onStart() {
     return NodeStatus::RUNNING;
 }
 
+void OfftheballPosition::onHalted() {
+    // Empty implementation
+}
+
 NodeStatus OfftheballPosition::onRunning()
 {
     // LOGGING START
