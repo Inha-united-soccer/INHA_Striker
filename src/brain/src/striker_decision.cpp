@@ -35,14 +35,14 @@ NodeStatus StrikerDecision::tick() {
     
     distToGoal = norm(ball.posToField.x - (-brain->config->fieldDimensions.length/2), ball.posToField.y);
 
-    // 장애물 회피 로직
-    bool avoidPushing;
-    double kickAoSafeDist;
-    brain->get_parameter("obstacle_avoidance.avoid_during_kick", avoidPushing);
-    brain->get_parameter("obstacle_avoidance.kick_ao_safe_dist", kickAoSafeDist);
-    bool avoidKick = avoidPushing // 전방에 장애물 있나
-        && brain->data->robotPoseToField.x < brain->config->fieldDimensions.length / 2 - brain->config->fieldDimensions.goalAreaLength
-        && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
+    // 장애물 회피 로직 -> 드리블이나 오프더볼 등
+    // bool avoidPushing;
+    // double kickAoSafeDist;
+    // brain->get_parameter("obstacle_avoidance.avoid_during_kick", avoidPushing);
+    // brain->get_parameter("obstacle_avoidance.kick_ao_safe_dist", kickAoSafeDist);
+    // bool avoidKick = avoidPushing // 전방에 장애물 있나
+    //     && brain->data->robotPoseToField.x < brain->config->fieldDimensions.length / 2 - brain->config->fieldDimensions.goalAreaLength
+    //     && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
 
 
     // 변수 로드
