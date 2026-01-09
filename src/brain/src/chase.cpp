@@ -17,7 +17,7 @@ void RegisterChaseNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
     REGISTER_CHASE_BUILDER(Chase) // obstacle 추가된 chase
     REGISTER_CHASE_BUILDER(DribbleChase) // 드리블 전용 chase
     REGISTER_CHASE_BUILDER(DribbleToGoal) // 골대 드리블
-    REGISTER_CHASE_BUILDER(OfftheballPosition) // 골대 앞 오프더볼 무브
+
 }
 
 NodeStatus SimpleChase::tick(){
