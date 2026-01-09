@@ -106,7 +106,7 @@ NodeStatus OfftheballPosition::tick(){
     double angleDiff = toPInPI(targetTheta - robotTheta);
     
     // 회전 속도 계산
-    double vtheta = angleDiff * 1.0; 
+    double vtheta = angleDiff * 4.0; 
     
     // 안전하게 돌기 위해 최대 회전 속도 제한
     if (vtheta > 1.0) vtheta = 1.0;

@@ -49,6 +49,7 @@ NodeStatus StrikerDecision::tick() {
     // 변수 로드
     double kickYOffset = -0.077; 
     getInput("kick_y_offset", kickYOffset);
+
     double setPieceGoalDist = 2.0;
     getInput("set_piece_goal_dist", setPieceGoalDist);
 
@@ -96,15 +97,14 @@ NodeStatus StrikerDecision::tick() {
 
     /* ----------------- 5. 공 슛/정렬 ----------------- */
     else {
-        // 거리(SetPiece)에 따라 허용 오차 다르게 적용 - 가까우면(SetPiece) 좀 더 관대하게(빨리 차게), 멀면 정밀하게
-        double kickTolerance = 0.3;
-        double yawTolerance = 0.5;  
+        // 세트피스 상황이면 더 여유롭게 (0.1라디안은 5.7도)
+        double kickTolerance = 0.1; // 멀면 정밀하게 (기본값)
+        double yawTolerance = 0.1;  
         
-        if (distToGoal < setPieceGoalDist + 1.0) {
-            kickTolerance = 0.2; 
-            yawTolerance = 0.3;
+        if (distToGoal < setPieceGoalDist) {
+            kickTolerance = 0.3; // 가까우면 관대하게
+            yawTolerance = 0.5;
         }
-
 
         auto now = brain->get_clock()->now();
         auto dt = brain->msecsSince(timeLastTick);
@@ -115,7 +115,9 @@ NodeStatus StrikerDecision::tick() {
 
         /* ----------------- 6. Kick 정렬 완료 & 장애물 없음 & 공 가까움 ----------------- */
         double kickRange = 1.0;
-        if (distToGoal < setPieceGoalDist + 0.5) kickRange = 3.0;
+        if (distToGoal < setPieceGoalDist){
+            kickRange = 3.0;
+        }
 
         if (
             (reachedKickDir) 
@@ -124,10 +126,11 @@ NodeStatus StrikerDecision::tick() {
             && fabs(brain->data->ball.yawToRobot) < yawTolerance 
 
             // && !avoidKick
+
             && ball.range < kickRange
         ) {
             // 골대 거리(setPieceGoalDist)에 따라 Quick vs Normal Kick 결정
-            if (distToGoal < setPieceGoalDist + 0.5) {
+            if (distToGoal < setPieceGoalDist) {
                 newDecision = "kick_quick"; 
             }
             else {
@@ -140,7 +143,7 @@ NodeStatus StrikerDecision::tick() {
 
         else {
             // 골대 거리에 따라 Quick vs Normal Adjust 결정
-            if (distToGoal < setPieceGoalDist + 0.5) newDecision = "adjust_quick";
+            if (distToGoal < setPieceGoalDist) newDecision = "adjust_quick";
             else newDecision = "adjust";
 
             color = 0xFFFF00FF;
