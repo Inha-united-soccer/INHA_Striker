@@ -25,7 +25,7 @@ void RegisterOfftheballNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
 */
 NodeStatus OfftheballPosition::tick(){
 
-    // 1. 경기장 규격 및 파라미터 가져오기
+    // 경기장 규격 및 파라미터 가져오기
     auto fd = brain->config->fieldDimensions;
     
     // 골대 앞에서 얼마나 떨어져 있을지
