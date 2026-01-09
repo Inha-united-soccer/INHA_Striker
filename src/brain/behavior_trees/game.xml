@@ -5,7 +5,6 @@
     <include path="./subtrees/cam_find_and_track_ball.xml" />
     <include path="./subtrees/striker.xml" />
     <include path="./subtrees/defender.xml" />
-    <include path="./subtrees/test_kick.xml" />
     <include path="./subtrees/find_ball.xml" />
 
 
