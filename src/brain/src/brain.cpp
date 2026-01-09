@@ -479,6 +479,7 @@ void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
     detection_utils::detectProcessVisionBox(msg, data);
 
     // 로그 기록
+    log->setTimeSeconds(detection_utils::timePointFromHeader(msg.header).seconds());
     logDetection(gameObjects);
 }
 
@@ -1029,7 +1030,7 @@ void Brain::calibrateOdom(double x, double y, double theta){
     }
 
     // relog
-    log->setTimeSeconds(detection_utils::timePointFromHeader(msg.header).seconds());
+    log->setTimeNow();
     // logVisionBox(get_clock()->now());
     vector<GameObject> gameObjects = {};
     if(data->ballDetected) gameObjects.push_back(data->ball);
