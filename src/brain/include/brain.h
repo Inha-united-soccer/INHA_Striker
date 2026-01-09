@@ -110,6 +110,7 @@ public:
     void imageCallback(const sensor_msgs::msg::Image &msg);
 
     void logObstacles();
+    void logVisionBox(rclcpp::Time timestamp);
     void logDepth(int grid_x_count, int grid_y_count, vector<vector<int>> &grid_occupied, vector<rerun::Vec3D> &points_robot);
 
     /* ----------------------------- role 결정을 위한 함수 ----------------------------- */

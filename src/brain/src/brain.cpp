@@ -477,9 +477,12 @@ void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
 
     // 시야 정보 처리 및 로깅
     detection_utils::detectProcessVisionBox(msg, data);
+    logVisionBox(detection_utils::timePointFromHeader(msg.header));
 
     // 로그 기록
-    log->setTimeSeconds(detection_utils::timePointFromHeader(msg.header).seconds());
+    auto tp = detection_utils::timePointFromHeader(msg.header);
+    log->setTimeSeconds(tp.seconds());
+    log->logToScreen("debug/DetCheck", format("Det count: %zu, Time: %.2f", gameObjects.size(), tp.seconds()), 0xFF00FFFF);
     logDetection(gameObjects);
 }
 
@@ -1342,6 +1345,28 @@ void Brain::logObstacles() {
         .with_colors(colors)
         .with_labels(labels)
         .with_radii(0.1)
+    );
+}
+
+
+void Brain::logVisionBox(rclcpp::Time timestamp) {
+    auto vbox = data->visionBox;
+    log->setTimeSeconds(timestamp.seconds());
+
+    vector<rerun::Vec3D> points;
+    // vbox points are in pairs (x, y) relative to robot
+    for (size_t i = 0; i < vbox.posToRobot.size() / 2; ++i) {
+        points.push_back(rerun::Vec3D{vbox.posToRobot[2*i], -vbox.posToRobot[2*i+1], 0.0});
+    }
+    // Close the loop
+    if (!points.empty()) {
+        points.push_back(points[0]);
+    }
+
+    log->log("robotframe/vision_box", 
+        rerun::LineStrips3D(rerun::Collection<rerun::components::LineStrip3D>(points))
+        .with_colors(0x00FF00FF)
+        .with_radii(0.02)
     );
 }
 
