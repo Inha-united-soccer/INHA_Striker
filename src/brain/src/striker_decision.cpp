@@ -70,31 +70,31 @@ NodeStatus StrikerDecision::tick() {
     auto color = 0xFFFFFFFF; 
 
 
-    /* ----------------- 1. 공 찾기 ----------------- */ 
+    /* ----------------------- 1. 공 찾기 ----------------------- */ 
     if (!(iKnowBallPos || tmBallPosReliable)) {
         newDecision = "find";
         color = 0xFFFFFFFF;
     }
     
-    /* ----------------- 2. OffTheBall ----------------- */
+    /* ----------------------- 2. OffTheBall ----------------------- */
     else if (!brain->data->tmImLead && ballRange >= 1.0) {
         newDecision = "offtheball";
         color = 0x00FFFFFF;
     } 
 
-    /* ----------------- 3. 공 chase ----------------- */
+    /* ----------------------- 3. 공 chase ----------------------- */
     else if (ballRange > chaseRangeThreshold) {
         newDecision = "chase";
         color = 0x0000FFFF;
     } 
 
-    /* ----------------- 4. 공 드리블 ----------------- */
+    /* ----------------------- 4. 공 드리블 ----------------------- */
     else if (distToGoal > 3.0) {
         newDecision = "dribble";
         color = 0x00FFFF00; 
     }
 
-    /* ----------------- 5. 공 슛/정렬 ----------------- */
+    /* ----------------------- 5. 공 슛/정렬 ----------------------- */
     else {
         // 세트피스 상황이면 더 여유롭게 (0.1라디안은 5.7도)
         double kickTolerance = 0.1; // 멀면 정밀하게
@@ -112,7 +112,7 @@ NodeStatus StrikerDecision::tick() {
         timeLastTick = now;
 
 
-        /* ----------------- 6. Kick 정렬 완료 & 장애물 없음 & 공 가까움 ----------------- */
+        /* ----------------------- 6. Kick ----------------------- */
         double kickRange = 1.0;
         if (distToGoal < setPieceGoalDist){
             kickRange = 3.0;
@@ -139,7 +139,8 @@ NodeStatus StrikerDecision::tick() {
             color = 0x00FF00FF;
             brain->data->isFreekickKickingOff = false; 
         }
-
+        
+        /* ----------------------- 7. Adjust ----------------------- */
         else {
             // 골대 거리에 따라 Quick vs Normal Adjust 결정
             if (distToGoal < setPieceGoalDist) newDecision = "adjust_quick";
