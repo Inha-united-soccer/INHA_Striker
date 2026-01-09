@@ -57,7 +57,6 @@ set(SOURCE_FILES
   src/kick.cpp
   src/adjust.cpp
   src/brain_communication.cpp
-  src/decision_role.cpp
   src/speak.cpp
   src/offtheball.cpp
   src/defender_decision.cpp

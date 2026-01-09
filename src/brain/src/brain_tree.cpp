@@ -27,7 +27,6 @@ void BrainTree::init(){
     brain->registerChaseNodes(factory); // chase 관련 노드 등록
     RegisterKickNodes(factory, brain); // kick 관련 노드 등록
     brain->registerAdjustNodes(factory); // adjust 관련 노드 등록
-    brain->registerDecisionRoleNodes(factory); // decision role 관련 노드 등록
     brain->registerSpeakNodes(factory); // speak 관련 노드 등록
     brain->registerOfftheballNodes(factory); // offtheball 관련 노드 등록
     brain->registerDefenderDecisionNodes(factory); // defender decision 관련 노드 등록

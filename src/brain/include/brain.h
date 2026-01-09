@@ -43,9 +43,10 @@
 #include "chase.h"
 #include "kick.h"
 #include "adjust.h"
-#include "decision_role.h"
 #include "speak.h"
 #include "offtheball.h"
+#include "defender_decision.h"
+#include "striker_decision.h"
 
 // Forward declaration to avoid circular dependency
 class BrainCommunication;
@@ -112,7 +113,6 @@ public:
     void logDepth(int grid_x_count, int grid_y_count, vector<vector<int>> &grid_occupied, vector<rerun::Vec3D> &points_robot);
 
     /* ----------------------------- role 결정을 위한 함수 ----------------------------- */
-    void registerDecisionRoleNodes(BT::BehaviorTreeFactory &factory){RegisterDecisionRoleNodes(factory, this);}
     bool isAngleGood(double goalPostMargin = 0.3, string type = "kick");
     
 
