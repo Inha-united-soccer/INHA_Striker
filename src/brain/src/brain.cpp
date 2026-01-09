@@ -1029,7 +1029,7 @@ void Brain::calibrateOdom(double x, double y, double theta){
     }
 
     // relog
-    log->setTimeNow();
+    log->setTimeSeconds(detection_utils::timePointFromHeader(msg.header).seconds());
     // logVisionBox(get_clock()->now());
     vector<GameObject> gameObjects = {};
     if(data->ballDetected) gameObjects.push_back(data->ball);
@@ -1071,8 +1071,8 @@ void Brain::logDetection(const vector<GameObject> &gameObjects, bool logBounding
     }
     
     // else 
-    rclcpp::Time timePoint = gameObjects[0].timePoint;
-    log->setTimeSeconds(timePoint.seconds());
+    // else 
+
 
     map<std::string, rerun::Color> detectColorMap = {
         {"LCross", rerun::Color(0xFFFF00FF)},
