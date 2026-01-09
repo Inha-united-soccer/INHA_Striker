@@ -1,0 +1,119 @@
+#include "brain.h"
+#include "offtheball.h"
+#include "brain_tree.h"
+
+#include <cstdlib>
+#include <ctime>
+
+#define REGISTER_OFFTHEBALL_BUILDER(Name)     \
+    factory.registerBuilder<Name>( \
+        #Name,                     \
+        [brain](const string &name, const NodeConfig &config) { return make_unique<Name>(name, config, brain); });
+
+
+void RegisterOfftheballNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
+    REGISTER_OFFTHEBALL_BUILDER(OfftheballPosition)
+}
+
+/*
+패스 받기 전 오프더볼 무브 추후 추가할 점
+1. 이동 경로상 장애물 회피
+2. 공 위치에 따라 이동 경로 변경
+3. 통신으로 받은 도착 위치로 이동
+4. 골대 충돌 방지
+5. 목표위치에서의 속도 조절
+*/
+NodeStatus OfftheballPosition::tick(){
+
+    // 1. 경기장 규격 및 파라미터 가져오기
+    auto fd = brain->config->fieldDimensions;
+    
+    // 골대 앞에서 얼마나 떨어져 있을지
+    double distFromGoal = 2.0; 
+    if (!getInput("dist_from_goal", distFromGoal)) {
+        distFromGoal = 2.0;
+    }
+    
+    // 골대 중앙 좌표
+    double goalX = -(fd.length / 2.0);
+    // 골대에서 distFromGoal만큼 떨어진 좌표
+    double baseX = goalX + distFromGoal; 
+
+    // 최적의 Y좌표 계산 (경기장 폭의 절반에서 0.5m 안쪽)
+    double maxY = fd.width / 2.0 - 0.5;
+    double bestY = 0.0;
+    double maxScore = -1e9;
+    
+    // 장애물 정보 나중에 사용
+    // auto obstacles = brain->data->getObstacles();
+
+    // 최종 위치 계산
+    static double lastBestY = 0.0;
+
+    // Y축을 따라 0.2m 간격으로 후보 지점 탐색
+    for (double y = -maxY; y <= maxY; y += 0.2) { 
+        double score = 0.0
+                     - (fabs(y) * 0.3) // 중앙 선호 (0.0)이 골대 중앙선
+                     // - (fabs(y - lastBestY) * 0.5); 이전 위치 선호 -> 생각해보면 어차피 로봇인데 계속 하고있는게 이득
+                     // 수비수 위치 고려
+                     // 골키퍼 위치 고려
+
+        if (score > maxScore) {
+            maxScore = score;
+            bestY = y; // 가장 점수가 높은 y좌표 선택
+        }
+    }
+
+    // 공이 1.5m 이내로 오거나 새로 계산된 위치가 이전 위치보다 1.0m 이상 차이나면 업데이트
+    bool forceUpdate = brain->data->ball.range < 1.5; 
+    if (forceUpdate || fabs(bestY - lastBestY) > 1.0) {
+        lastBestY = bestY;
+    }
+    
+    // 최종 목표 위치 설정
+    double targetX = baseX;
+    double targetY = lastBestY;
+    
+    // 현재 로봇 위치
+    double robotX = brain->data->robotPoseToField.x;
+    double robotY = brain->data->robotPoseToField.y;
+    double robotTheta = brain->data->robotPoseToField.theta;
+
+    // 이동 벡터 계산
+    double errX = targetX - robotX; // X축 이동 필요량
+    double errY = targetY - robotY; // Y축 이동 필요량
+
+    // 필드 좌표계 계산
+    double vX_field = errX * 1.0;
+    double vY_field = errY * 1.0;
+
+    // 로봇 좌표계로 변환
+    double vx_robot = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
+    double vy_robot = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
+
+    // 회전 제어
+    double targetTheta;
+    
+    // 오프더볼 상황에서는 공을 주시하는 것이 유리함
+    if (brain->data->ballDetected) {
+        targetTheta = brain->data->ball.yawToRobot + robotTheta; // 공 각도
+    } 
+    else {
+        targetTheta = atan2(0.0 - robotY, goalX - robotX); // 공 모르면 중앙 보기
+    }
+
+    // 각도 오차 계산
+    double angleDiff = toPInPI(targetTheta - robotTheta);
+    
+    // 회전 속도 계산
+    double vtheta = angleDiff * 1.0; 
+    
+    // 안전하게 돌기 위해 최대 회전 속도 제한
+    if (vtheta > 1.0) vtheta = 1.0;
+    if (vtheta < -1.0) vtheta = -1.0;
+
+    // 최종 속도 명령 전송
+    brain->client->setVelocity(vx_robot, vy_robot, vtheta);
+
+    return NodeStatus::SUCCESS;
+}

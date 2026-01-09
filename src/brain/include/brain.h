@@ -45,6 +45,7 @@
 #include "adjust.h"
 #include "decision_role.h"
 #include "speak.h"
+#include "offtheball.h"
 
 // Forward declaration to avoid circular dependency
 class BrainCommunication;
@@ -92,6 +93,7 @@ public:
     void registerKickNodes(BT::BehaviorTreeFactory &factory){RegisterKickNodes(factory, this);}
     void registerAdjustNodes(BT::BehaviorTreeFactory &factory){RegisterAdjustNodes(factory, this);}
     void registerSpeakNodes(BT::BehaviorTreeFactory &factory){RegisterSpeakNodes(factory, this);}
+    void registerOfftheballNodes(BT::BehaviorTreeFactory &factory){RegisterOfftheballNodes(factory, this);}
     
     // ROS callback 함수
     void gameControlCallback(const game_controller_interface::msg::GameControlData &msg);
