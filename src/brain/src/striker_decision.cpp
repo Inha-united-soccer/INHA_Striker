@@ -33,16 +33,8 @@ NodeStatus StrikerDecision::tick() {
     double ballY = ball.posToRobot.y;
     double distToGoal = 0.0;
     
-    // 거리 계산 (Localization vs Vision)
     distToGoal = norm(ball.posToField.x - (-brain->config->fieldDimensions.length/2), ball.posToField.y);
     auto gps = brain->data->getGoalposts();
-    double visibleMinDist = 999.0;
-    for(const auto& gp : gps){
-        if (gp.posToRobot.x > 0 && gp.range < visibleMinDist) visibleMinDist = gp.range;
-    }
-    if(visibleMinDist < 10.0 && visibleMinDist < distToGoal) distToGoal = visibleMinDist;
-    brain->log->logToScreen("debug/DistCheck", format("DistToGoal: %.2f (Vis: %.2f)", distToGoal, visibleMinDist), 0x00FFFF00);
-
 
     // 장애물 회피 로직
     bool avoidPushing;
@@ -66,21 +58,11 @@ NodeStatus StrikerDecision::tick() {
         else kickYOffset = -fabs(kickYOffset);
     }
 
-    // [Quick Kick Mode] 골대 근처에서는 OffTheBall(0.9m) 이후 바로 Adjust로 넘어가기 위해 Chase 임계값을 높임
-    if (distToGoal < setPieceGoalDist + 0.5) {
-        if (chaseRangeThreshold < 1.0) chaseRangeThreshold = 1.0;
-    }
-    
     // 정렬 오차 계산
-
-    double deltaDir = toPInPI(kickDir - dir_rb_f); // 로봇이 공 뒤에 일직선으로 서있으면 0으로 계산됨
-    double targetAngleOffset = atan2(kickYOffset, ballRange); // 오른 발로 차야하니까 공보다 약간 왼쪽에 있어야함 - 그 왼쪽에 해당하는 각도
-    double errorDir = toPInPI(deltaDir + targetAngleOffset); // 공을 차기 위한 위치인가 - 최종 위치 오차
-    double headingBias = -targetAngleOffset * 0.3; // 오른발로 차기에 골대를 정면으로 보는 것보단 몸을 살짝 안쪽으로 돌리고 차야함 targetAngleOffset의 30퍼센트만큼 (휴리스틱이니 해보고 수정..)
-    double desiredHeading = kickDir + headingBias; // 바라봐야할 이상적인 헤딩 각도
-    double headingError = toPInPI(desiredHeading - brain->data->robotPoseToField.theta); // 로봇이 골대를 정확히 보고있나 - 최종 각도 오차
-
-
+    double deltaDir = toPInPI(kickDir - dir_rb_f);                              // 로봇이 공 뒤에 일직선으로 서있으면 0이라 생각할 수 있음
+    double targetAngleOffset = atan2(kickYOffset, ballRange);                    // 오른 발로 차야하니까 공보다 약간 왼쪽에 있어야함 - 그 왼쪽에 해당하는 각도
+    double errorDir = toPInPI(deltaDir + targetAngleOffset);                     // 공을 차기 위한 위치인가 - 최종 위치 오차
+    double headingError = toPInPI(kickDir - brain->data->robotPoseToField.theta); // 로봇이 골대를 정확히 보고있나 - 최종 각도 오차
 
     bool iKnowBallPos = brain->tree->getEntry<bool>("ball_location_known");
     bool tmBallPosReliable = brain->tree->getEntry<bool>("tm_ball_pos_reliable");
@@ -101,7 +83,7 @@ NodeStatus StrikerDecision::tick() {
     } 
 
     /* ----------------- 3. 공 chase ----------------- */
-    else if (ballRange > chaseRangeThreshold * (lastDecision == "chase" ? 0.9 : 1.0)) {
+    else if (ballRange > chaseRangeThreshold) { // * (lastDecision == "chase" ? 0.9 : 1.0)) {
         newDecision = "chase";
         color = 0x0000FFFF;
     } 
@@ -127,7 +109,6 @@ NodeStatus StrikerDecision::tick() {
         auto now = brain->get_clock()->now();
         auto dt = brain->msecsSince(timeLastTick);
         bool reachedKickDir = fabs(errorDir) < kickTolerance && fabs(headingError) < kickTolerance && dt < 100; // 정렬 완료 상태 bool 값
-        // bool maintainKick = (lastDecision == "kick" || lastDecision == "kick_quick") && fabs(errorDir) < 0.10 && fabs(headingError) < 0.10;
 
         timeLastTick = now;
         lastDeltaDir = deltaDir;

@@ -50,7 +50,7 @@ NodeStatus OfftheballPosition::tick(){
     // 최종 위치 계산
     static double lastBestY = 0.0;
 
-    // Y축을 따라 0.2m 간격으로 후보 지점 탐색
+    // y축을 따라 0.2m 간격으로 후보 지점 탐색
     for (double y = -maxY; y <= maxY; y += 0.2) { 
         double score = 0.0
                      - (fabs(y) * 0.3) // 중앙 선호 (0.0)이 골대 중앙선

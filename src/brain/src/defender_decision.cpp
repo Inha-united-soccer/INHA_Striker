@@ -15,7 +15,7 @@ void RegisterDefenderDecisionNodes(BT::BehaviorTreeFactory &factory, Brain* brai
     REGISTER_DEFENDERDECISION_BUILDER(DefenderDecision)
 }
 
-NodeStatus DefenderDecide::tick() {
+NodeStatus DefenderDecision::tick() {
     double chaseRangeThreshold;
     getInput("chase_threshold", chaseRangeThreshold);
     string lastDecision;

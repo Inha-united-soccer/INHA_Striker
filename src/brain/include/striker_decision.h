@@ -8,10 +8,10 @@ using namespace BT;
 
 void RegisterStrikerDecisionNodes(BT::BehaviorTreeFactory &factory, Brain* brain);
 
-class StrikerDecide : public SyncActionNode
+class StrikerDecision : public SyncActionNode
 {
 public:
-    StrikerDecide(const string &name, const NodeConfig &config, Brain *_brain) : SyncActionNode(name, config), brain(_brain) {}
+    StrikerDecision(const string &name, const NodeConfig &config, Brain *_brain) : SyncActionNode(name, config), brain(_brain) {}
 
     static PortsList providedPorts()
     {
