@@ -142,12 +142,6 @@ NodeStatus OfftheballPosition::tick(){
     {
         brain->log->setTimeNow();
         // 1. 목표 위치 점
-        brain->log->log("debug/offtheball/target", 
-            rerun::Points2D({rerun::Vec2D{targetX, targetY}})
-            .with_colors(0xFF0000FF)
-            .with_radii(0.1)
-            .with_labels({format("Target(%.1f, %.1f)", targetX, targetY)})
-        );
 
         // 2. 이동 경로 화살표 (로봇 -> 목표)
         brain->log->log("debug/offtheball/path", 
