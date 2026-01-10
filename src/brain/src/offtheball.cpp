@@ -69,7 +69,7 @@ NodeStatus OfftheballPosition::tick(){
     }
 
     // Y축을 따라 0.2m 간격으로 후보 지점 탐색
-    for (double y = -maxY; y <= maxY; y += 0.2) { 
+    for (double y = -maxY; y <= maxY; y += 0.1) { 
         double distToDefender = 0.0;
         double normalizer = (defenderIndices.size() > 0 ? defenderIndices.size() : 1.0);
 
@@ -82,9 +82,27 @@ NodeStatus OfftheballPosition::tick(){
         distToDefender /= normalizer;
         
         double score = 0.0
-                     - (fabs(y) * 0.4) // 중앙 선호 (0.0)이 골대 중앙선
-                     + (distToDefender * 1.0); // 수비수 거리가 멀수록 선호
-                     // - (fabs(y - lastBestY) * 0.5); 이전 위치 선호 -> 생각해보면 어차피 로봇인데 계속 하고있는게 이득
+                     - (fabs(y) * 0.8) // 중앙 선호 (0.0)이 골대 중앙선
+                     + (distToDefender * 1.0) // 수비수 거리가 멀수록 선호
+                     // - (fabs(y - lastBestY) * 0.5); 이전 위치 선호
+                     - (fabs(y - robotY) * 0.5); 로봇 위치 선호
+                     
+                    
+        // 공을 알고 있을 때만 패스 경로 계산이 의미가 있음 -> 공을 바라보고 있지만 안보일 수도 있기에
+        if (brain->data->ballDetected) { 
+            Line passPath = {brain->data->ball.posToField.x, brain->data->ball.posToField.y, baseX, y};
+            for (const auto& opponent : Opponents) {
+                if (opponent.label != "Opponent") continue;
+                // 상대방이 패스 경로에 얼마나 가까운지
+                double distToPassPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, passPath);
+                
+                // 0.5m 이내에 있으면 페널티 부여
+                if (distToPassPath < 1.0) {
+                    score -= (1.0 - distToPassPath) * 2.0; // 가까울수록 큰 페널티 (최대 2.0)
+                }
+            }
+        }
+
         if (score > maxScore) {
             maxScore = score;
             bestY = y; // 가장 점수가 높은 y좌표 선택
@@ -92,12 +110,8 @@ NodeStatus OfftheballPosition::tick(){
     } // TODO: if maxScore is below ?.?, it's not proper to stay at baseX.
     // TODO: in this case, we need whole new logic
 
-    // 공이 1.5m 이내로 오거나 새로 계산된 위치가 이전 위치보다 1.0m 이상 차이나면 업데이트
-    bool forceUpdate = brain->data->ball.range < 1.5; 
-    if (forceUpdate || fabs(bestY - lastBestY) > 1.0) {
-        lastBestY = bestY;
-    }
-    
+    lastBestY = bestY;
+
     // 최종 목표 위치 설정
     double targetX = baseX;
     double targetY = lastBestY;
