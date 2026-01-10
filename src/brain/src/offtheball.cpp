@@ -71,13 +71,19 @@ NodeStatus OfftheballPosition::tick(){
     // Y축을 따라 0.2m 간격으로 후보 지점 탐색
     for (double y = -maxY; y <= maxY; y += 0.2) { 
         double distToDefender = 0.0;
+        double normalizer = (defenderIndices.size() > 0 ? defenderIndices.size() : 1.0);
+
         for (const auto& defenderIndex : defenderIndices) {
-            double dist = norm(y - Opponents[defenderIndex].posToField.y, baseX - Opponents[defenderIndex].posToField.x);    
-            distToDefender += (dist*dist);
+            double dist = norm(y - Opponents[defenderIndex].posToField.y, baseX - Opponents[defenderIndex].posToField.x);
+            dist = cap(dist, 3.0, 0.0); // 3m 면 충분히 멀다. 그 이상 떨어져 있다고 cost를 더 주진 않을것
+            distToDefender += dist;
         }
+
+        distToDefender /= normalizer;
+        
         double score = 0.0
-                     - (fabs(y) * 0.3) // 중앙 선호 (0.0)이 골대 중앙선
-                     + (distToDefender * 0.5); // 수비수 거리가 멀수록 선호
+                     - (fabs(y) * 0.4) // 중앙 선호 (0.0)이 골대 중앙선
+                     + (distToDefender * 1.0); // 수비수 거리가 멀수록 선호
                      // - (fabs(y - lastBestY) * 0.5); 이전 위치 선호 -> 생각해보면 어차피 로봇인데 계속 하고있는게 이득
         if (score > maxScore) {
             maxScore = score;
