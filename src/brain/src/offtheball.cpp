@@ -42,6 +42,7 @@ NodeStatus OfftheballPosition::tick(){
     // 최적의 Y좌표 계산 (경기장 폭의 절반에서 0.5m 안쪽)
     double maxY = fd.width / 2.0 - 0.5;
     double bestY = 0.0;
+
     double maxScore = -1e9;
     
     // 장애물 정보 나중에 사용
@@ -84,21 +85,35 @@ NodeStatus OfftheballPosition::tick(){
         double score = 0.0
                      - (fabs(y) * 0.8) // 중앙 선호 (0.0)이 골대 중앙선
                      + (distToDefender * 1.0) // 수비수 거리가 멀수록 선호
-                     // - (fabs(y - lastBestY) * 0.5); 이전 위치 선호
-                     - (fabs(y - robotY) * 0.5); 로봇 위치 선호
+                     - (fabs(y - robotY) * 0.5); // 로봇 위치 선호(이전 위치 선호)
                      
                     
         // 공을 알고 있을 때만 패스 경로 계산이 의미가 있음 -> 공을 바라보고 있지만 안보일 수도 있기에
+        // 생각해보면 메모리가 필수일 거 같아서 우선 추가만 함 봐보고 아니다 싶으면 지우죠
         if (brain->data->ballDetected) { 
             Line passPath = {brain->data->ball.posToField.x, brain->data->ball.posToField.y, baseX, y};
+            Line shotPath = {baseX, y, goalX, 0.0}; // 후보 위치에서 골대까지의 경로
+
             for (const auto& opponent : Opponents) {
                 if (opponent.label != "Opponent") continue;
-                // 상대방이 패스 경로에 얼마나 가까운지
+
+                // 1. 메모리 기반 신뢰도 계산 -> 3초가 지나면 0이 되어 영향력 없음
+                rclcpp::Time now = clock->now();
+                double elapsed = (now - opponent.timePoint).seconds();
+                double confidenceFactor = std::max(0.0, (3.0 - elapsed) / 3.0); 
+
+                if (confidenceFactor <= 0.0) continue;
+
+                // 2. 패스 경로 cost 계산
                 double distToPassPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, passPath);
-                
-                // 0.5m 이내에 있으면 페널티 부여
                 if (distToPassPath < 1.0) {
-                    score -= (1.0 - distToPassPath) * 2.0; // 가까울수록 큰 페널티 (최대 2.0)
+                    score -= (1.0 - distToPassPath) * 2.0 * confidenceFactor; 
+                }
+
+                // 3. 골대 슈팅각 cost 계산
+                double distToShotPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, shotPath);
+                if (distToShotPath < 0.5) { // 슈팅 경로는 더 좁게(0.5m) 검사
+                    score -= (0.5 - distToShotPath) * 3.0 * confidenceFactor; // 슛 각이 막히면 큰 감점
                 }
             }
         }
