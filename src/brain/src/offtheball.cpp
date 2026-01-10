@@ -97,23 +97,25 @@ NodeStatus OfftheballPosition::tick(){
         for (const auto& opponent : Opponents) {
             if (opponent.label != "Opponent") continue;
 
-            // 1. 메모리 기반 신뢰도 계산 -> 3초가 지나면 0이 되어 영향력 없음
+            // 메모리 기반 신뢰도 계산 -> 3초가 지나면 0이 되어 영향력 없음
             rclcpp::Time now = brain->get_clock()->now();
-            double elapsed = (now - opponent.timePoint).seconds();
-            double confidenceFactor = std::max(0.0, (3.0 - elapsed) / 3.0); 
+            double elapsed = (now - opponent.timePoint).seconds(); // 수비수를 마지막으로 본 지 몇 초 지났나
+            double confidenceFactor = std::max(0.0, (3.0 - elapsed) / 3.0);  // 시간이 지날수록 신뢰도가 떨어지게
 
             if (confidenceFactor <= 0.0) continue;
 
-            // 2. 패스 경로 cost 계산 (공이 보일 때만)
+            // 패스 경로 cost 계산 (공이 보일 때만)
             if (brain->data->ballDetected) { 
+                // 수비수가 패스 경로 직선에서 얼마나 떨어져 있나
                 double distToPassPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, passPath);
-                if (distToPassPath < 1.0) {
-                    score -= (1.0 - distToPassPath) * 5.0 * confidenceFactor; // 패스길 막히면 감점
+                if (distToPassPath < 1.0) { // 경로 1m 이내 opponent가 있다면 cost 계산에 포함
+                    score -= (1.0 - distToPassPath) * 5.0 * confidenceFactor; // (1.0 - 거리) * 5.0 * 신뢰도 만큼 감점
+                    // 패스길 막히면 감점 -> confidenceFactor를 포함한 이유는 공을 따라가다 보면 시야에서 수비수가 사라질 수 있기에 여기도 메모리 적용해봄
                 }
             }
 
-            // 3. 골대 슈팅각 cost 계산 (공 안보여도 수행)
-            double distToShotPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, shotPath);
+            // 골대 슈팅각 cost 계산 (공 안보여도 수행)
+            double distToShotPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, shotPath); // 패스 경로 계산과 거의 같게 골대 슈팅각 계산
             if (distToShotPath < 1.0) { 
                 score -= (1.0 - distToShotPath) * 5.0 * confidenceFactor; // 슛 각이 막히면 감점
             }
