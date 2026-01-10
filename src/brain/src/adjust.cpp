@@ -34,7 +34,7 @@ NodeStatus Adjust::tick(){
     getInput("tangential_speed_far", st_far);
     getInput("tangential_speed_near", st_near);
     getInput("vtheta_factor", vtheta_factor);
-    // getInput("turn_threshold", turnThreshold); // Unused
+    // getInput("turn_threshold", turnThreshold);
     getInput("vx_limit", vxLimit);
     getInput("vy_limit", vyLimit);
     getInput("vtheta_limit", vthetaLimit);

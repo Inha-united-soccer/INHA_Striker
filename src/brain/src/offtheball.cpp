@@ -138,5 +138,30 @@ NodeStatus OfftheballPosition::tick(){
     // 최종 속도 명령 전송
     brain->client->setVelocity(vx_robot, vy_robot, vtheta);
 
+    // rerun 로그
+    {
+        brain->log->setTimeNow();
+        // 1. 목표 위치 점
+        brain->log->log("debug/offtheball/target", 
+            rerun::Points2D({rerun::Vec2D{targetX, targetY}})
+            .with_colors(0xFF0000FF)
+            .with_radii(0.1)
+            .with_labels({format("Target(%.1f, %.1f)", targetX, targetY)})
+        );
+
+        // 2. 이동 경로 화살표 (로봇 -> 목표)
+        brain->log->log("debug/offtheball/path", 
+            rerun::Arrows2D::from_vectors({{targetX - robotX, targetY - robotY}})
+            .with_origins({{robotX, robotY}})
+            .with_colors(0x00FF00FF)
+            .with_labels({"Path"})
+        );
+
+        // 3. 디버그 info
+        brain->log->log("debug/offtheball/info", 
+            rerun::TextLog(format("Score: %.2f, DistDiff: %.2f, v(%.2f, %.2f, %.2f)", maxScore, fabs(bestY - lastBestY), vx_robot, vy_robot, vtheta))
+        );
+    }
+
     return NodeStatus::SUCCESS;
 }
