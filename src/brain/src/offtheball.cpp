@@ -98,7 +98,7 @@ NodeStatus OfftheballPosition::tick(){
                 if (opponent.label != "Opponent") continue;
 
                 // 1. 메모리 기반 신뢰도 계산 -> 3초가 지나면 0이 되어 영향력 없음
-                rclcpp::Time now = clock->now();
+                rclcpp::Time now = brain->get_clock()->now();
                 double elapsed = (now - opponent.timePoint).seconds();
                 double confidenceFactor = std::max(0.0, (3.0 - elapsed) / 3.0); 
 
