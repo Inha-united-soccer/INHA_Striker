@@ -58,12 +58,12 @@ NodeStatus OfftheballPosition::tick(){
 
     // 상대선수들
     auto Opponents = brain->data->getRobots();
-    bool hasOpponent = false;
+
 
     std::vector<int> defenderIndices;
     for (size_t idx = 0; idx < Opponents.size(); idx++) {
         if (Opponents[idx].label != "Opponent") continue;
-        hasOpponent = true;
+
         if (std::abs(Opponents[idx].posToField.x - goalX) < 4.0) {
             defenderIndices.push_back(idx); // 항상 올바른 인덱스
         }
