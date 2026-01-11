@@ -13,7 +13,6 @@ NodeStatus PassReceive::onStart()
 NodeStatus PassReceive::onRunning()
 {
     // pass signal false로 초기화
-    bool passSignal = false;
     double targetX = 0.0;
     double targetY = 0.0;
 
@@ -22,7 +21,6 @@ NodeStatus PassReceive::onRunning()
     
     if (brain->data->tmStatus[partnerIdx].passSignal)
     {
-        passSignal = true;
         targetX = brain->data->tmStatus[partnerIdx].passTargetX;
         targetY = brain->data->tmStatus[partnerIdx].passTargetY;
     }
