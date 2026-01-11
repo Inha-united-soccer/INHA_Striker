@@ -69,24 +69,36 @@ NodeStatus StrikerDecision::tick() {
     string newDecision;
     auto color = 0xFFFFFFFF; 
 
+    // 팀원 패스 신호 받기
+    int myId = brain->config->playerId;
+    int partnerIdx = (myId == 1) ? 1 : 2;
+    
+    bool passsignal = brain->data->tmStatus[partnerIdx].passSignal;
 
+    // 패스 신호 타임 카운트
+    bool isReceiveTimeout = false;
+    if (passsignal) {
+        if (receiveStartTime.nanoseconds() == 0) {
+            receiveStartTime = brain->get_clock()->now();
+        } 
+        else if (brain->msecsSince(receiveStartTime) > 5000) {
+            isReceiveTimeout = true;
+        }
+    } 
+    else {
+        receiveStartTime = rclcpp::Time(0, 0, RCL_ROS_TIME);
+    }
+    
+    
     /* ----------------------- 1. 공 찾기 ----------------------- */ 
     if (!(iKnowBallPos || tmBallPosReliable)) {
         newDecision = "find";
         color = 0xFFFFFFFF;
     }
 
-    // Check for pass signal
-    bool passsignal = false;
-    for(int i=0; i<HL_MAX_NUM_PLAYERS; i++) {
-        if (brain->data->tmStatus[i].passSignal) {
-            passsignal = true;
-            break;
-        }
-    }
 
     /* ----------------------- 2. 패스 받기 ----------------------- */ 
-    else if (passsignal && ballRange > 0.5){
+    else if (passsignal && !isReceiveTimeout && ballRange > 0.5){
         newDecision = "receive";
         color = 0x00FFFFFF;
     }

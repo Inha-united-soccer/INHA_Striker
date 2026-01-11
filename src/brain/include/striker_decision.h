@@ -30,4 +30,5 @@ private:
     Brain *brain;
  
     rclcpp::Time timeLastTick; 
+    rclcpp::Time receiveStartTime; 
 };
