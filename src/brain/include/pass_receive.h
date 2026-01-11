@@ -19,7 +19,7 @@ public:
     static BT::PortsList providedPorts()
     {
         return {
-            BT::InputPort<string>("_while"),
+            // BT::InputPort<string>("_while"), // Underscore reserved error
         };
     }
 
