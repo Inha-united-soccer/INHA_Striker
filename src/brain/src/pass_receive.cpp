@@ -26,6 +26,8 @@ NodeStatus PassReceive::onRunning()
         targetY = brain->data->tmStatus[partnerIdx].passTargetY;
     }
 
+    brain->log->log("field/pass_target", rerun::Points2D({{static_cast<float>(targetX), static_cast<float>(targetY)}}).with_colors({0x00FF00FF}).with_labels({"PassTarget"}).with_radii({0.1f}));
+
     // target 좌표를 로봇 좌표로 변환
     double target_rx, target_ry, __;
     transCoord(targetX, targetY, 0, 
