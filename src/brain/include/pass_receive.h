@@ -1,7 +1,8 @@
 #pragma once
 
-#include "brain.h"
 #include "behaviortree_cpp/action_node.h"
+
+class Brain;
 
 class PassReceive : public BT::StatefulActionNode
 {

@@ -40,6 +40,7 @@ NodeStatus PassReceive::onRunning()
     double vy = target_ry * p_gain;
 
     // 방향 조절
+    double vtheta = 0.0;
     if (brain->data->ballDetected) {
         vtheta = brain->data->ball.yawToRobot * 1.5; // 공이 보이면 공쪽을 보면서
     } else {
@@ -64,7 +65,7 @@ NodeStatus PassReceive::onRunning()
         }
     }
 
-    brain->set_velocity(vx, vy, vtheta);
+    brain->client->setVelocity(vx, vy, vtheta);
 
     return NodeStatus::RUNNING;
 }
