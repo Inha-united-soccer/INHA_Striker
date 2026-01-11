@@ -71,8 +71,8 @@ NodeStatus OfftheballPosition::tick(){
     }
 
     // Y축을 따라 0.2m 간격으로 후보 지점 탐색
-    for (double x = baseX-1; x <= baseX+1; x += 0.5) {
-        for (double y = -maxY; y <= maxY; y += 0.5) {
+    for (double x = baseX-1; x <= baseX+1; x += 0.1) {
+        for (double y = -maxY; y <= maxY; y += 0.1) {
             double distToDefender = 0.0;
             double normalizer = (defenderIndices.size() > 0 ? defenderIndices.size() : 1.0);
 
@@ -85,11 +85,11 @@ NodeStatus OfftheballPosition::tick(){
             distToDefender /= normalizer;
             
             double score = 0.0
-                        - (fabs(x - baseX) * 0.2) // baseX 약한 선호
+                        - (fabs(x - baseX) * 0.1) // baseX 약한 선호
                         - (fabs(y) * 0.6) // 중앙 선호
                         + (distToDefender * 1.0) // 수비수 거리가 멀수록 선호
-                        - (fabs(x - robotX) * 0.2) // 로봇 위치 선호(이전 위치 선호)
-                        - (fabs(y - robotY) * 0.2); // 로봇 위치 선호(이전 위치 선호)
+                        - (fabs(x - robotX) * 0.5) // 로봇 위치 선호(이전 위치 선호)
+                        - (fabs(y - robotY) * 0.5); // 로봇 위치 선호(이전 위치 선호)
                         
 
             // 공을 알고 있을 때만 패스 경로 계산이 의미가 있음 -> 공을 바라보고 있지만 안보일 수도 있기에
