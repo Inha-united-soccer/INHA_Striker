@@ -1629,9 +1629,9 @@ void Brain::handleCooperation() {
     double BALL_CONTROL_COST_THRESHOLD = 3.0;
     get_parameter("strategy.cooperation.ball_control_cost_threshold", BALL_CONTROL_COST_THRESHOLD);
 
-    if (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost) {
+    // if (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost) {
     // [TEST] 강제로 리더가 아님(False)으로 고정하여 Offtheball 테스트
-    // if (true || (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost)) {
+    if (true || (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost)) {
 
         data->tmImLead = false;
         tree->setEntry<bool>("is_lead", false);
