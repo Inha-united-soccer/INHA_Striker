@@ -82,22 +82,16 @@ void BrainData::updateRobots(const vector<GameObject>& newObservations, double r
 
         bool matched = false;
         double minDistance = 1.0; // 매칭 임계값 (1m)
-        int matchedIdx = -1;
 
         for (int i = 0; i < _robots.size(); i++) {
             double dist = norm(newObj.posToField.x - _robots[i].posToField.x, 
                                newObj.posToField.y - _robots[i].posToField.y);
             if (dist < minDistance) {
-                minDistance = dist;
-                matchedIdx = i;
+                _robots[i] = newObj;
+                matched = true;
             }
         }
-
-        if (matchedIdx != -1) {
-            // 매칭된 로봇 업데이트
-            _robots[matchedIdx] = newObj;
-        } else {
-            // 새로운 로봇 추가
+        if (!matched) {
             _robots.push_back(newObj);
         }
     }
