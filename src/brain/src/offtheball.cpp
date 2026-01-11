@@ -136,11 +136,11 @@ NodeStatus OfftheballPosition::tick(){
     // TODO: if maxScore is below ?.?, it's not proper to stay at baseX.
     // TODO: in this case, we need whole new logic
 
-    lastBestY = bestY;
+    //lastBestY = bestY;
 
     // 최종 목표 위치 설정
-    double targetX = baseX;
-    double targetY = lastBestY;
+    double targetX = bestX;
+    double targetY = bestY;
 
     // 이동 벡터 계산
     double errX = targetX - robotX; // X축 이동 필요량
