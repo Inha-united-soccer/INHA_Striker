@@ -95,7 +95,7 @@ NodeStatus OfftheballPosition::tick(){
             // 공을 알고 있을 때만 패스 경로 계산이 의미가 있음 -> 공을 바라보고 있지만 안보일 수도 있기에
             // 생각해보면 메모리가 필수일 거 같아서 우선 추가만 함 봐보고 아니다 싶으면 지우죠
 
-            Line passPath = {brain->data->ball.posToField.x, brain->data->ball.posToField.y, baseX, y};
+            Line passPath = {brain->data->ball.posToField.x, brain->data->ball.posToField.y, x, y};
             Line shotPath = {baseX, y, goalX, 0.0}; // 후보 위치에서 골대까지의 경로
 
             for (const auto& opponent : Opponents) {
