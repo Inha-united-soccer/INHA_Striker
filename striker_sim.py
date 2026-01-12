@@ -34,16 +34,18 @@ PARAMS = {
     "hysteresis_x_weight": 1.3,  # 현재 로봇 위치 유지 선호도 (X축)
     "hysteresis_y_weight": 1.5,  # 현재 로봇 위치 유지 선호도 (Y축)
     
-    "penalty_weight": 5.0,       # 경로 막힘 패널티 기본값
-    "path_margin": 1.0,          # 경로 방해 판단 거리
+    "penalty_weight": 10.0,       # 경로 막힘 패널티 기본값
+    "path_margin": 1.5,          # 경로 방해 판단 거리
     
     "opp_memory_sec": 5.0,       # 수비수 기억 시간 (시간에 따라서 신뢰도 감소함)
     
     "pass_penalty_weight": 5.0,  # 패스 경로 막힘 감점 가중치
     "shot_penalty_weight": 3.0,  # 슛 경로 막힘 감점 가중치
-    "movement_penalty_weight": 10.0, # 이동 경로 막힘 감점 가중치
-    "symmetry_weight": 2.0,      # 대칭 위치 선호 가중치
-    "path_margin": 1.0,          # 경로 안전 마진 (m) -> 패스/슛/이동 공통
+    "movement_penalty_weight": 30.0, # 이동 경로 막힘 감점 가중치
+    "symmetry_weight": 10.0,      # 대칭 위치 선호 가중치
+    "ball_dist_weight": 2.0,     # 공과의 거리 선호 가중치
+    "forward_weight": 2.0,       # 공격 방향(전진) 선호 가중치 x가 작아질 수록 가중치
+    
     "path_confidence": 0.5,      # 경로 신뢰도 (0~1)
     
     "search_x_margin": 1.8,      # 검색 범위 (x)
@@ -61,8 +63,9 @@ SCENARIO = {
     "ball":  {"x": -0.1, "y": 0.0}, # 공 위치
     
     "opponents": [
-        {"x": -4.3, "y": 0.0}, # 골키퍼
+        {"x": -3.8, "y": -0.5}, # 골키퍼
         {"x": -3.0, "y": 2.0}, # 상대 수비수 1 
+        {"x": -2.0, "y": 0.5}, # 상대 수비수 2
     ]
 }
 
@@ -133,10 +136,16 @@ def compute_striker_score(tx: float, ty: float,
         avg_opp_y = sum(d.pos.y for d in defenders) / len(defenders)
         sym_target_y = -avg_opp_y # 대칭 목표 지점 (수비수가 왼쪽에 있으면 오른쪽을 선호)
         
-        # 대칭 지점과의 거리 페널티 (가까울수록 이득 -> 멀수록 감점)
-        # 단순히 절대값 차이로 계산하면 됨. 
-        # 단, 중앙에 몰려있으면(avg=0) 중앙(0)을 선호하게 되므로 자연스러움.
+        # 대칭 지점과의 거리 페널티 (가까울수록 이득 -> 멀수록 감점) - 단순히 절대값 차이로 계산하면 됨
+        # 중앙에 몰려있으면 중앙(0)을 선호하게 되도록
         score -= abs(ty - sym_target_y) * params["symmetry_weight"]
+
+    # [공 거리 선호] 공과의 X축 거리(깊이)가 2.5m와 가까울수록 선호 - Y축은 자유롭게 움직여서 빈 공간(대칭점)을 찾도록 함
+    dist_x_to_ball = abs(tx - ball.x)
+    score -= abs(dist_x_to_ball - 2.5) * params["ball_dist_weight"]
+
+    # [공격 방향 선호] 골대 쪽(X가 작을수록)으로 갈수록 이득 - tx는 보통 음수이므로, -tx는 양수가 됨 즉 전진할수록 점수 증가
+    score += (-tx) * params["forward_weight"]
 
     # [경로 패널티] 패스 경로 & 슛 경로가 막히면 감점
     pass_path = (ball.x, ball.y, tx, ty)
@@ -156,8 +165,7 @@ def compute_striker_score(tx: float, ty: float,
         if dist_shot < params["path_margin"]:
             score -= (1.0 - dist_shot) * params["penalty_weight"] * cf
             
-    # 7. 이동 경로 막힘 (Movement Path Blocked) - (New)
-    # Robot(Current) -> Target(Candidate) 경로에 수비수가 있는가?
+    # 이동 경로 막힘 cost - 수비수 피해가도록
     dist_robot_target = np.hypot(tx - robot.x, ty - robot.y)
     
     # 로봇과 타겟이 너무 가까우면(0.1m 이내) 이동 경로 체크 불필요
@@ -165,13 +173,6 @@ def compute_striker_score(tx: float, ty: float,
         for opp in opponents:
             cf = confidence_factor(opp.last_seen_sec_ago, params["opp_memory_sec"])
             if cf <= 0.0: continue
-
-            # 상대방과의 거리 (현재 위치 기준) - 혹시 모를 안전장치
-            # if np.hypot(opp.pos.x - robot.x, opp.pos.y - robot.y) < 0.5: continue 
-            
-            # Point-Line Distance (Robot -> Target 선분과 Opponent 사이 거리)
-            # 선분: Robot(x1,y1) -> Target(x2,y2), 점: Opp(x0,y0)
-            # 투영 점이 선분 내에 있는지 확인 필요
             
             # 벡터 정의
             vec_rt_x = tx - robot.x
@@ -180,7 +181,6 @@ def compute_striker_score(tx: float, ty: float,
             vec_ro_y = opp.pos.y - robot.y
             
             # 내적을 통한 투영 계수 t 계산
-            # t = (vec_ro . vec_rt) / |vec_rt|^2
             dot_prod = vec_ro_x * vec_rt_x + vec_ro_y * vec_rt_y
             len_sq = vec_rt_x**2 + vec_rt_y**2
             t = dot_prod / len_sq
@@ -197,13 +197,10 @@ def compute_striker_score(tx: float, ty: float,
             dist_to_path = np.hypot(opp.pos.x - closest_x, opp.pos.y - closest_y)
             
             # 경로 마진보다 가까우면 감점
-            # 단, t < 0.0 인 경우(로봇보다 뒤)는 무시해도 되지만, 
-            # t > 0.0 && t < 1.0 인 구간(사이에 낀 경우)만 강력 처벌
             if t > 0.0 and t < 1.0 and dist_to_path < params["path_margin"]:
                 # 거리가 가까울수록 더 큰 감점
                 penalty = (params["path_margin"] - dist_to_path) * params["movement_penalty_weight"] * cf
                 score -= penalty
-                # print(f"Movement Blocked at {tx:.2f},{ty:.2f} penalty: {penalty:.2f}")
 
     return score
 
@@ -238,7 +235,7 @@ def compute_costmap(robot: Pose2D, ball: Pose2D, opponents: List[Opponent], para
     return X, Y, S, best_pos, best_score
 
 # =========================
-# 5. 동적 경로 시뮬레이션 (핵심 추가)
+# 5. 동적 경로 시뮬레이션
 # =========================
 def simulate_path(start_robot: Pose2D, ball: Pose2D, opponents: List[Opponent], params: dict, steps=50, dt=0.2):
     """
