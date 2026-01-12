@@ -70,6 +70,16 @@ NodeStatus OfftheballPosition::tick(){
         }
     }
 
+    // Calculate symmetry target Y
+    double symTargetY = 0.0;
+    if (!defenderIndices.empty()) {
+        double totalOppY = 0.0;
+        for (int idx : defenderIndices) {
+            totalOppY += Opponents[idx].posToField.y;
+        }
+        symTargetY = -(totalOppY / defenderIndices.size());
+    }
+
     // Y축을 따라 0.2m 간격으로 후보 지점 탐색 (범위 확장: +/- 2.0m)
     for (double x = baseX-2.0; x <= baseX+2.0; x += 0.1) {
         for (double y = -maxY; y <= maxY; y += 0.1) {
@@ -84,13 +94,26 @@ NodeStatus OfftheballPosition::tick(){
 
             distToDefender /= normalizer;
             
-            double score = 0.0
-                        - (fabs(x - baseX) * 0.1) // baseX 약한 선호
-                        - (fabs(y) * 0.6) // 중앙 선호
-                        + (distToDefender * 1.0) // 수비수 거리가 멀수록 선호
-                        - (fabs(x - robotX) * 1.0) // 로봇 위치 선호(이전 위치 선호)
-                        - (fabs(y - robotY) * 1.5); // 로봇 위치 선호(이전 위치 선호)
-                        
+            double score = 0.0;
+            score -= (fabs(x - baseX) * 0.0); // Sim: base_x_weight = 0.0
+            score -= (fabs(y) * 0.6);         // Sim: center_y_weight = 0.6
+            score -= (fabs(x - robotX) * 3.0); // Sim: hysteresis_x_weight = 3.0
+            score -= (fabs(y - robotY) * 3.0); // Sim: hysteresis_y_weight = 3.0
+            score += (distToDefender * 1.0);   // Sim: defender_dist_weight = 1.0
+
+            // [대칭 위치 선호]
+            if (!defenderIndices.empty()) {
+                score -= std::abs(y - symTargetY) * 10.0; // Sim: symmetry_weight = 10.0
+            }
+
+            // [공 거리 선호] X축 거리(깊이) 2.5m 유지
+            // 공을 보고 있지 않아도 ball info는 유효하다고 가정 (추정값)
+            double distXToBall = std::abs(x - brain->data->ball.posToField.x);
+            score -= std::abs(distXToBall - 2.5) * 1.5; // Sim: ball_dist_weight = 1.5
+
+            // [공격 방향 선호] 전진할수록 이득
+            // x가 음수이므로, -x는 양수. 즉 전진할수록 점수 증가
+            score += (-x) * 5.2; // Sim: forward_weight = 5.2
 
             // 공을 알고 있을 때만 패스 경로 계산이 의미가 있음 -> 공을 바라보고 있지만 안보일 수도 있기에
             // 생각해보면 메모리가 필수일 거 같아서 우선 추가만 함 봐보고 아니다 싶으면 지우죠
@@ -110,27 +133,29 @@ NodeStatus OfftheballPosition::tick(){
 
                 // 패스 경로 cost 계산 (공이 보일 때만)
                 if (brain->data->ballDetected) { 
-                    // 수비수가 패스 경로 직선에서 얼마나 떨어져 있나
                     double distToPassPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, passPath);
-                    if (distToPassPath < 1.0) { // 경로 1m 이내 opponent가 있다면 cost 계산에 포함
-                        score -= (1.0 - distToPassPath) * 5.0 * confidenceFactor; // (1.0 - 거리) * 5.0 * 신뢰도 만큼 감점
-                        // 패스길 막히면 감점 -> confidenceFactor를 포함한 이유는 공을 따라가다 보면 시야에서 수비수가 사라질 수 있기에 여기도 메모리 적용해봄
+                    // Sim uses 'penalty_weight' (10.0) and 'path_margin' (1.5)
+                    if (distToPassPath < 1.5) { 
+                        score -= (1.5 - distToPassPath) * 10.0 * confidenceFactor;
                     }
                 }
 
                 // 골대 슈팅각 cost 계산 (공 안보여도 수행)
-                double distToShotPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, shotPath); // 패스 경로 계산과 거의 같게 골대 슈팅각 계산
-                if (distToShotPath < 1.0) { 
-                    score -= (1.0 - distToShotPath) * 3.0 * confidenceFactor; // 슛 각이 막히면 감점 (Updated: 5.0->3.0)
+                double distToShotPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, shotPath); 
+                // Sim uses 'penalty_weight' (10.0) and 'path_margin' (1.5)
+                if (distToShotPath < 1.5) { 
+                     score -= (1.5 - distToShotPath) * 10.0 * confidenceFactor; 
                 }
 
-                // 이동 경로 cost 계산 (New) - 로봇이 후보 위치로 가는 길이 막히면 감점
+                // 이동 경로 cost 계산 - 로봇이 후보 위치로 가는 길이 막히면 감점
                 Line movementPath = {robotX, robotY, x, y}; // 현재 로봇 위치에서 후보 위치까지의 이동 경로
                 double distRobotTarget = norm(x - robotX, y - robotY);
                 if (distRobotTarget > 0.1) { // 0.1m 이상 이동해야 할 때만 체크
                      double distToMovementPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, movementPath);
-                     if (distToMovementPath < 1.0) {
-                         score -= (1.0 - distToMovementPath) * 3.0 * confidenceFactor; // 이동 경로 막히면 꽤 큰 감점 (시뮬레이터: 3.0)
+                     
+                     // Sim params: path_margin = 1.5, movement_penalty_weight = 30.0
+                     if (distToMovementPath < 1.5) { 
+                         score -= (1.5 - distToMovementPath) * 30.0 * confidenceFactor; 
                      }
                 }
             }
