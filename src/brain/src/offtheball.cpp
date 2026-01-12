@@ -29,7 +29,7 @@ NodeStatus OfftheballPosition::tick(){
     auto fd = brain->config->fieldDimensions;
     
     // 골대 앞에서 얼마나 떨어져 있을지
-    double distFromGoal = 2.0; 
+    double distFromGoal = 2.0; // 골대에서 떨어진 기준 거리 (2.0m) 
     if (!getInput("dist_from_goal", distFromGoal)) {
         distFromGoal = 2.0;
     }
@@ -37,9 +37,9 @@ NodeStatus OfftheballPosition::tick(){
     // 골대 중앙 좌표
     double goalX = -(fd.length / 2.0);
     // 골대에서 distFromGoal만큼 떨어진 좌표
-    double baseX = goalX + distFromGoal; 
+    double baseX = goalX + distFromGoal; // 오프더볼 위치 기준 X좌표 
 
-    // 최적의 Y좌표 계산 (경기장 폭의 절반에서 0.5m 안쪽)
+    // 최적의 Y좌표 계산 (경기장 폭 0.5m씩 안쪽)
     double maxY = fd.width / 2.0 - 0.5;
     double bestX = baseX;
     double bestY = 0.0;
@@ -66,11 +66,11 @@ NodeStatus OfftheballPosition::tick(){
         if (Opponents[idx].label != "Opponent") continue;
 
         if (std::abs(Opponents[idx].posToField.x - goalX) < 4.0) {
-            defenderIndices.push_back(idx); // 항상 올바른 인덱스
+            defenderIndices.push_back(idx);
         }
     }
 
-    // Calculate symmetry target Y
+    // opponent 대칭점 계산 Y
     double symTargetY = 0.0;
     if (!defenderIndices.empty()) {
         double totalOppY = 0.0;
@@ -80,7 +80,7 @@ NodeStatus OfftheballPosition::tick(){
         symTargetY = -(totalOppY / defenderIndices.size());
     }
 
-    // Y축을 따라 0.2m 간격으로 후보 지점 탐색 (범위 확장: +/- 2.0m)
+    // Y, X 축을 따라 0.1m 간격으로 후보 지점 탐색
     for (double x = baseX-2.0; x <= baseX+2.0; x += 0.1) {
         for (double y = -maxY; y <= maxY; y += 0.1) {
             double distToDefender = 0.0;
@@ -95,25 +95,25 @@ NodeStatus OfftheballPosition::tick(){
             distToDefender /= normalizer;
             
             double score = 0.0;
-            score -= (fabs(x - baseX) * 0.0); // Sim: base_x_weight = 0.0
-            score -= (fabs(y) * 0.6);         // Sim: center_y_weight = 0.6
-            score -= (fabs(x - robotX) * 3.0); // Sim: hysteresis_x_weight = 3.0
-            score -= (fabs(y - robotY) * 3.0); // Sim: hysteresis_y_weight = 3.0
-            score += (distToDefender * 1.0);   // Sim: defender_dist_weight = 1.0
+            score -= (fabs(x - baseX) * 0.0); // 기준 X좌표 선호 가중치 (0.0)
+            score -= (fabs(y) * 0.6);         // 중앙(Y=0) 선호 가중치 (0.6)
+            score -= (fabs(x - robotX) * 3.0); // 현재 위치 유지 선호 가중치 (3.0)
+            score -= (fabs(y - robotY) * 3.0); // 현재 위치 유지 선호 가중치 (3.0)
+            score += (distToDefender * 1.0);   // 수비수와의 거리 확보 가중치 (1.0)
 
             // [대칭 위치 선호]
             if (!defenderIndices.empty()) {
-                score -= std::abs(y - symTargetY) * 10.0; // Sim: symmetry_weight = 10.0
+                score -= std::abs(y - symTargetY) * 10.0; // 대칭점(빈 공간) 선호 가중치 (10.0)
             }
 
             // [공 거리 선호] X축 거리(깊이) 2.5m 유지
             // 공을 보고 있지 않아도 ball info는 유효하다고 가정 (추정값)
             double distXToBall = std::abs(x - brain->data->ball.posToField.x);
-            score -= std::abs(distXToBall - 2.5) * 1.5; // Sim: ball_dist_weight = 1.5
+            score -= std::abs(distXToBall - 2.5) * 1.5; // 공과의 거리(X축 깊이) 2.5m 유지 가중치 (1.5)
 
             // [공격 방향 선호] 전진할수록 이득
             // x가 음수이므로, -x는 양수. 즉 전진할수록 점수 증가
-            score += (-x) * 5.2; // Sim: forward_weight = 5.2
+            score += (-x) * 5.2; // 공격 방향(전진) 선호 가중치 (5.2)
 
             // 공을 알고 있을 때만 패스 경로 계산이 의미가 있음 -> 공을 바라보고 있지만 안보일 수도 있기에
             // 생각해보면 메모리가 필수일 거 같아서 우선 추가만 함 봐보고 아니다 싶으면 지우죠
