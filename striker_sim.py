@@ -31,7 +31,7 @@ PARAMS = {
     "defender_dist_weight": 1.0, # 수비수와의 거리 가중치 (멀수록 좋음)
     "defender_dist_cap": 3.0,    # 수비수 거리 이득 최대치 제한 (3m 이상은 동일 취급)
     
-    "hysteresis_x_weight": 1.0,  # 현재 로봇 위치 유지 선호도 (X축)
+    "hysteresis_x_weight": 1.3,  # 현재 로봇 위치 유지 선호도 (X축)
     "hysteresis_y_weight": 1.5,  # 현재 로봇 위치 유지 선호도 (Y축)
     
     "penalty_weight": 5.0,       # 경로 막힘 패널티 기본값
@@ -39,13 +39,14 @@ PARAMS = {
     
     "opp_memory_sec": 5.0,       # 수비수 기억 시간 (시간에 따라서 신뢰도 감소함)
     
-    "pass_penalty_weight": 2.0,  # 패스 경로 막힘 감점 가중치
+    "pass_penalty_weight": 5.0,  # 패스 경로 막힘 감점 가중치
     "shot_penalty_weight": 3.0,  # 슛 경로 막힘 감점 가중치
-    "movement_penalty_weight": 3.0, # (New) 이동 경로 막힘 감점 가중치
+    "movement_penalty_weight": 10.0, # 이동 경로 막힘 감점 가중치
+    "symmetry_weight": 2.0,      # 대칭 위치 선호 가중치
     "path_margin": 1.0,          # 경로 안전 마진 (m) -> 패스/슛/이동 공통
     "path_confidence": 0.5,      # 경로 신뢰도 (0~1)
     
-    "search_x_margin": 2.0,      # 검색 범위 (x)
+    "search_x_margin": 1.8,      # 검색 범위 (x)
     "grid_step": 0.1,            # 그리드 간격
     
     # 시각화 설정
@@ -61,7 +62,7 @@ SCENARIO = {
     
     "opponents": [
         {"x": -4.3, "y": 0.0}, # 골키퍼
-        {"x": -2.7, "y": 2.0}, # 상대 수비수 1 
+        {"x": -3.0, "y": 2.0}, # 상대 수비수 1 
     ]
 }
 
@@ -126,7 +127,17 @@ def compute_striker_score(tx: float, ty: float,
         
     dist_to_defender /= normalizer
     score += dist_to_defender * params["defender_dist_weight"]
-    
+
+    # [대칭 위치 선호] 수비수들의 평균 Y 위치의 반대편을 선호
+    if defenders:
+        avg_opp_y = sum(d.pos.y for d in defenders) / len(defenders)
+        sym_target_y = -avg_opp_y # 대칭 목표 지점 (수비수가 왼쪽에 있으면 오른쪽을 선호)
+        
+        # 대칭 지점과의 거리 페널티 (가까울수록 이득 -> 멀수록 감점)
+        # 단순히 절대값 차이로 계산하면 됨. 
+        # 단, 중앙에 몰려있으면(avg=0) 중앙(0)을 선호하게 되므로 자연스러움.
+        score -= abs(ty - sym_target_y) * params["symmetry_weight"]
+
     # [경로 패널티] 패스 경로 & 슛 경로가 막히면 감점
     pass_path = (ball.x, ball.y, tx, ty)
     shot_path = (base_x, ty, goal_x, 0.0) # 후보 위치에서 골대 중앙으로의 슛 경로
