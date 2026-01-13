@@ -95,88 +95,71 @@ NodeStatus OfftheballPosition::tick(){
             distToDefender /= normalizer;
             
             double score = 0.0;
-            score -= (fabs(x - baseX) * 5.0); // 기준 X좌표 선호 가중치 (5.0)
-            score -= (fabs(y) * 5.0);         // 중앙(Y=0) 선호 가중치 (3.0)
-            score -= (fabs(x - robotX) * 3.0); // 현재 위치 유지 선호 가중치 (3.0)
-            score -= (fabs(y - robotY) * 3.0); // 현재 위치 유지 선호 가중치 (3.0)
-            score += (distToDefender * 20.0);   // 수비수와의 거리 확보 가중치 (20.0)
+            score -= (fabs(x - baseX) * 5.0);   // 1. 기준 X좌표 선호 가중치 (5.0)
+            score -= (fabs(y) * 5.0);           // 2. Y축 중앙 선호 가중치 (5.0)
+            score -= (fabs(x - robotX) * 3.0);  // 3. 현재 위치 유지(X) 가중치 (3.0)
+            score -= (fabs(y - robotY) * 3.0);  // 4. 현재 위치 유지(Y) 가중치 (3.0)
+            score += (distToDefender * 20.0);   // 5. 수비수와의 거리 확보 가중치 (20.0)
 
-            // [대칭 위치 선호]
             if (!defenderIndices.empty()) {
-                score -= std::abs(y - symTargetY) * 10.0; // 대칭점(빈 공간) 선호 가중치 (10.0)
+                score -= std::abs(y - symTargetY) * 10.0; // 6. 대칭점(빈 공간) 선호 가중치 (10.0)
             }
 
-            // [공 거리 선호] X축 거리(깊이) 2.5m 유지
-            // 공을 보고 있지 않아도 ball info는 유효하다고 가정 (추정값)
             double distXToBall = std::abs(x - brain->data->ball.posToField.x);
-            score -= std::abs(distXToBall - 2.5) * 3.0; // 공과의 거리(X축 깊이) 2.5m 유지 가중치 (3.0)
+            score -= std::abs(distXToBall - 2.5) * 3.0; // 7. 공과의 거리(X축 깊이) 2.5m 유지 가중치 (3.0)
 
-            // [공격 방향 선호] 전진할수록 이득
-            // x가 음수이므로, -x는 양수. 즉 전진할수록 점수 증가
-            score += (-x) * 5.2; // 공격 방향(전진) 선호 가중치 (5.2)
-
-            // 공을 알고 있을 때만 패스 경로 계산이 의미가 있음 -> 공을 바라보고 있지만 안보일 수도 있기에
-            // 생각해보면 메모리가 필수일 거 같아서 우선 추가만 함 봐보고 아니다 싶으면 지우죠
+            score += (-x) * 5.2; // 8. 공격 방향(전진) 선호 가중치 (5.2)
 
             Line passPath = {brain->data->ball.posToField.x, brain->data->ball.posToField.y, x, y};
-            Line shotPath = {baseX, y, goalX, 0.0}; // 후보 위치에서 골대까지의 경로
+            Line shotPath = {baseX, y, goalX, 0.0};
 
             for (const auto& opponent : Opponents) {
-                if (opponent.label != "Opponent") continue; // 모든 상대편에 대해?
+                if (opponent.label != "Opponent") continue;
 
-                // 메모리 기반 신뢰도 계산 -> 5초가 지나면 0이 되어 영향력 없음
                 rclcpp::Time now = brain->get_clock()->now();
-                double elapsed = (now - opponent.timePoint).seconds(); // 수비수를 마지막으로 본 지 몇 초 지났나
-                double confidenceFactor = std::max(0.0, (5.0 - elapsed) / 5.0);  // 시간이 지날수록 신뢰도가 떨어지게
+                double elapsed = (now - opponent.timePoint).seconds();
+                double confidenceFactor = std::max(0.0, (5.0 - elapsed) / 5.0);  // 메모리 기반 신뢰도 계산 -> 시간이 지날수록 신뢰도가 떨어지게
 
                 if (confidenceFactor <= 0.0) continue;
 
-                // 패스 경로 cost 계산 (공이 보일 때만)
                 if (brain->data->ballDetected) { 
                     double distToPassPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, passPath);
-                    // Sim uses 'pass_penalty_weight' (15.0) and 'path_margin' (1.5)
                     if (distToPassPath < 1.5) { 
-                        score -= (1.5 - distToPassPath) * 15.0 * confidenceFactor;
+                        score -= (1.5 - distToPassPath) * 15.0 * confidenceFactor; // 9. 공 사이 패스 경로 페널티 (15.0)
                     }
                 }
 
-                // 골대 슈팅각 cost 계산 (공 안보여도 수행)
                 double distToShotPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, shotPath); 
-                // Sim uses 'penalty_weight' (10.0) and 'path_margin' (1.5)
                 if (distToShotPath < 1.5) { 
-                     score -= (1.5 - distToShotPath) * 3.0 * confidenceFactor; 
+                     score -= (1.5 - distToShotPath) * 3.0 * confidenceFactor; // 10. 슈팅 경로 페널티 (3.0)
                 }
 
-                // 이동 경로 cost 계산 - 로봇이 후보 위치로 가는 길이 막히면 감점
-                Line movementPath = {robotX, robotY, x, y}; // 현재 로봇 위치에서 후보 위치까지의 이동 경로
+                Line movementPath = {robotX, robotY, x, y};
                 double distRobotTarget = norm(x - robotX, y - robotY);
-                if (distRobotTarget > 0.1) { // 0.1m 이상 이동해야 할 때만 체크
+                if (distRobotTarget > 0.1) {
                      double distToMovementPath = pointMinDistToLine({opponent.posToField.x, opponent.posToField.y}, movementPath);
                      
-                     // Sim params: path_margin = 1.5, movement_penalty_weight = 30.0
                      if (distToMovementPath < 1.5) { 
-                         score -= (1.5 - distToMovementPath) * 30.0 * confidenceFactor; 
+                         score -= (1.5 - distToMovementPath) * 30.0 * confidenceFactor; // 11. 이동 경로 obstacle 페널티 (30.0)
                      }
                 }
             }
 
-            // 골대 위치: (goalX, +/- goalWidth/2)
-            double halfGoalW = brain->config->fieldDimensions.goalWidth / 2.0;
+            double halfGoalW = brain->config->fieldDimensions.goalWidth / 2.0; // 골대 위치: (goalX, +/- goalWidth/2)
             double distToLeftPost = norm(x - goalX, y - halfGoalW);
             double distToRightPost = norm(x - goalX, y + halfGoalW);
             
-            // 0.5m 이내 접근 시 골대 충돌 피하기
             if (distToLeftPost < 0.5) {
-                score -= (0.5 - distToLeftPost) * 20.0; 
+                score -= (0.5 - distToLeftPost) * 20.0; // 12. 골대 충돌 방지 페널티 (20.0)
             }
             if (distToRightPost < 0.5) {
-                score -= (0.5 - distToRightPost) * 20.0;
+                score -= (0.5 - distToRightPost) * 20.0; // 12. 골대 충돌 방지 페널티 (20.0)
             }
 
             if (score > maxScore) {
                 maxScore = score;
                 bestX = x;
-                bestY = y; // 가장 점수가 높은 y좌표 선택
+                bestY = y;
             }
         }
     }
