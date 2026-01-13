@@ -26,4 +26,6 @@ public:
 
 private:
     Brain *brain;
+    std::chrono::steady_clock::time_point scanStartTime = std::chrono::steady_clock::time_point::min();
+    double smoothHeadYaw = 0.0;
 };

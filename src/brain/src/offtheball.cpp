@@ -213,8 +213,7 @@ NodeStatus OfftheballPosition::tick(){
     // 안전하게 돌기 위해 최대 회전 속도 제한
     vtheta = cap(vtheta, 1.0, -1.0);
 
-    // 머리 움직임 제어
-    static auto scanStartTime = std::chrono::steady_clock::time_point::min();
+    // 머리 움직임 제어 - scanStartTime, smoothHeadYaw는 헤더에 선언된 멤버 변수 사용
     auto now = std::chrono::steady_clock::now();
     
     double headPitch = 0.0;
@@ -226,15 +225,23 @@ NodeStatus OfftheballPosition::tick(){
         scanStartTime = now;
     }
     
+    double targetHeadYaw = 0.0;
+
     if (timeSinceScan < 2.0) {
         // sin파로 0.8 rad 범위로 2.0초 주기 (왼쪽 1초, 오른쪽 1초)
-        headYaw = 0.8 * sin(2.0 * M_PI * timeSinceScan / 2.0);
+        targetHeadYaw = 0.8 * sin(2.0 * M_PI * timeSinceScan / 2.0);
     } else {
         // headYaw는 (공 각도 - 로봇의 현재 몸통 각도)
-        headYaw = toPInPI(angleToBall - robotTheta);
-        // headYaw Limit Check (로봇 목 회전 반경 제한, -1.5 ~ 1.5 라디안)
-        headYaw = cap(headYaw, 1.5, -1.5);
+        targetHeadYaw = toPInPI(angleToBall - robotTheta);
+        targetHeadYaw = cap(targetHeadYaw, 1.35, -1.35);
     }
+
+    // EMA Smoothing (Low Pass Filter) -> alpha가 클수록 기존 값 유지 성향이 강함 (= 부드러움, 반응 느림)
+    // 0.6 정도면 적절한 반응성과 부드러움
+    smoothHeadYaw = smoothHeadYaw * 0.6 + targetHeadYaw * 0.4;
+    
+    // 최종 Check
+    headYaw = cap(smoothHeadYaw, 1.35, -1.35);
 
     brain->client->moveHead(headPitch, headYaw);
 
