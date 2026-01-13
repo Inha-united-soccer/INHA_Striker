@@ -24,6 +24,7 @@ void RegisterOfftheballNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
 5. 목표위치에서의 속도 조절
 */
 NodeStatus OfftheballPosition::tick(){
+    auto startTick = std::chrono::high_resolution_clock::now();
 
     // 경기장 규격 및 파라미터 가져오기
     auto fd = brain->config->fieldDimensions;
@@ -190,24 +191,52 @@ NodeStatus OfftheballPosition::tick(){
     // 회전 제어
     double targetTheta;
     
-    // 오프더볼 상황에서는 공을 주시하는 것이 유리함
+    // 오프더볼 상황에서는 공을 주시하는 것이 유리함 하지만 몸은 공을 받을 준비를 하기 위해 공과 골대 사이의 중간 각를 바라보게 함
+    double angleToGoal = atan2(0.0 - robotY, goalX - robotX);
+    double angleToBall;
     if (brain->data->ballDetected) {
-        targetTheta = brain->data->ball.yawToRobot + robotTheta; // 공 각도
+        angleToBall = brain->data->ball.yawToRobot + robotTheta; 
     } 
     else {
-        // targetTheta = atan2(0.0 - robotY, goalX - robotX); // 공 모르면 중앙 보기
-        // 공을 놓쳤을 때도 마지막 기억된 공 위치를 바라보도록 수정
-        targetTheta = atan2(brain->data->ball.posToField.y - robotY, brain->data->ball.posToField.x - robotX);
+        angleToBall = atan2(brain->data->ball.posToField.y - robotY, brain->data->ball.posToField.x - robotX);
     }
+    
+    double angleDiff = toPInPI(angleToGoal - angleToBall);
+    targetTheta = toPInPI(angleToBall + angleDiff * 0.5); 
 
     // 각도 오차 계산
-    double angleDiff = toPInPI(targetTheta - robotTheta);
+    double angleDiffForControl = toPInPI(targetTheta - robotTheta);
     
     // 회전 속도 계산
-    double vtheta = angleDiff * 4.0; 
+    double vtheta = angleDiffForControl * 4.0; 
     
     // 안전하게 돌기 위해 최대 회전 속도 제한
     vtheta = cap(vtheta, 1.0, -1.0);
+
+    // 머리 움직임 제어
+    static auto scanStartTime = std::chrono::steady_clock::time_point::min();
+    auto now = std::chrono::steady_clock::now();
+    
+    double headPitch = 0.0;
+    double headYaw = 0.0;
+    
+    // 6초마다 2초간 고개 돌리기
+    double timeSinceScan = std::chrono::duration<double>(now - scanStartTime).count();
+    if (timeSinceScan > 6.0) {
+        scanStartTime = now;
+    }
+    
+    if (timeSinceScan < 2.0) {
+        // sin파로 0.8 rad 범위로 2.0초 주기 (왼쪽 1초, 오른쪽 1초)
+        headYaw = 0.8 * sin(2.0 * M_PI * timeSinceScan / 2.0);
+    } else {
+        // headYaw는 (공 각도 - 로봇의 현재 몸통 각도)
+        headYaw = toPInPI(angleToBall - robotTheta);
+        // headYaw Limit Check (로봇 목 회전 반경 제한, -1.5 ~ 1.5 라디안)
+        headYaw = cap(headYaw, 1.5, -1.5);
+    }
+
+    brain->client->moveHead(headPitch, headYaw);
 
     // 최종 속도 명령 전송
     brain->client->setVelocity(vx_robot, vy_robot, vtheta, false, false, false);
@@ -226,8 +255,10 @@ NodeStatus OfftheballPosition::tick(){
         );
 
         // 3. 디버그 info
+        auto endTick = std::chrono::high_resolution_clock::now();
+        double duration = std::chrono::duration<double, std::milli>(endTick - startTick).count();
         brain->log->log("debug/offtheball/info", 
-            rerun::TextLog(format("Score: %.2f, DistDiff: %.2f, v(%.2f, %.2f, %.2f)", maxScore, fabs(bestY - lastBestY), vx_robot, vy_robot, vtheta))
+            rerun::TextLog(format("Score: %.2f, Time: %.2fms, v(%.2f, %.2f, %.2f)", maxScore, duration, vx_robot, vy_robot, vtheta))
         );
     }
 
