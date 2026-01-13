@@ -81,8 +81,8 @@ NodeStatus OfftheballPosition::tick(){
     }
 
     // Y, X 축을 따라 0.1m 간격으로 후보 지점 탐색
-    for (double x = baseX-2.0; x <= baseX+2.0; x += 0.1) {
-        for (double y = -maxY; y <= maxY; y += 0.1) {
+    for (double x = baseX-2.0; x <= baseX+2.0; x += 0.05) {
+        for (double y = -maxY; y <= maxY; y += 0.05) {
             double distToDefender = 0.0;
             double normalizer = (defenderIndices.size() > 0 ? defenderIndices.size() : 1.0);
 
