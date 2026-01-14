@@ -62,6 +62,7 @@ set(SOURCE_FILES
   src/defender_decision.cpp
   src/striker_decision.cpp
   src/pass_receive.cpp
+  src/gotopose.cpp
 )
 
 add_executable(brain_node ${SOURCE_FILES})
