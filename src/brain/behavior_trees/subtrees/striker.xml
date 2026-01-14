@@ -14,7 +14,8 @@
          <!-- 상대 킥오프 대기 -->
          <ReactiveSequence _while="wait_for_opponent_kickoff" name="상대 팀 킥오프 대기">
             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
-            <SetVelocity />
+            <!-- <SetVelocity /> -->
+            <StrikerInitPos turn_threshold="0.5" stop_threshold="0.1" vx_limit="0.6" vy_limit="0.5" init_pos_x="-0.65" init_pos_y="0.0" init_pos_theta="0.0" />
          </ReactiveSequence>
          
          <!-- 정상 경기 -->

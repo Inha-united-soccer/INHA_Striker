@@ -12,6 +12,7 @@
 #include "std_msgs/msg/string.hpp"
 #include <fstream>
 #include <ios>
+#include "striker_init_pos.h"
 
 #define REGISTER_BUILDER(Name)     \
     factory.registerBuilder<Name>( \
@@ -31,6 +32,7 @@ void BrainTree::init(){
     brain->registerOfftheballNodes(factory); // offtheball 관련 노드 등록
     brain->registerDefenderDecisionNodes(factory); // defender decision 관련 노드 등록
     brain->registerStrikerDecisionNodes(factory); // striker decision 관련 노드 등록
+    RegisterStrikerInitPosNodes(factory, brain); // striker init pos node registration
     brain->registerPassReceiveNodes(factory); // pass receive 노드 등록
     
     
