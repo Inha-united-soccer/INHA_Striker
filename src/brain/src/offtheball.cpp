@@ -119,10 +119,10 @@ NodeStatus OfftheballPosition::tick(){
 
                 rclcpp::Time now = brain->get_clock()->now();
                 double elapsed = (now - opponent.timePoint).seconds();
-                // 3초 동안은 확실하게 기억한다고 가정 (1.0 유지) -> 고개 돌릴 때 Cost 변화 방지
+                // 1초 동안은 확실하게 기억한다고 가정 (1.0 유지) -> 고개 돌릴 때 Cost 변화 방지
                 // 메모리 기반 신뢰도 계산 -> 시간이 지날수록 신뢰도가 떨어지게
-                // 3초~5초 사이에는 선형적으로 감소
-                double confidenceFactor = (elapsed < 3.0) ? 1.0 : std::max(0.0, (5.0 - elapsed) / 2.0);
+                // 1초~3초 사이에는 선형적으로 감소
+                double confidenceFactor = (elapsed < 1.0) ? 1.0 : std::max(0.0, (3.0 - elapsed) / 2.0);
 
                 if (confidenceFactor <= 0.0) continue;
 
