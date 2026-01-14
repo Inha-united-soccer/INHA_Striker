@@ -43,3 +43,26 @@ public:
 private:
     Brain *brain;
 };
+
+class GoToPosition : public SyncActionNode
+{
+public:
+    GoToPosition(const string &name, const NodeConfig &config, Brain *_brain) : SyncActionNode(name, config), brain(_brain) {}
+
+    static PortsList providedPorts()
+    {
+        return {
+            InputPort<double>("turn_threshold", 0.1, "turn threshold"),
+            InputPort<double>("stop_threshold", 0.1, "stop threshold"),
+            InputPort<double>("vx_limit", 0.5, "vx limit"),
+            InputPort<double>("vy_limit", 0.5, "vy limit"),
+            InputPort<double>("x", 0.0, "target x"),
+            InputPort<double>("y", 0.0, "target y"),
+            InputPort<double>("theta", 0.0, "target theta, degree")};
+    }
+
+    NodeStatus tick() override;
+
+private:
+    Brain *brain;
+};
