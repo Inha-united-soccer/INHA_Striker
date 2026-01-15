@@ -64,15 +64,6 @@
                                         dist_threshold="0.2" 
                                         min_speed="0.1" 
                                         max_speed="0.3" 
-                                        circle_back_dist="0.7"
-                                    />
-                                    <DribbleFigureEight 
-                                        vx_limit="0.2" 
-                                        vy_limit="0.3" 
-                                        vtheta_limit="1.0" 
-                                        dist_threshold="0.2" 
-                                        min_speed="0.1" 
-                                        max_speed="0.3" 
                                         circle_back_dist="0.4"
                                     />
                                     

@@ -813,7 +813,7 @@ NodeStatus DribbleFigureEight::tick() {
          // circleback obstacle (ball) avoidance
          // 공을 건드리지 않고 뒤로 돌기 위해 공 근처에서 밀어내는 힘 적용
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double safeDist = 0.5; 
+        double safeDist = 0.35; // reduced from 0.5 to allow 0.4 circle_back_dist 
         if (distToBall < safeDist) {
             double repulsionStrength = 3.0 * (safeDist - distToBall);
             double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x);
