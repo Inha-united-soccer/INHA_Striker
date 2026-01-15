@@ -104,3 +104,29 @@ public:
 private:
     Brain *brain;
 };
+
+class DribbleFigureEight : public BT::SyncActionNode
+{
+public:
+    DribbleFigureEight(const string &name, const BT::NodeConfig &config, Brain *brain)
+        : BT::SyncActionNode(name, config), brain(brain) {}
+
+    static BT::PortsList providedPorts()
+    {
+        return {
+            BT::InputPort<double>("vx_limit", 0.8, "x velocity limit"),
+            BT::InputPort<double>("vy_limit", 0.5, "y velocity limit"),
+            BT::InputPort<double>("vtheta_limit", 1.0, "theta velocity limit"),
+            BT::InputPort<double>("dist_threshold", 0.5, "distance to switch to next waypoint"),
+            BT::InputPort<double>("min_speed", 0.3, "Minimum approach speed"),
+            BT::InputPort<double>("max_speed", 0.8, "Maximum approach speed"),
+            BT::InputPort<double>("circle_back_dist", 0.7, "Distance behind ball to start/circle back"),
+        };
+    }
+
+    BT::NodeStatus tick() override;
+
+private:
+    Brain *brain;
+    int currentWaypointIndex = 0;
+};

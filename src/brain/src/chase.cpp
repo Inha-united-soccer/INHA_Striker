@@ -17,6 +17,7 @@ void RegisterChaseNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
     REGISTER_CHASE_BUILDER(Chase) // obstacle 추가된 chase
     REGISTER_CHASE_BUILDER(DribbleChase) // 드리블 전용 chase
     REGISTER_CHASE_BUILDER(DribbleToGoal) // 골대 드리블
+    REGISTER_CHASE_BUILDER(DribbleFigureEight) // 8자 드리블
 
 }
 
@@ -682,6 +683,184 @@ NodeStatus DribbleToGoal::tick() {
     
 //     return NodeStatus::SUCCESS;
 // }
+
+
+// DribbleFigureEight
+NodeStatus DribbleFigureEight::tick() {
+    auto log = [=](string msg) {
+        brain->log->setTimeNow();
+        brain->log->log("debug/DribbleFigureEight", rerun::TextLog(msg));
+    };
+    log("ticked");
+
+    double vxLimit, vyLimit, vthetaLimit, distThreshold;
+    double minSpeed, maxSpeed; 
+    double circleBackDist = 0.7;
+
+    getInput("vx_limit", vxLimit);
+    getInput("vy_limit", vyLimit);
+    getInput("vtheta_limit", vthetaLimit);
+    getInput("dist_threshold", distThreshold);
+    getInput("min_speed", minSpeed);
+    getInput("max_speed", maxSpeed);
+    getInput("circle_back_dist", circleBackDist);
+
+    if (!brain->tree->getEntry<bool>("ball_location_known")){
+        brain->client->setVelocity(0, 0, 0);
+        return NodeStatus::SUCCESS;
+    }
+
+    // Define Waypoints (Figure 8) - Absolute Coordinates
+    // Start at (-3.0, 2.0). Zig Zag towards goal without retreating.
+    // 1. Start (-3.0, 2.0)
+    // 2. Center (-3.2, 0.0) -> Turn 1
+    // 3. Bottom (-3.4, -2.0) -> Turn 2
+    // 4. Center (-3.6, 0.0) -> Shoot
+    static std::vector<Point> waypoints = {
+        {-2.5, 2.0},
+        {-2.8, 1.5},
+        {-2.2, 1.0},
+        {-2.8, 0.0}
+    };
+
+    // Safety check for index
+    if (currentWaypointIndex >= waypoints.size()) {
+       currentWaypointIndex = 0;
+    }
+
+    Point targetPoint = waypoints[currentWaypointIndex];
+    Point ballPos = brain->data->ball.posToField;
+    Point robotPos = {brain->data->robotPoseToField.x, brain->data->robotPoseToField.y, 0.0};
+    double robotTheta = brain->data->robotPoseToField.theta;
+
+
+    // Check distance to current waypoint (Ball distance)
+    double distToWaypoint = hypot(targetPoint.x - ballPos.x, targetPoint.y - ballPos.y);
+
+    if (distToWaypoint < distThreshold) {
+        log(format("Reached Waypoint %d", currentWaypointIndex));
+        currentWaypointIndex++;
+        
+        // If finished all waypoints
+        if (currentWaypointIndex >= waypoints.size()) {
+            currentWaypointIndex = 0; // Reset for next run if any
+            log("Finished Figure-8. Returning SUCCESS for Shot.");
+            brain->client->setVelocity(0, 0, 0); // Stop momentarily
+            return NodeStatus::SUCCESS;
+        }
+        
+        // Update target immediately
+        targetPoint = waypoints[currentWaypointIndex]; 
+    }
+
+    // Visualize Waypoints and Current Target
+    std::vector<bt_robotics::Point2D> waypointPoints;
+    for(const auto& wp : waypoints) waypointPoints.push_back({(float)wp.x, (float)wp.y});
+    brain->log->log("debug/figure8_waypoints", 
+        rerun::Points2D(waypointPoints)
+        .with_colors({0xFFFFFF55})
+        .with_radii({0.05f})
+    );
+    brain->log->log("debug/figure8_target", 
+        rerun::Points2D({{(float)targetPoint.x, (float)targetPoint.y}})
+        .with_colors({0x00FF00FF})
+        .with_radii({0.1f})
+        .with_labels({format("Target %d", currentWaypointIndex)})
+    );
+
+
+    // Dribble Logic (Similar to DribbleToGoal but target is a point, not a line)
+    
+    // Calculate angle from Ball to Target
+    // 1. 공에서 목표 지점(웨이포인트)을 바라보는 각도 계산 (드리블 해야 할 방향)
+    double angleBallToTarget = atan2(targetPoint.y - ballPos.y, targetPoint.x - ballPos.x);
+
+    // Minimize rotation of target angle to always be "forward-ish" relative to robot if possible?
+    // No, for dribbling we usually want to be behind the ball relative to target.
+
+    // 2. 로봇에서 공을 바라보는 각도
+    double angleRobotToBall = atan2(ballPos.y - robotPos.y, ballPos.x - robotPos.x);
+    // 3. 정렬 오차 확인: (목표 방향) vs (현재 로봇이 공을 보는 방향) 차이
+    double alignmentError = fabs(toPInPI(angleBallToTarget - angleRobotToBall));
+
+    double vx = 0, vy = 0, vtheta = 0;
+    string phase = "Align";
+
+    // Speed Control
+    double ballRange = brain->data->ball.range;
+    double targetSpeed = maxSpeed;
+    // Simple logic: slow down if near ball, speed up if far? 
+    if (ballRange > 0.6) targetSpeed = maxSpeed;
+    else targetSpeed = minSpeed;
+
+
+    // Dribble Logic
+     double pushDir = 0.0;
+    // 60도 이상 틀어져 있으면 -> 공 뒤로 돌아가는 CircleBack 모드
+    if (alignmentError > deg2rad(60)) {
+        // CircleBack
+        phase = "CircleBack";
+        // 목표: 공 뒤쪽(드리블 방향 반대편) circleBackDist 만큼 떨어진 위치
+        double targetX = ballPos.x - circleBackDist * cos(angleBallToTarget);
+        double targetY = ballPos.y - circleBackDist * sin(angleBallToTarget);
+        
+        double errX = targetX - robotPos.x;
+        double errY = targetY - robotPos.y;
+        
+        double vX_field = errX * 2.0;
+        double vY_field = errY * 2.0;
+
+         // circleback obstacle (ball) avoidance
+         // 공을 건드리지 않고 뒤로 돌기 위해 공 근처에서 밀어내는 힘 적용
+        double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
+        double safeDist = 0.5; 
+        if (distToBall < safeDist) {
+            double repulsionStrength = 3.0 * (safeDist - distToBall);
+            double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x);
+            vX_field += repulsionStrength * cos(angleBallToRobot);
+            vY_field += repulsionStrength * sin(angleBallToRobot);
+        }
+
+        double speed = hypot(vX_field, vY_field);
+        if (speed > maxSpeed) {
+             vX_field *= (maxSpeed / speed);
+             vY_field *= (maxSpeed / speed);
+        }
+
+        // 로봇 좌표계 변환
+        vx = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
+        vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
+        vtheta = brain->data->ball.yawToRobot * 2.0;
+        
+        if (ballRange < 0.3) vx = -0.3; // Back off if too close
+    } 
+    else {
+        // Push
+        // 정렬이 잘 되어 있으면 -> 공 방향으로 전진 (드리블)
+        phase = "Push";
+        pushDir = atan2(brain->data->ball.posToRobot.y, brain->data->ball.posToRobot.x);
+        
+        vx = targetSpeed * cos(pushDir);
+        vy = targetSpeed * sin(pushDir);
+        vtheta = pushDir * 2.0; 
+        
+        // 정렬이 약간 어긋나면 속도 줄임
+        if (alignmentError > deg2rad(10)) {
+            vx *= 0.5;
+            vy *= 0.5;
+        }
+    }
+
+    vx = cap(vx, vxLimit, -vxLimit);
+    vy = cap(vy, vyLimit, -vyLimit);
+    vtheta = cap(vtheta, vthetaLimit, -vthetaLimit);
+
+    brain->client->setVelocity(vx, vy, vtheta);
+
+    log(format("Phase:%s WP:%d Dist:%.2f", phase.c_str(), currentWaypointIndex, distToWaypoint));
+
+    return NodeStatus::SUCCESS;
+}
 
 
 
