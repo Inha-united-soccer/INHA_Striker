@@ -71,9 +71,15 @@ NodeStatus StrikerDecision::tick() {
 
     // 팀원 패스 신호 받기
     int myId = brain->config->playerId;
-    int partnerIdx = (myId == 1) ? 1 : 2;
+    // Fix logic: if 1 (Striker), partner 2 (Index 1). If 2 (Defender), partner 1 (Index 0).
+    int partnerIdx = (myId == 1) ? 1 : 0;
     
     bool passsignal = brain->data->tmStatus[partnerIdx].passSignal;
+    
+    // Debug Log for Signal Diagnosis
+    // if (tickCount % 60 == 0) { // Log occasionally or use logToScreen
+        brain->log->log("debug/striker_decision_signal", rerun::TextLog(format("PartnerIdx: %d (MyID:%d), Signal: %d", partnerIdx, myId, passsignal)));
+    // }
 
     // 패스 신호 타임 카운트
     bool isReceiveTimeout = false;
