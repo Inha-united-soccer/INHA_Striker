@@ -718,9 +718,9 @@ NodeStatus DribbleFigureEight::tick() {
     // 4. Center (-3.6, 0.0) -> Shoot
     static std::vector<Point> waypoints = {
         {-2.5, 2.0},
-        {-2.8, 1.5},
-        {-2.2, 1.0},
-        {-2.8, 0.0}
+        {-1.5, 1.5},
+        {-2.5, 0.5},
+        {-1.5, 0.0}
     };
 
     // Safety check for index
