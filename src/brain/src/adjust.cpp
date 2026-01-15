@@ -56,8 +56,18 @@ NodeStatus Adjust::tick(){
     double ballRange = brain->data->ball.range;
 
     // 한 발로 차기 위해 공을 로봇 중심보다 옆(kickYOffset)에 두도록 정렬
-    // deltaDir 각도 에러 수정
-    double deltaDir = toPInPI(kickDir - dir_rb_f + kickYOffset);
+    // deltaDir 각도 에러 수정 (kickYOffset은 미터 단위이므로 각도로 변환해야 함)
+    // double deltaDir = toPInPI(kickDir - dir_rb_f + kickYOffset); // WRONG: Adding meters to radians
+    
+    // 절대값으로 양발 -> 그냥 절대값이면 항상 양수로 들어갈테니 ball.posToRobot.y로 공이 왼쪽에 있는지 오른쪽에 있는지 판단하고 부호 변경
+    // (StrikerDecision과 동일한 로직 적용)
+    double offsetVal = kickYOffset;
+    if (offsetVal > 0) {
+        if (brain->data->ball.posToRobot.y > 0) offsetVal = fabs(offsetVal);
+        else offsetVal = -fabs(offsetVal);
+    }
+    double targetAngleOffset = atan2(offsetVal, ballRange);
+    double deltaDir = toPInPI(kickDir - dir_rb_f + targetAngleOffset);
 
     double ballYaw = brain->data->ball.yawToRobot;
     // double st = cap(fabs(deltaDir), st_far, st_near);

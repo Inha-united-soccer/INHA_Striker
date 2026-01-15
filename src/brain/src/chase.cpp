@@ -711,10 +711,10 @@ NodeStatus DribbleFigureEight::tick() {
     }
 
     static std::vector<Point> waypoints = {
-        {-2.5, 2.0},
-        {-1.5, 1.5},
-        {-2.5, 0.5},
-        {-1.5, 0.0}
+        {-2.0, 1.5},
+        {-3.0, 0.5},
+        {-1.5, -0.5},
+        {-3.0, -2.0}
     };
 
     // Safety check for index
@@ -862,11 +862,10 @@ NodeStatus DribbleFigureEight::tick() {
         vy = targetSpeed * sin(pushDir);
         vtheta = pushDir * 2.0; 
         
-        // 정렬이 약간 어긋나면 속도 줄임
-        if (alignmentError > deg2rad(10)) {
-            vx *= 0.5;
-            vy *= 0.5;
-        }
+        // if (alignmentError > deg2rad(10)) {
+        //     vx *= 0.5;
+        //     vy *= 0.5;
+        // }
     }
 
     vx = cap(vx, vxLimit, -vxLimit);
