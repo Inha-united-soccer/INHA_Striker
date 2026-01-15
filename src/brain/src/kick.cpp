@@ -319,16 +319,16 @@ tuple<double, double, double> Kick::_calcSpeed() {
 
     } else {
         // 기존 로직 (직선 경로 유지)
-        if (fabs(ty) < 0.01 && fabs(adjustedYaw) < 0.01){ 
+        if (fabs(ty) < 0.15 && fabs(adjustedYaw) < 0.15){ 
             vx = vxLimit;
             vy = 0.0;
         } else {
             vy = ty > 0 ? vyLimit : -vyLimit;
-            vx = vy / ty * tx * vxFactor;
-            if (fabs(vx) > vxLimit){
-                vy *= vxLimit / vx;
-                vx = vxLimit;
+            vx = vxLimit; 
+            if (fabs(adjustedYaw) > 0.5) {
+                 vx = vx * 0.5; 
             }
+            if (fabs(vx) > vxLimit) vx = vxLimit;
         }
     }
 
