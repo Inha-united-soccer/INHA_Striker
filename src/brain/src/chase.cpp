@@ -710,12 +710,6 @@ NodeStatus DribbleFigureEight::tick() {
         return NodeStatus::SUCCESS;
     }
 
-    // Define Waypoints (Figure 8) - Absolute Coordinates
-    // Start at (-3.0, 2.0). Zig Zag towards goal without retreating.
-    // 1. Start (-3.0, 2.0)
-    // 2. Center (-3.2, 0.0) -> Turn 1
-    // 3. Bottom (-3.4, -2.0) -> Turn 2
-    // 4. Center (-3.6, 0.0) -> Shoot
     static std::vector<Point> waypoints = {
         {-2.5, 2.0},
         {-1.5, 1.5},
@@ -796,7 +790,7 @@ NodeStatus DribbleFigureEight::tick() {
 
     // Dribble Logic
      double pushDir = 0.0;
-    // 45도 이상 틀어져 있으면 -> 공 뒤로 돌아가는 CircleBack 모드 (더 적극적으로 돌도록 수정)
+    // 45도 이상 틀어져 있으면 -> 공 뒤로 돌아가는 CircleBack 모드 (더 적극적으로 돌도록 수정) (각도 -> 라디안)
     if (alignmentError > deg2rad(45)) {
         // CircleBack
         phase = "CircleBack";
@@ -808,15 +802,36 @@ NodeStatus DribbleFigureEight::tick() {
         double errY = targetY - robotPos.y;
         
         double vX_field = errX * 2.0;
-        double vY_field = errY * 2.0;
+        double vY_field = errY * 1.5; // Slightly reduced Y gain to allow swirl to dominate? Or keep 2.0. Let's keep 2.0 but rely on summation. 
+        vY_field = errY * 2.0;
 
          // circleback obstacle (ball) avoidance
          // 공을 건드리지 않고 뒤로 돌기 위해 공 근처에서 밀어내는 힘 적용
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double safeDist = 0.35; // reduced from 0.5 to allow 0.4 circle_back_dist 
+        double safeDist = 0.55; // Increased trigger distance for smoother avoidance (was 0.35)
+        
+        // [Swirl Logic] Add tangential force to circle around the ball widely
+        double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x);
+        double desiredAngle = angleBallToTarget + M_PI; // We want to be Behind the ball
+        double angleDiff = toPInPI(desiredAngle - angleBallToRobot); // How far we are rotationally
+
+        // If we are significantly misaligned, add swirl
+        if (fabs(angleDiff) > deg2rad(10)) {
+            double swirlDir = (angleDiff > 0) ? 1.0 : -1.0; // Rotation direction
+            double swirlStrength = 1.0; // Base strength
+            
+            // Stronger swirl when far away or very misaligned
+            if (fabs(angleDiff) > deg2rad(90)) swirlStrength = 2.0; 
+            
+            // Tangential direction: Perpendicular to Radius
+            double tanAngle = angleBallToRobot + swirlDir * M_PI / 2.0;
+            
+            vX_field += swirlStrength * cos(tanAngle);
+            vY_field += swirlStrength * sin(tanAngle);
+        }
+
         if (distToBall < safeDist) {
             double repulsionStrength = 3.0 * (safeDist - distToBall);
-            double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x);
             vX_field += repulsionStrength * cos(angleBallToRobot);
             vY_field += repulsionStrength * sin(angleBallToRobot);
         }
