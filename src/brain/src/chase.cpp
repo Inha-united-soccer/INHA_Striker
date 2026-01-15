@@ -434,28 +434,41 @@ NodeStatus DribbleToGoal::tick() {
 
     // 드리블 로직
     double pushDir = 0.0;
-    if (alignmentError > deg2rad(60)) {
+    
+    if (alignmentError > deg2rad(30)) {
         // 공 뒤에 제대로 서지 못했다면 CircleBack으로 공뒤로 이동할 수 있게
         phase = "CircleBack";
 
         // 목표 : 공 뒤 circleBackDist 위치 + 골대 반대 방향
         double targetX = ballPos.x - circleBackDist * cos(angleBallToGoal);
-        double targetY = ballPos.y - 0.5 * sin(angleBallToGoal);
+        double targetY = ballPos.y - circleBackDist * sin(angleBallToGoal);
         
         double errX = targetX - robotPos.x;
         double errY = targetY - robotPos.y;
         
         // P-Control for CircleBack
-        double vX_field = errX * 2.0;
-        double vY_field = errY * 2.0;
+        double vX_field = errX * 2.5; // Gain increased
+        double vY_field = errY * 2.5;
+
+        double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x); // Ball -> Robot 벡터
+        double desiredAngle = angleBallToGoal + M_PI; 
+        double angleDiff = toPInPI(desiredAngle - angleBallToRobot);
+
+        if (fabs(angleDiff) > deg2rad(10)) {
+            double swirlDir = (angleDiff > 0) ? 1.0 : -1.0; 
+            double swirlStrength = 3.0;
+            
+            double tanAngle = angleBallToRobot + swirlDir * M_PI / 2.0;
+            
+            vX_field += swirlStrength * cos(tanAngle);
+            vY_field += swirlStrength * sin(tanAngle);
+        }
 
         // circleback 시에 공에 닿는걸 방지
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double safeDist = 0.5; 
+        double safeDist = 0.55; 
         if (distToBall < safeDist) {
-            double repulsionStrength = 3.0 * (safeDist - distToBall); // 가까울수록 강하게 밈
-            double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x); // Ball -> Robot 벡터
-            
+            double repulsionStrength = 4.0 * (safeDist - distToBall); // 가까울수록 강하게 밈
             vX_field += repulsionStrength * cos(angleBallToRobot);
             vY_field += repulsionStrength * sin(angleBallToRobot);
         }
@@ -469,26 +482,25 @@ NodeStatus DribbleToGoal::tick() {
 
         vx = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
         vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
-        vtheta = brain->data->ball.yawToRobot * 2.0;
+        vtheta = brain->data->ball.yawToRobot * 3.5; // Turn faster
         
         if (ballRange < 0.3) vx = -0.3; // 너무 가까우면 후진
     } 
     else {
         // 정렬이 잘 되었다면 Push로 공 방향으로 전진
         phase = "Push";
-
         pushDir = atan2(brain->data->ball.posToRobot.y, brain->data->ball.posToRobot.x);
         
-        // 정렬 오차만큼 보정 추가
         vx = targetSpeed * cos(pushDir);
         vy = targetSpeed * sin(pushDir);
-        vtheta = pushDir * 2.0; // 공 중심 맞추기
+        vtheta = pushDir * 3.5; // 공 중심 맞추기 (High Gain)
         
-        // 정렬이 완벽하지 않으면 속도 감속
-        if (alignmentError > deg2rad(10)) {
-            vx *= 0.5;
-            vy *= 0.5;
-        }
+        // [User FeedBack] Remove excessive slow down
+        // 정렬 오차가 조금 있어도 그냥 밀고 가도록 패널티 제거
+        // if (alignmentError > deg2rad(20)) {
+        //     vx *= 0.5;
+        //     vy *= 0.5;
+        // }
     }
 
     // 속도 제한
