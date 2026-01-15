@@ -796,8 +796,8 @@ NodeStatus DribbleFigureEight::tick() {
 
     // Dribble Logic
      double pushDir = 0.0;
-    // 60도 이상 틀어져 있으면 -> 공 뒤로 돌아가는 CircleBack 모드
-    if (alignmentError > deg2rad(60)) {
+    // 45도 이상 틀어져 있으면 -> 공 뒤로 돌아가는 CircleBack 모드 (더 적극적으로 돌도록 수정)
+    if (alignmentError > deg2rad(45)) {
         // CircleBack
         phase = "CircleBack";
         // 목표: 공 뒤쪽(드리블 방향 반대편) circleBackDist 만큼 떨어진 위치
