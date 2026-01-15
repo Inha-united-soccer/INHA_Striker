@@ -864,7 +864,8 @@ NodeStatus DribbleFigureEight::tick() {
 
     // Log Dribble Direction (Ideal Path: Ball -> Target)
     brain->log->log("debug/dribble_dir", 
-        rerun::Arrows2D({rerun::components::Vector2D(
+        rerun::Arrows2D()
+        .with_vectors({rerun::components::Vector2D(
             (float)(cos(angleBallToTarget) * 1.0), 
             (float)(sin(angleBallToTarget) * 1.0)
         )})
