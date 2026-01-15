@@ -860,9 +860,18 @@ NodeStatus DribbleFigureEight::tick() {
 
     brain->client->setVelocity(vx, vy, vtheta);
 
+    log(format("Phase:%s WP:%d Dist:%.2f", phase.c_str(), currentWaypointIndex, distToWaypoint));
+
+    // Log Dribble Direction (Ideal Path: Ball -> Target)
+    brain->log->log("debug/dribble_dir", 
+        rerun::Arrows2D::from_vectors({rerun::components::Vector2D(
+            (float)(cos(angleBallToTarget) * 1.0), 
+            (float)(sin(angleBallToTarget) * 1.0)
+        )})
+        .with_origins({{ (float)ballPos.x, (float)ballPos.y }})
+        .with_colors({0x00FFFFFF}) // Cyan
+    );
 
     return NodeStatus::RUNNING;
 }
-
-
-
+```
