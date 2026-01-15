@@ -825,9 +825,9 @@ NodeStatus DribbleFigureEight::tick() {
         if (speed > maxSpeed) {
              vX_field *= (maxSpeed / speed);
              vY_field *= (maxSpeed / speed);
-        } else if (speed < min_speed && speed > 0.01) { // Apply min_speed if moving
-             vX_field *= (min_speed / speed);
-             vY_field *= (min_speed / speed);
+        } else if (speed < minSpeed && speed > 0.01) { // Apply minSpeed if moving
+             vX_field *= (minSpeed / speed);
+             vY_field *= (minSpeed / speed);
         }
 
         // 로봇 좌표계 변환
@@ -864,10 +864,10 @@ NodeStatus DribbleFigureEight::tick() {
 
     // Log Dribble Direction (Ideal Path: Ball -> Target)
     brain->log->log("debug/dribble_dir", 
-        rerun::Arrows2D(rerun::components::Vector2D(
+        rerun::Arrows2D({rerun::components::Vector2D(
             (float)(cos(angleBallToTarget) * 1.0), 
             (float)(sin(angleBallToTarget) * 1.0)
-        ))
+        )})
         .with_origins({{ (float)ballPos.x, (float)ballPos.y }})
         .with_colors({0x00FFFFFF}) // Cyan
     );
