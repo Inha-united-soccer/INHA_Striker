@@ -297,78 +297,95 @@ NodeStatus DribbleToGoal::tick() {
     Point robotPos = {brain->data->robotPoseToField.x, brain->data->robotPoseToField.y, 0.0};
     double robotTheta = brain->data->robotPoseToField.theta;
 
-    // 골대 목표 및 거리 확인
+    // 골대 중앙 좌표
     double goalX = -(fd.length / 2.0);
 
-    // 후보지 목록 : (0,0), 중앙, 왼쪽 오른쪽 끝
-    vector<double> candidatesY = {0.0, fd.goalWidth/2.0 - 0.5, -fd.goalWidth/2.0 + 0.5};
-
-    // CalcKickDirWithGoalkeeper가 계산한 킥 방향도 후보에 추가
+    vector<double> candidatesY;
+    double step = 0.25; 
+    double halfField = fd.width / 2.0 - 0.5; // offtheball과 동일
+    
+    for (double y = -halfField; y <= halfField; y += step) { // 마찬가지로 동일
+        candidatesY.push_back(y);
+    }
+    
     double kickDir = brain->data->kickDir;
-    double kickDirTargetY = 1000.0; // 초기화 (유효하지 않은 값)
-
-    // tan값이 폭발하지 않는 안전한 경우에만 계산
     if (isfinite(tan(kickDir))) {
-        // kickDir을 이용해 골라인(x=goalX) 상의 y좌표 계산
-    // 로봇 위치 기준이 아니라 공 위치 기준으로 투영
-        kickDirTargetY = ballPos.y + tan(kickDir) * (goalX - ballPos.x);
-        
-    // 골대 벗어나지 않게 클램핑 (골키퍼가 막고 있어서 킥 방향이 골대 밖일 수도 있으므로 주의)
-    // 하지만 CalcKickDirWithGoalkeeper가 골대 안쪽을 가리킨다고 가정
-    // 안전하게 골포스트 안쪽 0.2m 까지만 허용
-        double maxY = fd.goalWidth / 2.0 - 0.2;
-        kickDirTargetY = cap(kickDirTargetY, maxY, -maxY);
-        
-    // 후보지에 추가
-        candidatesY.push_back(kickDirTargetY);
+        double kickDirTargetY = ballPos.y + tan(kickDir) * (goalX - ballPos.x);
+        kickDirTargetY = cap(kickDirTargetY, halfField, -halfField);
+        candidatesY.push_back(kickDirTargetY); // 킥방향도 넣기 (킥)
     }
 
-
-    // 최종 선택된 좌표
     double targetGoalY = 0.0;
-    double maxClearance = -1.0;
+    double bestScore = -1000.0;
     
     auto obstacles = brain->data->getObstacles();
     
-    // 가장 장애물이 없는 경로 찾기
+    // 가장 좋은 점수의 경로 찾기
     for(double candY : candidatesY) {
 
-        // 후보지로 가는 길에 장애물과 얼마나 떨어져있는지 여유공간 계산
-        double clearance = 100.0;
-        // Ball -> (GoalX, candY) 경로 검사
-        double dx = goalX - ballPos.x;
-        double dy = candY - ballPos.y;
+        // 장애물 회피 점수
+        double clearance = 100.0; // 점수 초기화
+        
+        // 목표점 지정
+        double dx = goalX - ballPos.x; 
+        double dy = candY - ballPos.y; 
+        double pathLen = hypot(dx, dy); // 경로의 전체 길이
         
         for(const auto& obs : obstacles) {
-             // 공보다 뒤에 있는 장애물 무시 (이미 지난 것)
-             if (obs.posToField.x > ballPos.x) continue; // Goals are at negative X
+             if (obs.posToField.x > ballPos.x + 0.8) continue; // 공보다 뒤에 있는 장애물 무시
              
-             // 선분 거리 계산 (t projection)
+             // 장애물을 경로(선분)에 투영하여 최단 거리 계산
              double t = ((obs.posToField.x - ballPos.x) * dx + (obs.posToField.y - ballPos.y) * dy) / (dx*dx + dy*dy);
-             t = max(0.0, min(1.0, t));
+             t = max(0.0, min(1.0, t)); // 선분 내부로 제한 (0.0 ~ 1.0)
              
-             double closestX = ballPos.x + t * dx;
-             double closestY = ballPos.y + t * dy;
-             double d = hypot(obs.posToField.x - closestX, obs.posToField.y - closestY);
-             
+             double closestX = ballPos.x + t * dx; // 경로상에서 장애물과 가장 가까운 점 X
+             double closestY = ballPos.y + t * dy; // 경로상에서 장애물과 가장 가까운 점 Y
+             double d = hypot(obs.posToField.x - closestX, obs.posToField.y - closestY); // 그 점과 장애물 사이의 거리
+
+             // 가장 가까운 장애물 거리를 clearance로 저장
              if (d < clearance) clearance = d;
         }
-        
-        // 중앙을 선호하게
-        if (candY == 0.0) clearance += 0.2;
 
-        // 킥 방향 선호 -> 센터보다 더 우선순위 높음
-        // 비교 시 부동소수점 오차 고려
-        if (fabs(candY - kickDirTargetY) < 1e-4) clearance += 0.3;
+        // 골대 중앙 선호 점수
+        double distFromCenter = fabs(candY); // 골대 중앙(Y=0)에서 얼마나 떨어져 있는지 확인
+        double centerPenalty = distFromCenter * 0.5; // 멀어질수록 낮아짐
         
-        if (clearance > maxClearance) {
-            maxClearance = clearance;
+        // 골 유효 범위 가산점
+        double goalBonus = 0.0;
+        if (distFromCenter < fd.goalWidth / 2.0 - 0.2) {
+             goalBonus = 2.0; // 골대 안쪽으로 향하는 경로라면 강하게
+        }
+
+        // 점수 계산방식
+        double obstacleScore = 0.0;
+        if (clearance < 0.6) {
+            // 60cm 이내에 obstacle있으면 크게 감소
+            obstacleScore = -100.0 + clearance * 10.0; 
+        } 
+        else {
+            // 안전하다면 장애물과 멀수록 좋음
+            obstacleScore = clearance * 2.0; 
+        }
+
+        // 최종 점수 = 장애물 점수 - 중앙 이탈 감점 + 골 보너스
+        double finalScore = obstacleScore - centerPenalty + goalBonus;
+
+        if (finalScore > bestScore) {
+            bestScore = finalScore;
             targetGoalY = candY;
         }
     }
 
     double goalY = targetGoalY;
     
+    // Rerun Visualization of Candidate & Winner
+    brain->log->log("debug/dribble_target", 
+         rerun::Points2D({{(float)goalX, (float)goalY}})
+         .with_colors({0x00FF00FF})
+         .with_labels({"BestTarget"})
+         .with_radii({0.2f})
+    );
+
     // 공과 골대 사이의 거리
     double ballDistToGoal = hypot(goalX - ballPos.x, goalY - ballPos.y);
 
@@ -382,8 +399,7 @@ NodeStatus DribbleToGoal::tick() {
         return NodeStatus::SUCCESS;
     }
 
-    // 정렬 상태 확인 공에서 골대를 보는 각도(최적 슛 방향) Goalpost <- Ball <- Robot 순서로 서야함
-    // CalcKickDirWithGoalkeeper을 고려해서 계산하면 개선 많이 될 수도?
+    // 정렬 상태 확인 공에서 타겟(BestTarget)을 보는 각도
     double angleBallToGoal = atan2(goalY - ballPos.y, goalX - ballPos.x);
 
     // 로봇에서 공을 보는 각도
@@ -683,200 +699,5 @@ NodeStatus DribbleToGoal::tick() {
     
 //     return NodeStatus::SUCCESS;
 // }
-
-
-// DribbleFigureEight
-NodeStatus DribbleFigureEight::tick() {
-    auto log = [=](string msg) {
-        brain->log->setTimeNow();
-        brain->log->log("debug/DribbleFigureEight", rerun::TextLog(msg));
-    };
-    log("ticked");
-
-    double vxLimit, vyLimit, vthetaLimit, distThreshold;
-    double minSpeed, maxSpeed; 
-    double circleBackDist = 0.7;
-
-    getInput("vx_limit", vxLimit);
-    getInput("vy_limit", vyLimit);
-    getInput("vtheta_limit", vthetaLimit);
-    getInput("dist_threshold", distThreshold);
-    getInput("min_speed", minSpeed);
-    getInput("max_speed", maxSpeed);
-    getInput("circle_back_dist", circleBackDist);
-
-    if (!brain->tree->getEntry<bool>("ball_location_known")){
-        brain->client->setVelocity(0, 0, 0);
-        return NodeStatus::SUCCESS;
-    }
-
-    static std::vector<Point> waypoints = {
-        {-2.0, 1.5},
-        {-3.0, 0.5},
-        {-1.5, -0.5},
-        {-3.0, -2.0}
-    };
-
-    // Safety check for index
-    if (currentWaypointIndex >= waypoints.size()) {
-       currentWaypointIndex = 0;
-    }
-
-    Point targetPoint = waypoints[currentWaypointIndex];
-    Point ballPos = brain->data->ball.posToField;
-    Point robotPos = {brain->data->robotPoseToField.x, brain->data->robotPoseToField.y, 0.0};
-    double robotTheta = brain->data->robotPoseToField.theta;
-
-
-    // Check distance to current waypoint (Ball distance)
-    double distToWaypoint = hypot(targetPoint.x - ballPos.x, targetPoint.y - ballPos.y);
-
-    if (distToWaypoint < distThreshold) {
-        log(format("Reached Waypoint %d", currentWaypointIndex));
-        currentWaypointIndex++;
-        
-        // If finished all waypoints
-        if (currentWaypointIndex >= waypoints.size()) {
-            currentWaypointIndex = 0; // Reset for next run if any
-            log("Finished Figure-8. Returning SUCCESS for Shot.");
-            brain->client->setVelocity(0, 0, 0); // Stop momentarily
-            return NodeStatus::SUCCESS;
-        }
-        
-        // Update target immediately
-        targetPoint = waypoints[currentWaypointIndex]; 
-    }
-
-    // Visualize Waypoints and Current Target
-    std::vector<rerun::components::Position2D> waypointPoints;
-    for(const auto& wp : waypoints) waypointPoints.push_back({(float)wp.x, (float)wp.y});
-    brain->log->log("debug/figure8_waypoints", 
-        rerun::Points2D(waypointPoints)
-        .with_colors({0xFFFFFF55})
-        .with_radii({0.05f})
-    );
-    brain->log->log("debug/figure8_target", 
-        rerun::Points2D({{(float)targetPoint.x, (float)targetPoint.y}})
-        .with_colors({0x00FF00FF})
-        .with_radii({0.1f})
-        .with_labels({format("Target %d", currentWaypointIndex)})
-    );
-
-
-    // Dribble Logic (Similar to DribbleToGoal but target is a point, not a line)
-    
-    // Calculate angle from Ball to Target
-    // 1. 공에서 목표 지점(웨이포인트)을 바라보는 각도 계산 (드리블 해야 할 방향)
-    double angleBallToTarget = atan2(targetPoint.y - ballPos.y, targetPoint.x - ballPos.x);
-
-    // Minimize rotation of target angle to always be "forward-ish" relative to robot if possible?
-    // No, for dribbling we usually want to be behind the ball relative to target.
-
-    // 2. 로봇에서 공을 바라보는 각도
-    double angleRobotToBall = atan2(ballPos.y - robotPos.y, ballPos.x - robotPos.x);
-    // 3. 정렬 오차 확인: (목표 방향) vs (현재 로봇이 공을 보는 방향) 차이
-    double alignmentError = fabs(toPInPI(angleBallToTarget - angleRobotToBall));
-
-    double vx = 0, vy = 0, vtheta = 0;
-    string phase = "Align";
-
-    // Speed Control
-    double ballRange = brain->data->ball.range;
-    double targetSpeed = maxSpeed;
-    // Simple logic: slow down if near ball, speed up if far? 
-    if (ballRange > 0.6) targetSpeed = maxSpeed;
-    else targetSpeed = minSpeed;
-
-
-    // Dribble Logic
-     double pushDir = 0.0;
-    // 45도 이상 틀어져 있으면 -> 공 뒤로 돌아가는 CircleBack 모드 (더 적극적으로 돌도록 수정) (각도 -> 라디안)
-    if (alignmentError > deg2rad(45)) {
-        // CircleBack
-        phase = "CircleBack";
-        // 목표: 공 뒤쪽(드리블 방향 반대편) circleBackDist 만큼 떨어진 위치
-        double targetX = ballPos.x - circleBackDist * cos(angleBallToTarget);
-        double targetY = ballPos.y - circleBackDist * sin(angleBallToTarget);
-        
-        double errX = targetX - robotPos.x;
-        double errY = targetY - robotPos.y;
-        
-        double vX_field = errX * 2.0;
-        double vY_field = errY * 1.5; // Slightly reduced Y gain to allow swirl to dominate? Or keep 2.0. Let's keep 2.0 but rely on summation. 
-        vY_field = errY * 2.0;
-
-         // circleback obstacle (ball) avoidance
-         // 공을 건드리지 않고 뒤로 돌기 위해 공 근처에서 밀어내는 힘 적용
-        double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double safeDist = 0.55; // Increased trigger distance for smoother avoidance (was 0.35)
-        
-        // [Swirl Logic] Add tangential force to circle around the ball widely
-        double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x);
-        double desiredAngle = angleBallToTarget + M_PI; // We want to be Behind the ball
-        double angleDiff = toPInPI(desiredAngle - angleBallToRobot); // How far we are rotationally
-
-        // If we are significantly misaligned, add swirl
-        if (fabs(angleDiff) > deg2rad(10)) {
-            double swirlDir = (angleDiff > 0) ? 1.0 : -1.0; // Rotation direction
-            double swirlStrength = 1.0; // Base strength
-            
-            // Stronger swirl when far away or very misaligned
-            if (fabs(angleDiff) > deg2rad(90)) swirlStrength = 2.0; 
-            
-            // Tangential direction: Perpendicular to Radius
-            double tanAngle = angleBallToRobot + swirlDir * M_PI / 2.0;
-            
-            vX_field += swirlStrength * cos(tanAngle);
-            vY_field += swirlStrength * sin(tanAngle);
-        }
-
-        if (distToBall < safeDist) {
-            double repulsionStrength = 3.0 * (safeDist - distToBall);
-            vX_field += repulsionStrength * cos(angleBallToRobot);
-            vY_field += repulsionStrength * sin(angleBallToRobot);
-        }
-
-        double speed = hypot(vX_field, vY_field);
-        if (speed > maxSpeed) {
-             vX_field *= (maxSpeed / speed);
-             vY_field *= (maxSpeed / speed);
-        } else if (speed < minSpeed && speed > 0.01) { // Apply minSpeed if moving
-             vX_field *= (minSpeed / speed);
-             vY_field *= (minSpeed / speed);
-        }
-
-        // 로봇 좌표계 변환
-        vx = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
-        vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
-        vtheta = brain->data->ball.yawToRobot * 3.0;
-        
-        if (ballRange < 0.3) vx = -0.3; // Back off if too close
-    } 
-    else {
-        // Push
-        // 정렬이 잘 되어 있으면 -> 공 방향으로 전진 (드리블)
-        phase = "Push";
-        pushDir = atan2(brain->data->ball.posToRobot.y, brain->data->ball.posToRobot.x);
-        
-        vx = targetSpeed * cos(pushDir);
-        vy = targetSpeed * sin(pushDir);
-        vtheta = pushDir * 3.0; 
-        
-        // if (alignmentError > deg2rad(10)) {
-        //     vx *= 0.5;
-        //     vy *= 0.5;
-        // }
-    }
-
-    vx = cap(vx, vxLimit, -vxLimit);
-    vy = cap(vy, vyLimit, -vyLimit);
-    vtheta = cap(vtheta, vthetaLimit, -vthetaLimit);
-
-    brain->client->setVelocity(vx, vy, vtheta);
-
-
-    return NodeStatus::RUNNING;
-}
-
 
 

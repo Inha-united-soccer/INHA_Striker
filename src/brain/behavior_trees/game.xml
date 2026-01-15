@@ -54,26 +54,16 @@
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
-                            <!-- Dribble Figure-8 Sequence during SET -->
-                            <Sequence>
-                                <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
-                                    <DribbleFigureEight 
-                                        vx_limit="0.4" 
-                                        vy_limit="0.6" 
-                                        vtheta_limit="2.0" 
-                                        dist_threshold="0.8" 
-                                        min_speed="0.15" 
-                                        max_speed="0.5" 
-                                        circle_back_dist="0.6"
-                                    />
-                                    
-                                    <!-- Wait before restarting loop -->
-                                    <Sleep msec="1000" />
-                                </Sequence>
-                            
+                            <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
+                            <CalcKickDir /> 
+                            <!--<CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" goal_area_buffer="2.0" />     -->
+
+                            <ReactiveSequence>
+                                <!-- <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" /> -->
+                                <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
+                            </ReactiveSequence>
                             <SubTree ID="Locate" _autoremap="true" />
                             
-
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
