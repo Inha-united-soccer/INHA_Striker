@@ -467,6 +467,8 @@ NodeStatus Kick::onRunning(){
     if(brain->data->ballDetected){
          auto [vx, vy, _] = _calcSpeed();
          
+         // [User Request] Disable re-alignment during kick to maximize forward power
+         /*
          // 공을 보지 말고, 골대(KickDir)를 봐야 함 -> Bias 적용 (Adjust와 동일)
          double kickYOffset;
          getInput("kick_y_offset", kickYOffset);
@@ -484,6 +486,8 @@ NodeStatus Kick::onRunning(){
          
          // Adjust와 동일하게 미세한 오차는 무시 (0.01 rad = 약 0.57도)
          if(fabs(headingError) < 0.01) vtheta = 0.0;
+         */
+         double vtheta = 0.0;
          
          brain->client->setVelocity(vx, vy, vtheta);
     }
