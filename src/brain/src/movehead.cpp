@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <cmath>
 
 // BehaviorTree Factory에 Test 노드를 생성하는 함수를 등록하는 역할 -> 코드 양 줄일 수 있음
 #define REGISTER_MOVEHEAD_BUILDER(Name)     \
@@ -185,10 +186,32 @@ NodeStatus CamScanField::tick()
     getInput("msec_cycle", msecCycle);
 
     int cycleTime = msec % msecCycle;
-    double pitch = cycleTime > (msecCycle / 2.0) ? lowPitch : highPitch;
-    double yaw = cycleTime < (msecCycle / 2.0) ? (leftYaw - rightYaw) * (2.0 * cycleTime / msecCycle) + rightYaw : (leftYaw - rightYaw) * (2.0 * (msecCycle - cycleTime) / msecCycle) + rightYaw;
+    double t = (double)cycleTime / (double)msecCycle;
+    
+    // Yaw: Sin 함수 (중앙에서 시작해서 왼쪽으로 갔다가 오른쪽으로)
+    double yawAmp = (leftYaw - rightYaw) / 2.0;
+    double yawCenter = (leftYaw + rightYaw) / 2.0;
+    double targetYaw = yawCenter + yawAmp * sin(2.0 * M_PI * t);
 
-    brain->client->moveHead(pitch, yaw);
+    // Pitch: Cos 함수 중앙(아래)에서 시작해서 위로 갔다가 아래로
+    double pitchAmp = (lowPitch - highPitch) / 2.0;
+    double pitchCenter = (lowPitch + highPitch) / 2.0;
+    // t=0일때 lowPitch가 되도록 아래부터 시작
+    double targetPitch = pitchCenter + pitchAmp * cos(2.0 * M_PI * t);
+
+    // EMA Smoothing
+    double alpha = 0.1; // 0.6 -> 0.1 (MoveHead는 Tick rate가 빠를 수 있으므로 더 부드럽게)
+    
+    // 만약 초기화가 안되어 있다면 (0.0), 현재 타겟으로 바로 설정
+    if (smoothHeadYaw == 0.0 && smoothHeadPitch == 0.0) {
+        smoothHeadYaw = targetYaw;
+        smoothHeadPitch = targetPitch;
+    }
+    
+    smoothHeadYaw = smoothHeadYaw * (1.0 - alpha) + targetYaw * alpha;
+    smoothHeadPitch = smoothHeadPitch * (1.0 - alpha) + targetPitch * alpha;
+
+    brain->client->moveHead(smoothHeadPitch, smoothHeadYaw);
     return NodeStatus::SUCCESS;
 }
 

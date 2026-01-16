@@ -386,7 +386,6 @@ NodeStatus DribbleToGoal::tick() {
          .with_radii({0.2f})
     );
 
-    // [User Request] Visualize Dribble Direction Arrow
     brain->log->log("debug/dribble_arrow", 
         rerun::Arrows2D::from_vectors({{(float)(goalX - ballPos.x), (float)(goalY - ballPos.y)}})
             .with_origins({{(float)ballPos.x, (float)ballPos.y}})
@@ -398,7 +397,6 @@ NodeStatus DribbleToGoal::tick() {
     double ballDistToGoal = hypot(goalX - ballPos.x, goalY - ballPos.y);
 
     // 도달 확인
-    // StrikerDecide와 일관성을 위해 골대 중앙까지의 거리도 확인
     double distToGoalCenter = hypot(goalX - ballPos.x, -ballPos.y);
 
     if (ballDistToGoal < distToGoalThresh || distToGoalCenter < distToGoalThresh) {
@@ -447,7 +445,7 @@ NodeStatus DribbleToGoal::tick() {
         double errY = targetY - robotPos.y;
         
         // P-Control for CircleBack
-        double vX_field = errX * 2.5; // Gain increased
+        double vX_field = errX * 2.5;
         double vY_field = errY * 2.5;
 
         double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x); // Ball -> Robot 벡터
@@ -495,7 +493,6 @@ NodeStatus DribbleToGoal::tick() {
         vy = targetSpeed * sin(pushDir);
         vtheta = pushDir * 3.5; // 공 중심 맞추기 (High Gain)
         
-        // [User FeedBack] Remove excessive slow down
         // 정렬 오차가 조금 있어도 그냥 밀고 가도록 패널티 제거
         // if (alignmentError > deg2rad(20)) {
         //     vx *= 0.5;
