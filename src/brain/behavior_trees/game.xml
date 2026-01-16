@@ -54,7 +54,7 @@
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
-                            <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
+                            <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
                             <CalcKickDir /> 
                             <!--<CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" goal_area_buffer="2.0" />     -->
 
