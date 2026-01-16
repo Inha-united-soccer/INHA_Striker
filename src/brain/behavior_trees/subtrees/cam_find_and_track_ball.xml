@@ -11,6 +11,7 @@
                 <CamTrackBall />
              </Sequence>
              <Sequence               name="[No] -> 찾아">
+                <!-- <CamFindBall /> --> <!-- 기존꺼 -->
                 <CamFindBall />
              </Sequence>
          </IfThenElse>
