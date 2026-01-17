@@ -78,7 +78,7 @@ NodeStatus CamFindBall::tick(){
     double targetPitch = pitchCenter + pitchAmp * cos(2.0 * M_PI * t);
 
     // EMA Smoothing
-    double alpha = 0.6; 
+    double alpha = 0.4; // 0.6 -> 0.4 Stabilize 
     
     // 만약 초기화가 안되어 있다면 (0.0), 현재 타겟으로 바로 설정
     if (smoothHeadYaw == 0.0 && smoothHeadPitch == 0.0) {
@@ -167,7 +167,7 @@ NodeStatus CamTrackBall::tick(){
         yaw = brain->data->headYaw - deltaYaw; // 머리의 yaw를 공의 yaw와 뺌
         
         // EMA Smoothing
-        double alpha = 0.6; // 0.1(scan) 보다는 빠르게 (0.4)
+        double alpha = 0.4; // 0.6 -> 0.4 Stabilize
         if (smoothHeadYaw == 0.0 && smoothHeadPitch == 0.0) {
             smoothHeadYaw = yaw;
             smoothHeadPitch = pitch;
@@ -236,7 +236,7 @@ NodeStatus CamScanField::tick()
     double targetPitch = pitchCenter + pitchAmp * cos(2.0 * M_PI * t);
 
     // EMA Smoothing
-    double alpha = 0.6; // 0.1은 너무 느려서 모터가 끊기므로 0.5로 상향
+    double alpha = 0.4; 
     
     // 만약 초기화가 안되어 있다면 (0.0), 현재 타겟으로 바로 설정
     if (smoothHeadYaw == 0.0 && smoothHeadPitch == 0.0) {

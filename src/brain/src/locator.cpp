@@ -46,8 +46,8 @@ void Locator::calcFieldMarkers(FieldDimensions fd)
     fieldMarkers.push_back(FieldMarker{'X', 0.0, -fd.circleRadius, 0.0});
     fieldMarkers.push_back(FieldMarker{'X', 0.0, fd.circleRadius, 0.0});
 
-    fieldMarkers.push_back(FieldMarker{'X', fd.length / 2 - fd.penaltyDist, 0.0, 0.0});
-    fieldMarkers.push_back(FieldMarker{'X', -fd.length / 2 + fd.penaltyDist, 0.0, 0.0});
+    fieldMarkers.push_back(FieldMarker{'P', fd.length / 2 - fd.penaltyDist, 0.0, 0.0});
+    fieldMarkers.push_back(FieldMarker{'P', -fd.length / 2 + fd.penaltyDist, 0.0, 0.0});
 
     fieldMarkers.push_back(FieldMarker{'T', 0.0, fd.width / 2, 0.0});
     fieldMarkers.push_back(FieldMarker{'T', 0.0, -fd.width / 2, 0.0});

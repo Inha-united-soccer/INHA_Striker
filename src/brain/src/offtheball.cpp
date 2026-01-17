@@ -245,8 +245,8 @@ NodeStatus OfftheballPosition::tick(){
     targetHeadYaw = cap(targetHeadYaw, 1.35, -1.35);
 
     // EMA Smoothing (Low Pass Filter) -> alpha가 클수록 기존 값 유지 성향이 강함 (= 부드러움, 반응 느림)
-    // 0.6 정도면 적절한 반응성과 부드러움
-    smoothHeadYaw = smoothHeadYaw * 0.6 + targetHeadYaw * 0.4;
+    // 0.6 정도면 적절한 반응성과 부드러움 -> 0.4로 더 안정화
+    smoothHeadYaw = smoothHeadYaw * 0.4 + targetHeadYaw * 0.6;
     
     // 최종 Check
     headYaw = cap(smoothHeadYaw, 1.35, -1.35);
@@ -273,8 +273,7 @@ NodeStatus OfftheballPosition::tick(){
         auto endTick = std::chrono::high_resolution_clock::now();
         double duration = std::chrono::duration<double, std::milli>(endTick - startTick).count();
         brain->log->log("debug/offtheball/info", 
-            rerun::TextLog(format("Score: %.2f, v(%.2f, %.2f, %.2f) Cur:(%.2f, %.2f) Tgt:(%.2f, %.2f)", 
-                maxScore, vx_robot, vy_robot, vtheta, robotX, robotY, targetX, targetY))
+            rerun::TextLog(format("Score: %.2f, Time: %.2fms, v(%.2f, %.2f, %.2f)", maxScore, duration, vx_robot, vy_robot, vtheta))
         );
     }
 
