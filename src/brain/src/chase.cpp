@@ -470,7 +470,7 @@ NodeStatus DribbleToGoal::tick() {
 
         // circleback 시에 공에 닿는걸 방지
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double safeDist = 0.55; 
+        double safeDist = 0.25; 
         if (distToBall < safeDist) {
             double repulsionStrength = 4.0 * (safeDist - distToBall); // 가까울수록 강하게 밈
             vX_field += repulsionStrength * cos(angleBallToRobot);
