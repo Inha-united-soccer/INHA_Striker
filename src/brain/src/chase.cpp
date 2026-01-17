@@ -319,7 +319,7 @@ NodeStatus DribbleToGoal::tick() {
     double bestScore = -1000.0;
     
     auto obstacles = brain->data->getObstacles();
-    // [Fix] Safety: 사람도 반드시 피해야 함
+    // person도 opponent로 추가
     auto persons = brain->data->getPersons();
     obstacles.insert(obstacles.end(), persons.begin(), persons.end());
     
@@ -395,6 +395,14 @@ NodeStatus DribbleToGoal::tick() {
             .with_origins({{(float)ballPos.x, (float)ballPos.y}})
             .with_colors({0x00FFFF00}) // Cyan/Yellowish
             .with_labels({"Dribble Path"})
+    );
+    
+    // [Debug] Visualization Check
+    brain->log->logToScreen(
+        "debug/VisCheck", 
+        format("Ball: (%.2f, %.2f) Goal: (%.2f, %.2f) Vec: (%.2f, %.2f)", 
+            ballPos.x, ballPos.y, goalX, goalY, goalX - ballPos.x, goalY - ballPos.y),
+        0xFFFFFFFF
     );
 
     // 공과 골대 사이의 거리
