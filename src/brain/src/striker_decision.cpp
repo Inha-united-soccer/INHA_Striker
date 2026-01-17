@@ -147,20 +147,27 @@ NodeStatus StrikerDecision::tick() {
         timeLastTick = now;
 
 
-        /* ----------------------- 7. Kick ----------------------- */
+        /* ----------------------- 7. Kick Lock Logic ----------------------- */
+        static rclcpp::Time kickLockEndTime(0, 0, RCL_ROS_TIME);
+        bool isLocked = (now < kickLockEndTime);
+        
+        // Lock 해제 조건: 공이 너무 멀어지면 즉시 해제
+        if (isLocked && ballRange > 0.6) {
+            isLocked = false; 
+            kickLockEndTime = rclcpp::Time(0, 0, RCL_ROS_TIME);
+        }
+
         double kickRange = 1.0;
         if (distToGoal < setPieceGoalDist){
             kickRange = 2.0;
         }
 
+        // Kick 진입 조건
         if (
-            (reachedKickDir) 
+            (reachedKickDir || isLocked) // 정렬됐거나 이미 락이 걸려있으면
             && brain->data->ballDetected
-
-            && fabs(brain->data->ball.yawToRobot) < yawTolerance 
-
+            && (fabs(brain->data->ball.yawToRobot) < yawTolerance || isLocked) // 락 걸려있으면 각도 무시
             // && !avoidKick
-
             && ball.range < kickRange
         ) {
             // 골대 거리에 따라 Quick vs Normal Kick 결정
@@ -169,6 +176,11 @@ NodeStatus StrikerDecision::tick() {
             }
             else {
                 newDecision = "kick";      
+            }
+            
+            // 처음 락을 거는 순간 시간 설정 (1.5초 유지)
+            if (!isLocked) {
+                kickLockEndTime = now + rclcpp::Duration::from_seconds(1.5);
             }
             
             color = 0x00FF00FF;

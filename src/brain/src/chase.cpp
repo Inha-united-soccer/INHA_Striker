@@ -434,11 +434,10 @@ NodeStatus DribbleToGoal::tick() {
     // 드리블 로직
     double pushDir = 0.0;
     
-    // [Fix] Hysteresis for Stability (오실레이션 방지 핵심)
-    // 빡빡하게 검사해서 진입하고(20도), 충분히 정렬되면(10도) 나감 -> 잦은 모드 변경 방지
+    // [Fix] Hysteresis Update
     static bool isCircleBack = false;
-    double enterThresh = deg2rad(20);
-    double exitThresh = deg2rad(10);
+    double enterThresh = deg2rad(25);
+    double exitThresh = deg2rad(20);
     
     if (alignmentError > enterThresh) isCircleBack = true;
     else if (alignmentError < exitThresh) isCircleBack = false;
@@ -470,11 +469,14 @@ NodeStatus DribbleToGoal::tick() {
 
         if (fabs(angleDiff) > deg2rad(5)) { // 5도 이상이면 Swirl 적용
             double swirlDir = (angleDiff > 0) ? 1.0 : -1.0;
-            // [Fix] Swirl Strength Reduction (1.5 -> 0.8) to prevent wide swinging
-            double swirlStrength = 0.8; 
+            
+            // [Fix] Swirl Damping (Proportional)
+            // 고정값(0.8)이 아니라 오차가 줄어들면 같이 줄어들게 하여 오실레이션 및 오버슈트 방지
+            // 오차가 30도일 때 1.0 정도의 힘, 5도일 때 0.16 정도
+            double swirlStrength = fabs(angleDiff) * 2.0; 
+            if (swirlStrength > 1.0) swirlStrength = 1.0; // Max Cap
             
             double tanAngle = angleBallToRobot + swirlDir * M_PI / 2.0;
-            
             
             vX_field += swirlStrength * cos(tanAngle);
             vY_field += swirlStrength * sin(tanAngle);
@@ -498,7 +500,7 @@ NodeStatus DribbleToGoal::tick() {
 
         vx = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
         vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
-        vtheta = brain->data->ball.yawToRobot * 3.5; // Turn faster
+        vtheta = brain->data->ball.yawToRobot * 5.0; // Turn faster
         
         if (ballRange < 0.2) vx = -0.3; // 너무 가까우면 후진
     } 
