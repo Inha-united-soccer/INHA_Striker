@@ -41,7 +41,7 @@
                   <ReactiveSequence>
                      
                      <ReactiveSequence>
-                        <StrikerDecision decision_out="{decision}" decision_in="{decision}" chase_threshold="0.80" set_piece_goal_dist="1.0" />
+                        <StrikerDecision decision_out="{decision}" decision_in="{decision}" chase_threshold="0.80" set_piece_goal_dist="2.0" />
                         
                         <!-- <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" /> 행동 노드로 이동-->
                      </ReactiveSequence>

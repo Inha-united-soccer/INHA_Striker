@@ -390,19 +390,13 @@ NodeStatus DribbleToGoal::tick() {
          .with_radii({0.2f})
     );
 
+    // [Fix] Invert Vector for Rerun Visualization (User reported opposite direction)
+    // 원래 (goal - ball)이 맞지만, Rerun 상에서 반대로 그려지는 문제 해결 위해 부호 반전
     brain->log->log("debug/dribble_arrow", 
-        rerun::Arrows2D::from_vectors({{(float)(goalX - ballPos.x), (float)(goalY - ballPos.y)}})
+        rerun::Arrows2D::from_vectors({{(float)-(goalX - ballPos.x), (float)-(goalY - ballPos.y)}})
             .with_origins({{(float)ballPos.x, (float)ballPos.y}})
             .with_colors({0x00FFFF00}) // Cyan/Yellowish
             .with_labels({"Dribble Path"})
-    );
-    
-    // [Debug] Visualization Check
-    brain->log->logToScreen(
-        "debug/VisCheck", 
-        format("Ball: (%.2f, %.2f) Goal: (%.2f, %.2f) Vec: (%.2f, %.2f)", 
-            ballPos.x, ballPos.y, goalX, goalY, goalX - ballPos.x, goalY - ballPos.y),
-        0xFFFFFFFF
     );
 
     // 공과 골대 사이의 거리

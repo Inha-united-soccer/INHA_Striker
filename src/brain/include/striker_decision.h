@@ -20,7 +20,7 @@ public:
             InputPort<string>("decision_in", "", "이전 틱에서의 decision 값을 읽기 위해 사용"),
             InputPort<string>("position", "offense", "offense | defense, 공을 어느 방향으로 찰지 결정"),
             InputPort<double>("kick_y_offset", -0.077, "킥 시 공을 로봇 중심에서 y축으로 얼마나 오프셋 시킬지 결정"),
-            InputPort<double>("set_piece_goal_dist", 1.0, "이 거리 이내에서는 정렬 생략하고 One Touch 슛 시도"),
+            InputPort<double>("set_piece_goal_dist", 2.0, "이 거리 이내에서는 정렬 생략하고 One Touch 슛 시도"),
             OutputPort<string>("decision_out")};
     }
 
