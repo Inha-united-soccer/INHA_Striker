@@ -319,6 +319,9 @@ NodeStatus DribbleToGoal::tick() {
     double bestScore = -1000.0;
     
     auto obstacles = brain->data->getObstacles();
+    // [Fix] Safety: 사람도 반드시 피해야 함
+    auto persons = brain->data->getPersons();
+    obstacles.insert(obstacles.end(), persons.begin(), persons.end());
     
     // 가장 좋은 점수의 경로 찾기
     for(double candY : candidatesY) {
