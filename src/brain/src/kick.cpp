@@ -62,7 +62,7 @@ NodeStatus CalcKickDir::tick(){
     // 반코트용 슛 방향 계산 ( 상대 골대가 음수라고 가정)
     // 추가해야 될 것 -> 수비 상황 판단
     // 그리고 항상 왼쪽이 양수일까?도 고민해보기
-    if (thetal - thetar < crossThreshold) {
+    if (false) { // cross 우선 안쓰니까 계산에도 안들어가게
         brain->data->kickType = "cross";
         color = 0xFF00FFFF;
         // atan2( 목표Y - 공Y , 목표X - 공X )
