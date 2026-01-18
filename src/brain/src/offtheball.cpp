@@ -106,8 +106,8 @@ NodeStatus OfftheballPosition::tick(){
                 score -= std::abs(y - symTargetY) * 10.0; // 6. 대칭점(빈 공간) 선호 가중치 (10.0)
             }
 
-            double distXToBall = std::abs(x - brain->data->ball.posToField.x);
-            score -= std::abs(distXToBall - 2.5) * 3.0; // 7. 공과의 거리(X축 깊이) 2.5m 유지 가중치 (3.0)
+            double distToBall = norm(x - brain->data->ball.posToField.x, y - brain->data->ball.posToField.y);
+            score -= std::abs(distToBall - 2.5) * 3.0; // 7. 공과의 거리 2.5m 유지 가중치 (3.0)
 
             score += (-x) * 1.5; // 8. 공격 방향(전진) 선호 가중치 (5.2 -> 1.5)
 
