@@ -66,10 +66,10 @@
                      <Chase _while="decision == 'chase'" vx_limit="0.9" vy_limit="0.2" vtheta_limit="1.0" dist="0.4" safe_dist="0.5" />
 
                      <!-- Adjust -->
-                     <!-- <Adjust _while="decision == 'adjust'" no_turn_threshold="0.05" turn_threshold="0.5" turn_first_threshold="0.5" range="0.4" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.02" near_threshold="0.3" /> -->
+                     <Adjust _while="decision == 'adjust'" no_turn_threshold="0.05" turn_threshold="0.5" turn_first_threshold="0.5" range="0.4" vx_limit="0.5" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.02" near_threshold="0.3" />
                      
                      <!-- Adjust: adjust_quick -->
-                     <!-- <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.1" turn_threshold="0.5" turn_first_threshold="0.5" range="0.4" vx_limit="1.0" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.1" near_threshold="0.3" /> -->
+                     <Adjust _while="decision == 'adjust_quick'" no_turn_threshold="0.1" turn_threshold="0.5" turn_first_threshold="0.5" range="0.4" vx_limit="1.0" vy_limit="0.5" vtheta_limit="1.0" vtheta_factor="1.5" tangential_speed_far="0.5" tangential_speed_near="0.1" near_threshold="0.3" />
                      <!--
                      no_turn_threshold     : 0.1     각도 오차가 이 값보다 작으면 회전을 수행하지 않는다
                      turn_threshold        : 3.25    공의 각도가 이 값보다 크면 먼저 회전하여 공을 정면으로 바라보고 이동은 중단한다 -> 사용중 x
@@ -89,7 +89,7 @@
                      <Kick _while="decision == 'kick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.5" min_msec_kick="1000" msecs_stablize="1000" kick_type="kick" kick_speed="1.3" />
 
                      <!-- 빠른 킥 -->
-                     <Kick _while="decision == 'kick_quick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.5" min_msec_kick="500" msecs_stablize="500" kick_type="kick" kick_speed="1.3" />
+                     <Kick _while="decision == 'kick_quick'" speed_limit="1.3" vx_limit="1.3" vy_limit="0.5" min_msec_kick="500" msecs_stablize="0" kick_type="kick" kick_speed="1.3" />
                      
                      <!-- Cross (측면 패스)
                      <Kick _while="decision == 'cross'" speed_limit="0.4" min_msec_kick="300" kick_type="cross" /> -->

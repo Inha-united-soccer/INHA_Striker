@@ -180,7 +180,7 @@ NodeStatus StrikerDecision::tick() {
                 newDecision = "kick";      
             }
             
-            // 처음 락을 거는 순간 시간 설정 (1.5초 유지)
+            // 처음 락을 거는 순간 시간 설정
             if (!isLocked) {
                 kickLockEndTime = now + rclcpp::Duration::from_seconds(3.0);
             }
