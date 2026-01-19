@@ -33,7 +33,7 @@ NodeStatus StrikerDecision::tick() {
     double ballY = ball.posToRobot.y;
     double distToGoal = 0.0;
     
-    distToGoal = norm(ball.posToField.x - (-brain->config->fieldDimensions.length/2), ball.posToField.y);
+    distToGoal = norm(ball.posToField.x - (brain->config->fieldDimensions.length/2), ball.posToField.y);
 
     // 장애물 회피 로직 -> 드리블이나 오프더볼 등
     // bool avoidPushing;

@@ -79,7 +79,7 @@ NodeStatus Adjust::tick(){
 
     // 골문 가까이서 더 빠르게
     double distToGoal = norm(
-        brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length / 2),
+        brain->data->robotPoseToField.x - (brain->config->fieldDimensions.length / 2),
         brain->data->robotPoseToField.y
     );
     

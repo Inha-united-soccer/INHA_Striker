@@ -36,9 +36,9 @@ NodeStatus OfftheballPosition::tick(){
     }
     
     // 골대 중앙 좌표
-    double goalX = -(fd.length / 2.0);
-    // 골대에서 distFromGoal만큼 떨어진 좌표
-    double baseX = goalX + distFromGoal; // 오프더볼 위치 기준 X좌표 
+    double goalX = (fd.length / 2.0);
+    // 골대에서 distFromGoal만큼 떨어진 좌표 (공격 방향 반대로)
+    double baseX = goalX - distFromGoal; // 오프더볼 위치 기준 X좌표 
 
     // 최적의 Y좌표 계산 (경기장 폭 0.5m씩 안쪽)
     double maxY = fd.width / 2.0 - 0.5;

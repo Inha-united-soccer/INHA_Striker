@@ -112,7 +112,7 @@ NodeStatus Chase::tick(){
 
     // one_touch 상황이라면 몸을 골대쪽으로 할 수 있게
     double distToGoal = norm(
-        brain->data->robotPoseToField.x - (-brain->config->fieldDimensions.length / 2),
+        brain->data->robotPoseToField.x - (brain->config->fieldDimensions.length / 2),
         brain->data->robotPoseToField.y
     );
     if (distToGoal < 2.0) {
@@ -302,7 +302,8 @@ NodeStatus DribbleToGoal::tick() {
     double robotTheta = brain->data->robotPoseToField.theta;
 
     // 골대 중앙 좌표
-    double goalX = -(fd.length / 2.0);
+    // 골대 중앙 좌표 (Positive X)
+    double goalX = (fd.length / 2.0);
 
     vector<double> candidatesY;
     double step = 0.25; 
