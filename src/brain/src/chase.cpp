@@ -302,7 +302,6 @@ NodeStatus DribbleToGoal::tick() {
     double robotTheta = brain->data->robotPoseToField.theta;
 
     // 골대 중앙 좌표
-    // 골대 중앙 좌표 (Positive X)
     double goalX = (fd.length / 2.0);
 
     vector<double> candidatesY;
@@ -359,8 +358,8 @@ NodeStatus DribbleToGoal::tick() {
 
         // 골대 중앙 선호 점수
         double distFromCenter = fabs(candY); // 골대 중앙(Y=0)에서 얼마나 떨어져 있는지 확인
-        // 중앙 고집을 줄여서(0.5->0.3) 장애물이 있으면 측면으로 더 쉽게 빠지게 함
-        double centerPenalty = distFromCenter * 0.3; 
+        // 중앙 고집을 줄여서(0.5->0.3->0.2) 장애물이 있으면 측면으로 더 쉽게 빠지게 함
+        double centerPenalty = distFromCenter * 0.2; 
         
         // 골 유효 범위 가산점
         double goalBonus = 0.0;
@@ -370,13 +369,13 @@ NodeStatus DribbleToGoal::tick() {
 
         // 점수 계산방식
         double obstacleScore = 0.0;
-        if (clearance < 0.6) {
-            // 60cm 이내에 obstacle있으면 크게 감소
+        if (clearance < 0.7) { // 0.6 -> 0.7 (안전 거리 확보)
+            // 70cm 이내에 obstacle있으면 크게 감소
             obstacleScore = -100.0 + clearance * 10.0; 
         } 
         else {
-            // 확실하게 빈 공간을 찾아가도록 유도
-            obstacleScore = clearance * 4.0; 
+            // [User Request] 장애물 회피 가중치 대폭 증가 (4.0 -> 10.0)
+            obstacleScore = clearance * 10.0; 
         }
 
         // 최종 점수 = 장애물 점수 - 중앙 이탈 감점 + 골 보너스
@@ -446,10 +445,9 @@ NodeStatus DribbleToGoal::tick() {
     // 드리블 로직
     double pushDir = 0.0;
     
-    // [Fix] Hysteresis Update
     static bool isCircleBack = false;
     double enterThresh = deg2rad(25);
-    double exitThresh = deg2rad(20);
+    double exitThresh = deg2rad(15);
     
     if (alignmentError > enterThresh) isCircleBack = true;
     else if (alignmentError < exitThresh) isCircleBack = false;
@@ -482,7 +480,6 @@ NodeStatus DribbleToGoal::tick() {
         if (fabs(angleDiff) > deg2rad(5)) { // 5도 이상이면 Swirl 적용
             double swirlDir = (angleDiff > 0) ? 1.0 : -1.0;
             
-            // [Fix] Swirl Damping (Proportional)
             // 고정값(0.8)이 아니라 오차가 줄어들면 같이 줄어들게 하여 오실레이션 및 오버슈트 방지
             // 오차가 30도일 때 1.0 정도의 힘, 5도일 때 0.16 정도
             double swirlStrength = fabs(angleDiff) * 2.0; 
