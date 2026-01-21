@@ -467,7 +467,7 @@ NodeStatus DribbleToGoal::tick() {
         // 1. Radial Control (거리 유지)
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
         double distError = tightCircleBackDist - distToBall; // 목표 거리 - 현재 거리
-        double v_radial = -distError * 2.0; // 거리가 멀면(-), 다가가야 함. 가까우면(+), 멀어져야 함. (로봇 기준 Ball 방향이 원점)
+        double v_radial = distError * 2.0; // 거리가 멀면(-), 다가가야 함(-). (로봇 기준 Ball 방향이 원점)
         // -> 수정: v_radial은 "로봇에서 공을 바라보는 방향" 기준이 아니라 "공에서 로봇을 바라보는 벡터"의 길이 변화율로 생각해야 함
         // 공->로봇 벡터 길이(distToBall)가 tightCircleBackDist보다 크면 줄여야 함(음수 속도 필요)
         // 따라서 v_radial = (tightCircleBackDist - distToBall) * Gain.
