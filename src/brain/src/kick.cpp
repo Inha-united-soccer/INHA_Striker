@@ -75,8 +75,10 @@ NodeStatus CalcKickDir::tick(){
             0 - bPos.y,
             fd.length/2 - bPos.x 
         );
-    }    if (brain->data->ball.posToField.x < - (brain->config->fieldDimensions.length / 2)) brain->data->kickDir = M_PI; 
+    }
     
+    // 골대보다 더 깊숙이 있으면 뒤로 차기 방지 (공을 경기장 안으로 복귀)
+    if (brain->data->ball.posToField.x > brain->config->fieldDimensions.length / 2) brain->data->kickDir = 0;
 
     brain->log->setTimeNow();
     brain->log->log(
