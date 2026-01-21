@@ -27,7 +27,7 @@ Instead of simple if-else logic, we utilize a **Behavior Tree (BT)** architectur
 *   **Reactive**: Handles interruptions (e.g., sudden ball loss) gracefully.
 *   **Modular**: Easy to expand with new strategies or plays.
 
-### **Fluid Agility (Swirl Motion)**
+### **Fluid Agility**
 We move beyond linear paths. Our **Curvilinear Approach** algorithms allow the robot to:
 *   Approach the ball in smooth spirals rather than sharp turns.
 *   Maintain momentum while aligning for a kick.
