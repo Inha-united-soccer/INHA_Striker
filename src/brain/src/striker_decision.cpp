@@ -43,6 +43,25 @@ NodeStatus StrikerDecision::tick() {
     // bool avoidKick = avoidPushing // 전방에 장애물 있나
     //     && brain->data->robotPoseToField.x < brain->config->fieldDimensions.length / 2 - brain->config->fieldDimensions.goalAreaLength
     //     && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
+    //     && brain->data->robotPoseToField.x < brain->config->fieldDimensions.length / 2 - brain->config->fieldDimensions.goalAreaLength
+    //     && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
+
+    // 0. 골 판정
+    double goalX = brain->config->fieldDimensions.length / 2.0;
+    double goalY = brain->config->fieldDimensions.goalWidth / 2.0;
+
+    // 공이 적팀 골대 안으로 들어갔는지 판별
+    // x가 골라인보다 크고(즉, 넘어갔고), y가 골대 폭 안에 있으면 골로 인정
+    if (ball.posToField.x > goalX && fabs(ball.posToField.y) < goalY) {
+        brain->data->hasScored = true;
+    }
+
+    // 골을 넣었다면 멈추기
+    if (brain->data->hasScored) {
+        setOutput("decision_out", string("stop_goal"));
+        brain->log->logToScreen("tree/Decide", "GOAL SCORED! Stopping...", 0xFF0000FF);
+        return NodeStatus::SUCCESS;
+    }
 
 
     // 변수 로드

@@ -302,6 +302,9 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
         "END"      // 경기 종료
     };
     string gameState = gameStateMap[static_cast<int>(msg.state)]; // 현재 무슨 게임 상태인지 확인
+    if (gameState != "PLAY") {
+        data->hasScored = false;
+    }
     tree->setEntry<string>("gc_game_state", gameState); // 적용
 
     bool isKickOffSide = (msg.kick_off_team == config->teamId); // 우리 팀이 킥오프(선공) 팀인지 여부
@@ -425,7 +428,6 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
 void Brain::detectionsCallback(const vision_interface::msg::Detections &msg){
 
     // data->camConnected = true;
-    // time 관련 변수
     // time 관련 변수
     auto timePoint = detection_utils::timePointFromHeader(msg.header);
     auto now = get_clock()->now();
