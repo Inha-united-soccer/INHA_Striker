@@ -425,6 +425,9 @@ NodeStatus DribbleToGoal::tick() {
     
     // 두 각도 차이 -> 0에 가까울 수록 일직선이라는 뜻이됨
     double alignmentError = fabs(toPInPI(angleBallToGoal - angleRobotToBall));
+    // 근거리에서는 작은 위치/각도 노이즈로 alignmentError가 쉽게 튀어서 상태 토글이 발생할 수 있으므로 스무딩
+    static double smoothAlignmentError = 0.0;
+    smoothAlignmentError = smoothAlignmentError * 0.8 + alignmentError * 0.2;
     
     double vx = 0, vy = 0, vtheta = 0;
     string phase = "Align";
@@ -448,9 +451,15 @@ NodeStatus DribbleToGoal::tick() {
     static bool isCircleBack = false;
     double enterThresh = deg2rad(30);
     double exitThresh = deg2rad(20);
+    // 공이 매우 가까우면 CircleBack으로 빠지는 것이 오히려 멈춤/후진처럼 보여서, 근거리에서는 Push를 우선
+    const double closeBallNoCircleBack = 0.22; // m
     
-    if (alignmentError > enterThresh) isCircleBack = true;
-    else if (alignmentError < exitThresh) isCircleBack = false;
+    if (ballRange < closeBallNoCircleBack) {
+        isCircleBack = false;
+    } else {
+        if (smoothAlignmentError > enterThresh) isCircleBack = true;
+        else if (smoothAlignmentError < exitThresh) isCircleBack = false;
+    }
     
     if (isCircleBack) {
         // [CircleBack 단계] 공을 중심으로 반원 궤적을 그리며 공 뒤(desiredAngle)로 진입
@@ -467,7 +476,9 @@ NodeStatus DribbleToGoal::tick() {
         // 3. 거리 제어: distError(목표-현재)에 비례한 v_radial로 공과 일정 간격 유지
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
         double distError = tightCircleBackDist - distToBall; 
-        double v_radial = distError * 2.0; 
+        double v_radial = distError * 2.0;
+        // CircleBack에서 과도한 후진(멈춤처럼 보이는 백킹) 방지: 반지름 제어 성분의 후진을 제한
+        v_radial = cap(v_radial, 0.25, -0.10);
         
         // 4. 접선 제어: angleError(원하는 각-현재 각)에 비례한 v_tangential로 공 주위를 회전
         double angleError = toPInPI(desiredAngle - angleBallToRobot);
@@ -509,8 +520,8 @@ NodeStatus DribbleToGoal::tick() {
         vx = targetSpeed * cos(pushDir);
         vy = targetSpeed * sin(pushDir);
         
-        // 3. 회전 속도: 공이 정면에 오도록 pushDir 오차에 게인 2.0을 적용해 빠르게 보정
-        vtheta = pushDir * 2.0; 
+        // 3. 회전 속도: 공이 정면에 오도록 회전(근거리에서 pushDir 기반 회전이 튀면 토글이 유발될 수 있어 ballYaw 기반 사용)
+        vtheta = brain->data->ball.yawToRobot * 2.0;
         
         // if (alignmentError > deg2rad(20)) { ... }
     }
@@ -524,7 +535,8 @@ NodeStatus DribbleToGoal::tick() {
 
     // 디버깅
     if (vx < 0 && phase == "CircleBack") phase += "(Backing)";
-    log(format("Phase:%s DistToGoal:%.2f AlignErr:%.1f BallRange:%.2f", phase.c_str(), ballDistToGoal, rad2deg(alignmentError), ballRange));
+    log(format("Phase:%s DistToGoal:%.2f AlignErr:%.1f(%.1f) BallRange:%.2f",
+        phase.c_str(), ballDistToGoal, rad2deg(alignmentError), rad2deg(smoothAlignmentError), ballRange));
     brain->log->log("debug/dribble_goal", rerun::Points2D({{(float)goalX, (float)goalY}}).with_colors({0x00FF00FF}).with_labels({"GoalTarget"}));
     
     // 드리블 방향 시각화
