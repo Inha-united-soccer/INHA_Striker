@@ -66,15 +66,15 @@ graph LR
 
 ---
 
-## 🌟 Contribution
+## Contribution
 This project contributes to the field of humanoid robotics by:
 1.  **Demonstrating Robust Autonomy**: Showing how behavior trees can handle the chaotic environment of a soccer match.
-2.  **Implementing Human-inspired Motion**: Proving that curvilinear paths ("Swirl") are superior to linear point-to-point navigation for bipedal robots.
+2.  **Implementing Human-inspired Motion**: Proving that curvilinear paths are superior to linear point-to-point navigation for bipedal robots.
 3.  **Open Source Innovation**: Providing a modular, extensible C++ framework for future researchers in the RoboCup domain.
 
 ---
 
 <div align="center">
-    <b>Built with ❤️ by INHA United</b><br>
+    <b>Built with by INHA United</b><br>
     <i>Pushing the boundaries of Autonomous Soccer</i>
 </div>
