@@ -1,68 +1,77 @@
-# AI Soccer Striker Agent
+<div align="center">
 
-> **Advanced Autonomous Decision Making & Control System for Humanoid Soccer Robots**
+# ⚡️ INHA Striker Brain
+**Advanced Autonomous Agent for Humanoid Soccer**
 
-This module implements the **Striker** intelligence for our humanoid soccer robot, designed to execute dynamic tactical behaviors in real-time. It features a robust **Behavior Tree (BT)** architecture integrated with advanced motion planning algorithms.
+[![ROS2](https://img.shields.io/badge/ROS2-Humble-3490dc.svg?style=for-the-badge&logo=ros&logoColor=white)](https://docs.ros.org/en/humble/)
+[![C++](https://img.shields.io/badge/C++-17-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://en.cppreference.com/w/cpp/17)
+[![BehaviorTree](https://img.shields.io/badge/BehaviorTree-V4-2ca02c.svg?style=for-the-badge)](https://www.behaviortree.dev/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+*Dynamic Decision Making • Tactical Positioning • Human-like Agility*
+
+---
+</div>
+
+## Mission & Vision
+**"To create a soccer-playing intelligence that doesn't just calculate, but *understands* the flow of the game."**
+
+The **INHA Striker Brain** is designed to bridge the gap between rigid robotic control and dynamic human intuition. By leveraging hierarchical behavior trees and advanced motion planning, our agent demonstrates adaptive gameplay—switching seamlessly between aggressive dribbling, tactical off-ball movement, and precision finishing.
 
 ---
 
-## Core Architecture
+## ✨ Key Features
 
-The Striker's cognitive process is structured into a hierarchical **Finite State Machine (FSM)** driven by a Behavior Tree, ensuring reactive yet deliberate actions.
+### **Cognitive Flexibility**
+Instead of simple if-else logic, we utilize a **Behavior Tree (BT)** architecture that allows for complex, reactive decision-making. The robot constantly evaluates the game state to switch modes instantly.
+*   **Reactive**: Handles interruptions (e.g., sudden ball loss) gracefully.
+*   **Modular**: Easy to expand with new strategies or plays.
 
-| State | Description | Key Algorithm |
-|-------|-------------|---------------|
-| **Search** | Active perception to localize the ball. | `CamScanField` (Sine-wave Scanning) |
-| **Co-op** | Positioning for passes & tactical support. | `OffTheBall` (Grid-based Utility Maximization) |
-| **Approach** | Dynamic movement to ball or goal. | `Chase` (Curvilinear Swirl) / `Dribble` (Path Projection) |
-| **Attack** | Precision alignment and shooting. | `Adjust` (P-Control) & `Kick` (Lock Mechanism) |
+### **Fluid Agility (Swirl Motion)**
+We move beyond linear paths. Our **Curvilinear Approach** algorithms allow the robot to:
+*   Approach the ball in smooth spirals rather than sharp turns.
+*   Maintain momentum while aligning for a kick.
+*   Execute **Swirl Maneuvers** to circle behind the ball naturally, mimicking human footwork.
 
----
+### **Tactical Intelligence**
+The striker knows where to be even when it doesn't have the ball.
+*   **Symmetry-based Positioning**: Exploits open space by calculating the symmetric opposite of defender positions.
+*   **Obstacle-Aware Dribbling**: Dynamically projects paths to find the safest route through a crowded defense.
 
-## Key Algorithms
-
-### 1. Obstacle-Aware Dribble Planner
-*   **Problem**: How to navigate through defenders while maintaining ball control?
-*   **Solution**: **Trajectory Projection & Cost Optimization**
-    *   Generates candidate paths towards the goal line.
-    *   **Projects** obstacles onto each path to calculate clearance.
-    *   Evaluates paths using a cost function: $J = w_c \cdot Clearance - w_d \cdot CenterPenalty + w_g \cdot GoalBonus$.
-    *   Selects the optimal trajectory that balances safety (avoidance) and aggression (goal-scoring).
-
-### 2. Dynamic Curvilinear Approach (Chase)
-*   **Problem**: Approaching the ball directly often leads to poor kicking angles.
-*   **Solution**: **Circle-Back with Swirl Control**
-    *   Instead of a straight line, the robot calculates a **curvilinear path** to approach the ball from the rear (Goal-Ball-Robot alignment).
-    *   **Swirl Logic**: Adds a tangential velocity vector when circling, creating a spiral motion that aligns the robot's heading faster while maintaining momentum.
-    *   **Hysteresis Stabilization**: Uses dual thresholds (Enter 25° / Exit 15°) to prevent state oscillation between "Align" and "Push" phases.
-
-### 3. Grid-based Tactical Positioning (Off-Ball)
-*   **Problem**: Where should the robot stand when not in possession?
-*   **Solution**: **Symmetry-based Grid Search**
-    *   Discretizes the field into a grid.
-    *   Calculates the **Centroid of Defenders** and identifies the **Symmetric Target Point** to exploit open space.
-    *   Maximizes utility by avoiding defenders ($D < 3m$) and maintaining optimal distance from the goal.
-
-### 4. Robust Kick Execution
-*   **Kick Lock Mechanism**: To solve decision chattering (flickering between "Ready" and "Not Ready"), a temporal lock is applied once shooting conditions are met, ensuring the kick action completes.
-*   **Adaptive Precision**:
-    *   **Quick Kick**: Relaxed tolerances for set-pieces or close-range scrambles.
-    *   **Precision Kick**: Strict alignment requirements for long-range shots.
+### **Precision & Power**
+*   **Kick Lock Mechanism**: Ensures commitment to a shot once the perfect opportunity is recognized.
+*   **Adaptive Head Tracking**: Smoothes out sensor noise for stable vision while tracking high-speed balls.
 
 ---
 
-## Active Perception
+## System Architecture
 
-*   **Smooth Tracking**: Uses **EMA (Exponential Moving Average)** filtering on head joints to prevent jitter during tracking.
-*   **Adaptive Gain**: Lowers P-gain and increases damping when tracking noisy ball detection (`CamTrackBall`), while using clean sine-wave trajectories for field scanning (`CamScanField`).
+The system is built on a robust perception-action loop:
+
+```mermaid
+graph LR
+    A[👁 Perception] -->|Ball & Field Data| B(🧠 Decision Brain)
+    B -->|Behavior Tree| C{State Selection}
+    C -->|Attack| D[⚡ Chase & Dribble]
+    C -->|Support| E[🤝 Off-Ball Move]
+    C -->|Search| F[🔍 Active Scan]
+    
+    D --> G[🤖 Motion Control]
+    E --> G
+    F --> G
+```
 
 ---
 
-## Tech Stack
-*   **Language**: C++17
-*   **Framework**: BehaviorTree.CPP, ROS2 (Humble)
-*   **Optimization**: Eigen 3 (Matrix operations)
-*   **Visualization**: Rerun SDK (Real-time debugging)
+## 🌟 Contribution
+This project contributes to the field of humanoid robotics by:
+1.  **Demonstrating Robust Autonomy**: Showing how behavior trees can handle the chaotic environment of a soccer match.
+2.  **Implementing Human-inspired Motion**: Proving that curvilinear paths ("Swirl") are superior to linear point-to-point navigation for bipedal robots.
+3.  **Open Source Innovation**: Providing a modular, extensible C++ framework for future researchers in the RoboCup domain.
 
 ---
-*Created by [Your Name/Team Name] - Inha United*
+
+<div align="center">
+    <b>Built with ❤️ by INHA United</b><br>
+    <i>Pushing the boundaries of Autonomous Soccer</i>
+</div>
