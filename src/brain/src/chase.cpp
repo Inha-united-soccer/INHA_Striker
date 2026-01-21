@@ -374,7 +374,7 @@ NodeStatus DribbleToGoal::tick() {
             obstacleScore = -100.0 + clearance * 10.0; 
         } 
         else {
-            // [User Request] 장애물 회피 가중치 대폭 증가 (4.0 -> 10.0)
+            // 장애물 회피 가중치 대폭 증가 (4.0 -> 10.0)
             obstacleScore = clearance * 10.0; 
         }
 
@@ -446,8 +446,8 @@ NodeStatus DribbleToGoal::tick() {
     double pushDir = 0.0;
     
     static bool isCircleBack = false;
-    double enterThresh = deg2rad(25);
-    double exitThresh = deg2rad(15);
+    double enterThresh = deg2rad(30);
+    double exitThresh = deg2rad(20);
     
     if (alignmentError > enterThresh) isCircleBack = true;
     else if (alignmentError < exitThresh) isCircleBack = false;
@@ -456,7 +456,7 @@ NodeStatus DribbleToGoal::tick() {
         // 공 뒤에 제대로 서지 못했다면 CircleBack으로 공뒤로 이동할 수 있게
         phase = "CircleBack";
         
-        // 하지만 dribble에서는 조금 더 여유있게 잡아도 됨. 
+        // dribble에서는 조금 더 여유있게 잡아도 됨. 
         double tightCircleBackDist = min(circleBackDist, ballRange);
         if (tightCircleBackDist < 0.3) tightCircleBackDist = 0.3; // 최소 30cm (너무 가까우면 충돌 위험)
 
@@ -476,9 +476,6 @@ NodeStatus DribbleToGoal::tick() {
         // 2. Tangential Control (회전)
         double angleError = toPInPI(desiredAngle - angleBallToRobot);
         double v_tangential = angleError * 1.5; // 각도 오차에 비례하여 회전 속도 설정
-        // angleError > 0 이면 시계방향/반시계방향?
-        // desired가 180도, current가 170도 -> error = +10도
-        // 로봇이 +방향(반시계)으로 돌아야 함
         
         // 3. Convert to Field Velocity
         // Radial Component: Along the vector (Ball -> Robot)
@@ -511,13 +508,13 @@ NodeStatus DribbleToGoal::tick() {
         
         vx = targetSpeed * cos(pushDir);
         vy = targetSpeed * sin(pushDir);
-        vtheta = pushDir * 3.5; // 공 중심 맞추기 (High Gain)
+        vtheta = pushDir * 2.0; // 공 중심 맞추기 (High Gain)
         
-        // 정렬 오차가 20도 이상이면 속도를 줄여서 밀어가도록
-        if (alignmentError > deg2rad(20)) {
-            vx *= 0.5;
-            vy *= 0.5;
-        }
+        // // 정렬 오차가 20도 이상이면 속도를 줄여서 밀어가도록
+        // if (alignmentError > deg2rad(20)) {
+        //     vx *= 0.5;
+        //     vy *= 0.5;
+        // }
     }
 
     // 속도 제한
