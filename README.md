@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡️ INHA Striker Brain
+# :soccer: INHA Striker
 **Advanced Autonomous Agent for Humanoid Soccer**
 
 [![ROS2](https://img.shields.io/badge/ROS2-Humble-3490dc.svg?style=for-the-badge&logo=ros&logoColor=white)](https://docs.ros.org/en/humble/)
@@ -16,14 +16,14 @@
 ## Mission & Vision
 **"To create a soccer-playing intelligence that doesn't just calculate, but *understands* the flow of the game."**
 
-The **INHA Striker Brain** is designed to bridge the gap between rigid robotic control and dynamic human intuition. By leveraging hierarchical behavior trees and advanced motion planning, our agent demonstrates adaptive gameplay—switching seamlessly between aggressive dribbling, tactical off-ball movement, and precision finishing.
+The **INHA Striker** is designed to bridge the gap between rigid robotic control and dynamic human intuition. By leveraging hierarchical behavior trees and advanced motion planning, our agent demonstrates adaptive gameplay—switching seamlessly between aggressive dribbling, tactical off-ball movement, and precision finishing.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 ### **Cognitive Flexibility**
-Instead of simple if-else logic, we utilize a **Behavior Tree (BT)** architecture that allows for complex, reactive decision-making. The robot constantly evaluates the game state to switch modes instantly.
+Instead of simple if-else logic, we utilize a **Behavior Tree (BT)** architecture that allows for complex, reactive decision-making. The robot constantly evaluates the game state to transition between behaviors seamlessly.
 *   **Reactive**: Handles interruptions (e.g., sudden ball loss) gracefully.
 *   **Modular**: Easy to expand with new strategies or plays.
 
@@ -35,11 +35,11 @@ We move beyond linear paths. Our **Curvilinear Approach** algorithms allow the r
 
 ### **Tactical Intelligence**
 The striker knows where to be even when it doesn't have the ball.
-*   **Symmetry-based Positioning**: Exploits open space by calculating the symmetric opposite of defender positions.
+*   **Symmetry-based Positioning**: Exploits open space by calculating optimal gaps relative to defender positions.
 *   **Obstacle-Aware Dribbling**: Dynamically projects paths to find the safest route through a crowded defense.
 
 ### **Precision & Power**
-*   **Kick Lock Mechanism**: Ensures commitment to a shot once the perfect opportunity is recognized.
+*   **Kick Lock Mechanism**: Prevents action oscillation by committing to a shot once a high-confidence window is identified.
 *   **Adaptive Head Tracking**: Smoothes out sensor noise for stable vision while tracking high-speed balls.
 
 ---
@@ -50,15 +50,18 @@ The system is built on a robust perception-action loop:
 
 ```mermaid
 graph LR
-    A[👁 Perception] -->|Ball & Field Data| B(🧠 Decision Brain)
-    B -->|Behavior Tree| C{State Selection}
-    C -->|Attack| D[⚡ Chase & Dribble]
-    C -->|Support| E[🤝 Off-Ball Move]
-    C -->|Search| F[🔍 Active Scan]
+    A[Perception] -->|Ball & Field Data| B(Decision Brain)
     
-    D --> G[🤖 Motion Control]
+    B -->|Behavior Tree| C{State Selection}
+    C -->|Attack| D[Chase & Dribble]
+    C -->|Support| E[OfftheBall Move]
+    C -->|Search| F[Active Scan]
+    
+    D --> G[Motion Control]
     E --> G
     F --> G
+
+    style B fill:#feca57,stroke:#333,stroke-width:2px,color:black
 ```
 
 ---
