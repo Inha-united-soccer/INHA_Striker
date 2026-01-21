@@ -477,7 +477,7 @@ NodeStatus DribbleToGoal::tick() {
         double desiredAngle = angleBallToGoal + M_PI; 
         double angleDiff = toPInPI(desiredAngle - angleBallToRobot);
 
-        if (fabs(angleDiff) > deg2rad(5)) { // 5도 이상이면 Swirl 적용
+        if (fabs(angleDiff) > deg2rad(5)) { // 5도 이상이면 Swirl 적용 -> 로봇이 공 뒤로 돌아갈 때 소용돌이치듯 감아 들어가는 움직임(몸체 각도를 비틀며 들어감) -> 정렬 과정 빠르게 가능
             double swirlDir = (angleDiff > 0) ? 1.0 : -1.0;
             
             // 고정값(0.8)이 아니라 오차가 줄어들면 같이 줄어들게 하여 오실레이션 및 오버슈트 방지
