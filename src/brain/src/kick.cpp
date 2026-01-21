@@ -76,7 +76,7 @@ NodeStatus CalcKickDir::tick(){
             fd.length/2 - bPos.x 
         );
     }    if (brain->data->ball.posToField.x < - (brain->config->fieldDimensions.length / 2)) brain->data->kickDir = M_PI; 
-    }
+    
 
     brain->log->setTimeNow();
     brain->log->log(
