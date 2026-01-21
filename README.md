@@ -46,7 +46,6 @@ The striker knows where to be even when it doesn't have the ball.
 
 ## System Architecture
 
-The system is built on a robust perception-action loop:
 
 <img width="1117" height="523" alt="스크린샷 2026-01-21 오후 8 41 23" src="https://github.com/user-attachments/assets/1fa9ec9f-d363-46bd-80ab-8c16e8c4504d" />
 
