@@ -130,16 +130,20 @@ NodeStatus CamTrackBall::tick(){
     // if (!(iKnowBallPos || tmBallPosReliable))
     //     return NodeStatus::SUCCESS;
 
+    double targetPitch = 0.0;
+    double targetYaw = 0.0;
+    bool shouldMove = true;
+
     if(!iKnowBallPos){ return NodeStatus::SUCCESS; }
 
     if (!iSeeBall){ // 내가 공을 못봤을 때
         if (iKnowBallPos) {
-            pitch = brain->data->ball.pitchToRobot;
-            yaw = brain->data->ball.yawToRobot;
+            targetPitch = brain->data->ball.pitchToRobot;
+            targetYaw = brain->data->ball.yawToRobot;
         } 
         // else if (tmBallPosReliable) {
-        //     pitch = brain->data->tmBall.pitchToRobot;
-        //     yaw = brain->data->tmBall.yawToRobot;
+        //     targetPitch = brain->data->tmBall.pitchToRobot;
+        //     targetYaw = brain->data->tmBall.yawToRobot;
         // } 
         else { log("reached impossible condition"); }
         logTrackingBox(0x000000FF, "ball not detected"); // 검은색 박스로 바뀜
@@ -156,33 +160,38 @@ NodeStatus CamTrackBall::tick(){
         if (std::fabs(deltaX) < pixToleranceX && std::fabs(deltaY) < pixToleranceY){
             auto label = format("ballX: %.1f, ballY: %.1f, deltaX: %.1f, deltaY: %.1f", ballX, ballY, deltaX, deltaY);
             logTrackingBox(0x00FF00FF, label); // 초록색 박스로 바뀜
-            return NodeStatus::SUCCESS;
+            shouldMove = false;
         }
 
-        double smoother = 3.0;
-        double deltaYaw = deltaX / brain->config->camPixX * brain->config->camAngleX / smoother; // 공의 x 좌표와 시야 중심의 x 좌표의 차이를 이용하여 머리의 yaw를 계산
-        double deltaPitch = deltaY / brain->config->camPixY * brain->config->camAngleY / smoother; // 공의 y 좌표와 시야 중심의 y 좌표의 차이를 이용하여 머리의 pitch를 계산
+        else {
+            double smoother = 3.0;
+            double deltaYaw = deltaX / brain->config->camPixX * brain->config->camAngleX / smoother; // 공의 x 좌표와 시야 중심의 x 좌표의 차이를 이용하여 머리의 yaw를 계산
+            double deltaPitch = deltaY / brain->config->camPixY * brain->config->camAngleY / smoother; // 공의 y 좌표와 시야 중심의 y 좌표의 차이를 이용하여 머리의 pitch를 계산
 
-        pitch = brain->data->headPitch + deltaPitch; // 머리의 pitch를 공의 pitch와 더함
-        yaw = brain->data->headYaw - deltaYaw; // 머리의 yaw를 공의 yaw와 뺌
-        
-        // EMA Smoothing
+            targetPitch = brain->data->headPitch + deltaPitch; // 머리의 pitch를 공의 pitch와 더함
+            targetYaw = brain->data->headYaw - deltaYaw; // 머리의 yaw를 공의 yaw와 뺌
+            
+            auto label = format("ballX: %.1f, ballY: %.1f, deltaX: %.1f, deltaY: %.1f, pitch: %.1f, yaw: %.1f", ballX, ballY, deltaX, deltaY, targetPitch, targetYaw);
+            logTrackingBox(0xFF0000FF, label);  // 빨간색 박스로 바뀜 (Tracking 중)
+        }
+    }
+
+    if (shouldMove) {
+        // EMA Smoothing (Moved outside to apply globally)
         double alpha = 0.2;
         if (smoothHeadYaw == 0.0 && smoothHeadPitch == 0.0) {
-            smoothHeadYaw = yaw;
-            smoothHeadPitch = pitch;
+            smoothHeadYaw = targetYaw;
+            smoothHeadPitch = targetPitch;
         }
-        smoothHeadYaw = smoothHeadYaw * (1.0 - alpha) + yaw * alpha;
-        smoothHeadPitch = smoothHeadPitch * (1.0 - alpha) + pitch * alpha;
+        smoothHeadYaw = smoothHeadYaw * (1.0 - alpha) + targetYaw * alpha;
+        smoothHeadPitch = smoothHeadPitch * (1.0 - alpha) + targetPitch * alpha;
         
         pitch = smoothHeadPitch;
         yaw = smoothHeadYaw;
 
-        auto label = format("ballX: %.1f, ballY: %.1f, deltaX: %.1f, deltaY: %.1f, pitch: %.1f, yaw: %.1f", ballX, ballY, deltaX, deltaY, pitch, yaw);
-        logTrackingBox(0xFF0000FF, label);  // 초록색 박스로 바뀜
+        brain->client->moveHead(pitch, yaw);
     }
-
-    brain->client->moveHead(pitch, yaw);
+    
     return NodeStatus::SUCCESS;
 }
 
