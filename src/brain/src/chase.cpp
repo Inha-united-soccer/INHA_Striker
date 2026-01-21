@@ -223,35 +223,35 @@ NodeStatus DribbleChase::tick() {
     double dist = brain->data->ball.range;
     double ballYaw = brain->data->ball.yawToRobot;
 
-    // Fast -> Slow -> Fast -> Slow
+    // 거리 단계별로 목표 속도 결정 (먼 거리: 빠르게, 근거리: 천천히)
     double targetSpeed = maxSpeed;
     if (dist > slowDistFar) {
-         // 멀리 있을 때는 빠르게 접근
+         // 공과 멀리 떨어져 있으면 가속
         targetSpeed = maxSpeed;
         log("Phase: Far (Fast)");
     } else {
-        // 가까워지면 다시 천천히
+        // 공이 가까워지면 컨트롤을 위해 감속
         targetSpeed = minSpeed;
         log("Phase: Near (Slow)");
     }
 
-    // 목표 속도 벡터 계산 (공 방향으로)
+    // 공을 향한 단위 벡터에 targetSpeed를 곱해 원하는 속도 벡터 생성
     double vx = targetSpeed * cos(ballYaw);
     double vy = targetSpeed * sin(ballYaw);
     
     double vtheta = ballYaw; 
 
-    // 회전이 많이 필요하면 전진 속도 줄임
+    // 회전 각도가 큰 경우 전진 속도를 절반으로 낮춰 회전 안정성 확보
     if (fabs(ballYaw) > 0.5) {
         vx *= 0.5;
         vy *= 0.5;
     }
 
-    // 다만 로봇 좌표계 기준이므로:
+    // 위 계산은 참고용이며, 실제로는 로봇 좌표계에서 공까지의 벡터를 사용
     vx = brain->data->ball.posToRobot.x;
     vy = brain->data->ball.posToRobot.y;
     
-    // 정규화 후 targetSpeed 적용
+    // 로봇 기준 공 위치를 단위 벡터로 정규화한 뒤 targetSpeed로 스케일링
     double currDist = norm(vx, vy);
     if (currDist > 1e-5) {
         vx = (vx / currDist) * targetSpeed;
@@ -429,15 +429,15 @@ NodeStatus DribbleToGoal::tick() {
     double vx = 0, vy = 0, vtheta = 0;
     string phase = "Align";
 
-    // 드리블 속도 조절 -> dribblechase와 똑같이
+    // 드리블 속도 조절 (DribbleChase와 동일한 규칙: 멀면 가속, 가까우면 감속)
     double ballRange = brain->data->ball.range;
     double targetSpeed = maxSpeed;
     if (ballRange > slowDistFar) {
-         // 멀리 있을 때는 빠르게 접근
+         // 공과의 거리가 slowDistFar보다 크면 최대 속도로 접근
         targetSpeed = maxSpeed;
         log("Phase: Far (Fast)");
     } else {
-        // 가까워지면 다시 천천히
+        // 임계거리 이내에서는 컨트롤을 위해 최소 속도로 유지
         targetSpeed = minSpeed;
         log("Phase: Near (Slow)");
     }
@@ -453,68 +453,66 @@ NodeStatus DribbleToGoal::tick() {
     else if (alignmentError < exitThresh) isCircleBack = false;
     
     if (isCircleBack) {
-        // 공 뒤에 제대로 서지 못했다면 CircleBack으로 공뒤로 이동할 수 있게
+        // [CircleBack 단계] 공을 중심으로 반원 궤적을 그리며 공 뒤(desiredAngle)로 진입
         phase = "CircleBack";
         
-        // dribble에서는 조금 더 여유있게 잡아도 됨. 
+        // 1. 목표 거리 설정: circleBackDist와 현재 거리 중 작은 값 사용, 단 최소 0.3m 확보
         double tightCircleBackDist = min(circleBackDist, ballRange);
-        if (tightCircleBackDist < 0.3) tightCircleBackDist = 0.3; // 최소 30cm (너무 가까우면 충돌 위험)
+        if (tightCircleBackDist < 0.3) tightCircleBackDist = 0.3; 
 
-        // Orbit Control (Polar Coordinates)
-        double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x); // Ball -> Robot 벡터
+        // 2. 각도 계산: angleBallToRobot(공→로봇) 대비 desiredAngle(공→골대의 반대편)으로 이동
+        double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x); 
         double desiredAngle = angleBallToGoal + M_PI; 
         
-        // 1. Radial Control (거리 유지)
+        // 3. 거리 제어: distError(목표-현재)에 비례한 v_radial로 공과 일정 간격 유지
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double distError = tightCircleBackDist - distToBall; // 목표 거리 - 현재 거리
-        double v_radial = distError * 2.0; // 거리가 멀면(-), 다가가야 함(-). (로봇 기준 Ball 방향이 원점)
-        // -> 수정: v_radial은 "로봇에서 공을 바라보는 방향" 기준이 아니라 "공에서 로봇을 바라보는 벡터"의 길이 변화율로 생각해야 함
-        // 공->로봇 벡터 길이(distToBall)가 tightCircleBackDist보다 크면 줄여야 함(음수 속도 필요)
-        // 따라서 v_radial = (tightCircleBackDist - distToBall) * Gain.
-        // 만약 distToBall(0.5) > Target(0.3) -> Error = -0.2 -> v_radial = -0.2 * Gain (공쪽으로 이동)
+        double distError = tightCircleBackDist - distToBall; 
+        double v_radial = distError * 2.0; 
         
-        // 2. Tangential Control (회전)
+        // 4. 접선 제어: angleError(원하는 각-현재 각)에 비례한 v_tangential로 공 주위를 회전
         double angleError = toPInPI(desiredAngle - angleBallToRobot);
-        double v_tangential = angleError * 1.5; // 각도 오차에 비례하여 회전 속도 설정
+        double v_tangential = angleError * 1.5; 
         
-        // 3. Convert to Field Velocity
-        // Radial Component: Along the vector (Ball -> Robot)
+        // 5. 필드 속도 계산: v_radial은 공→로봇 방향, v_tangential은 수직(-sin, cos) 성분
         double vX_radial = v_radial * cos(angleBallToRobot);
         double vY_radial = v_radial * sin(angleBallToRobot);
         
-        // Tangential Component: Perpendicular to the vector (Ball -> Robot)
-        // (cos(theta + 90), sin(theta + 90)) = (-sin(theta), cos(theta))
         double vX_tangential = v_tangential * -sin(angleBallToRobot);
         double vY_tangential = v_tangential * cos(angleBallToRobot);
         
+        // 두 성분을 합산해 최종 필드 속도 산출
         double vX_field = vX_radial + vX_tangential;
         double vY_field = vY_radial + vY_tangential;
 
-        // 속도 제한 (CircleBack은 빠르게 -> 천천히)
+        // 6. 속도 제한: 합성 속도가 maxSpeed 초과 시 비율 축소
         double speed = hypot(vX_field, vY_field);
         if (speed > maxSpeed) {
              vX_field *= (maxSpeed / speed);
              vY_field *= (maxSpeed / speed);
         }
 
+        // 7. 로봇 좌표계 변환 및 회전 제어: 필드 속도를 로봇 기준(vx, vy)으로 변환, 헤딩은 공을 향하도록 설정
         vx = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
         vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
-        vtheta = brain->data->ball.yawToRobot * 3.0; // Turn slightly slower
+        
+        // 헤딩은 공을 바라보도록 회전 (게인 3.0)
+        vtheta = brain->data->ball.yawToRobot * 3.0; 
     } 
     else {
-        // 정렬이 잘 되었다면 Push로 공 방향으로 전진
+        // [Push 단계] 정렬이 완료되었으므로, 공을 골대 방향으로 밀고 나감
         phase = "Push";
+        
+        // 1. 미는 방향: 로봇 기준 공 방향(pushDir)으로 직진
         pushDir = atan2(brain->data->ball.posToRobot.y, brain->data->ball.posToRobot.x);
         
+        // 2. 전진 속도: pushDir 단위벡터에 targetSpeed를 곱해 전진
         vx = targetSpeed * cos(pushDir);
         vy = targetSpeed * sin(pushDir);
-        vtheta = pushDir * 2.0; // 공 중심 맞추기 (High Gain)
         
-        // // 정렬 오차가 20도 이상이면 속도를 줄여서 밀어가도록
-        // if (alignmentError > deg2rad(20)) {
-        //     vx *= 0.5;
-        //     vy *= 0.5;
-        // }
+        // 3. 회전 속도: 공이 정면에 오도록 pushDir 오차에 게인 2.0을 적용해 빠르게 보정
+        vtheta = pushDir * 2.0; 
+        
+        // if (alignmentError > deg2rad(20)) { ... }
     }
 
     // 속도 제한
