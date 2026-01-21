@@ -409,13 +409,13 @@ NodeStatus DribbleToGoal::tick() {
     double ballDistToGoal = hypot(goalX - ballPos.x, goalY - ballPos.y);
 
     // 도달 확인
-    double distToGoalCenter = hypot(goalX - ballPos.x, -ballPos.y);
+    // double distToGoalCenter = hypot(goalX - ballPos.x, -ballPos.y);
 
-    if (ballDistToGoal < distToGoalThresh || distToGoalCenter < distToGoalThresh) {
-        brain->client->setVelocity(0, 0, 0);
-        log("Success: Ball reached target distance");
-        return NodeStatus::SUCCESS;
-    }
+    // if (ballDistToGoal < distToGoalThresh || distToGoalCenter < distToGoalThresh) {
+    //     brain->client->setVelocity(0, 0, 0);
+    //     log("Success: Ball reached target distance");
+    //     return NodeStatus::SUCCESS;
+    // }
 
     // 정렬 상태 확인 공에서 타겟(BestTarget)을 보는 각도
     double angleBallToGoal = atan2(goalY - ballPos.y, goalX - ballPos.x);
@@ -460,43 +460,39 @@ NodeStatus DribbleToGoal::tick() {
         double tightCircleBackDist = min(circleBackDist, ballRange);
         if (tightCircleBackDist < 0.3) tightCircleBackDist = 0.3; // 최소 30cm (너무 가까우면 충돌 위험)
 
-        double targetX = ballPos.x - tightCircleBackDist * cos(angleBallToGoal);
-        double targetY = ballPos.y - tightCircleBackDist * sin(angleBallToGoal);
-        
-        double errX = targetX - robotPos.x;
-        double errY = targetY - robotPos.y;
-        
-        // P-Control for CircleBack (Gently)
-        double vX_field = errX * 1.0; 
-        double vY_field = errY * 1.0;
-
+        // Orbit Control (Polar Coordinates)
         double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x); // Ball -> Robot 벡터
         double desiredAngle = angleBallToGoal + M_PI; 
-        double angleDiff = toPInPI(desiredAngle - angleBallToRobot);
-
-        if (fabs(angleDiff) > deg2rad(5)) { // 5도 이상이면 Swirl 적용 -> 로봇이 공 뒤로 돌아갈 때 소용돌이치듯 감아 들어가는 움직임(몸체 각도를 비틀며 들어감) -> 정렬 과정 빠르게 가능
-            double swirlDir = (angleDiff > 0) ? 1.0 : -1.0;
-            
-            // 고정값(0.8)이 아니라 오차가 줄어들면 같이 줄어들게 하여 오실레이션 및 오버슈트 방지
-            // 오차가 30도일 때 1.0 정도의 힘, 5도일 때 0.16 정도
-            double swirlStrength = fabs(angleDiff) * 2.0; 
-            if (swirlStrength > 1.0) swirlStrength = 1.0; 
-            
-            double tanAngle = angleBallToRobot + swirlDir * M_PI / 2.0;
-            
-            vX_field += swirlStrength * cos(tanAngle);
-            vY_field += swirlStrength * sin(tanAngle);
-        }
-
-        // circleback 시에 공에 닿는걸 방지
-        double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double safeDist = 0.25; // 0.3m 목표에 대해 0.25m 안전 거리 설정 (오실레이션 방지)
-        if (distToBall < safeDist) {
-            double repulsionStrength = 2.0 * (safeDist - distToBall);
-            vX_field += repulsionStrength * cos(angleBallToRobot);
-            vY_field += repulsionStrength * sin(angleBallToRobot);
-        }
         
+        // 1. Radial Control (거리 유지)
+        double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
+        double distError = tightCircleBackDist - distToBall; // 목표 거리 - 현재 거리
+        double v_radial = -distError * 2.0; // 거리가 멀면(-), 다가가야 함. 가까우면(+), 멀어져야 함. (로봇 기준 Ball 방향이 원점)
+        // -> 수정: v_radial은 "로봇에서 공을 바라보는 방향" 기준이 아니라 "공에서 로봇을 바라보는 벡터"의 길이 변화율로 생각해야 함
+        // 공->로봇 벡터 길이(distToBall)가 tightCircleBackDist보다 크면 줄여야 함(음수 속도 필요)
+        // 따라서 v_radial = (tightCircleBackDist - distToBall) * Gain.
+        // 만약 distToBall(0.5) > Target(0.3) -> Error = -0.2 -> v_radial = -0.2 * Gain (공쪽으로 이동)
+        
+        // 2. Tangential Control (회전)
+        double angleError = toPInPI(desiredAngle - angleBallToRobot);
+        double v_tangential = angleError * 1.5; // 각도 오차에 비례하여 회전 속도 설정
+        // angleError > 0 이면 시계방향/반시계방향?
+        // desired가 180도, current가 170도 -> error = +10도
+        // 로봇이 +방향(반시계)으로 돌아야 함
+        
+        // 3. Convert to Field Velocity
+        // Radial Component: Along the vector (Ball -> Robot)
+        double vX_radial = v_radial * cos(angleBallToRobot);
+        double vY_radial = v_radial * sin(angleBallToRobot);
+        
+        // Tangential Component: Perpendicular to the vector (Ball -> Robot)
+        // (cos(theta + 90), sin(theta + 90)) = (-sin(theta), cos(theta))
+        double vX_tangential = v_tangential * -sin(angleBallToRobot);
+        double vY_tangential = v_tangential * cos(angleBallToRobot);
+        
+        double vX_field = vX_radial + vX_tangential;
+        double vY_field = vY_radial + vY_tangential;
+
         // 속도 제한 (CircleBack은 빠르게 -> 천천히)
         double speed = hypot(vX_field, vY_field);
         if (speed > maxSpeed) {
@@ -507,8 +503,6 @@ NodeStatus DribbleToGoal::tick() {
         vx = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
         vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
         vtheta = brain->data->ball.yawToRobot * 3.0; // Turn slightly slower
-        
-        // if (ballRange < 0.22) vx = -0.15; // Backing 삭제 (오실레이션 원인)
     } 
     else {
         // 정렬이 잘 되었다면 Push로 공 방향으로 전진
