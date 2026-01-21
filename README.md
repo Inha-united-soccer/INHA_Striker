@@ -48,21 +48,9 @@ The striker knows where to be even when it doesn't have the ball.
 
 The system is built on a robust perception-action loop:
 
-```mermaid
-graph LR
-    A[Perception] -->|Ball & Field Data| B(Decision Brain)
-    
-    B -->|Behavior Tree| C{State Selection}
-    C -->|Attack| D[Chase & Dribble]
-    C -->|Support| E[OfftheBall Move]
-    C -->|Search| F[Active Scan]
-    
-    D --> G[Motion Control]
-    E --> G
-    F --> G
+<img width="1117" height="523" alt="스크린샷 2026-01-21 오후 8 41 23" src="https://github.com/user-attachments/assets/1fa9ec9f-d363-46bd-80ab-8c16e8c4504d" />
 
-    style B fill:#feca57,stroke:#333,stroke-width:2px,color:black
-```
+
 
 ---
 
