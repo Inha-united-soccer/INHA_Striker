@@ -522,11 +522,11 @@ NodeStatus DribbleToGoal::tick() {
         vy = targetSpeed * sin(pushDir);
         vtheta = pushDir * 3.5; // 공 중심 맞추기 (High Gain)
         
-        // 정렬 오차가 조금 있어도 그냥 밀고 가도록 패널티 제거
-        // if (alignmentError > deg2rad(20)) {
-        //     vx *= 0.5;
-        //     vy *= 0.5;
-        // }
+        // 정렬 오차가 20도 이상이면 속도를 줄여서 밀어가도록
+        if (alignmentError > deg2rad(20)) {
+            vx *= 0.5;
+            vy *= 0.5;
+        }
     }
 
     // 속도 제한
