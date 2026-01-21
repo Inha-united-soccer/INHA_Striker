@@ -42,7 +42,7 @@ void Locator::init(FieldDimensions fd, int minMarkerCntParam, double residualTol
 
 void Locator::calcFieldMarkers(FieldDimensions fd)
 {
-    
+    fieldMarkers.push_back(FieldMarker{'X', 0.0, 0.0, 0.0});
     fieldMarkers.push_back(FieldMarker{'X', 0.0, -fd.circleRadius, 0.0});
     fieldMarkers.push_back(FieldMarker{'X', 0.0, fd.circleRadius, 0.0});
 

@@ -455,13 +455,10 @@ NodeStatus DribbleToGoal::tick() {
     if (isCircleBack) {
         // 공 뒤에 제대로 서지 못했다면 CircleBack으로 공뒤로 이동할 수 있게
         phase = "CircleBack";
-
-        // [Fix] Dynamic CircleBack Distance (유동 거리 적용)
-        double currentDist = max(0.25, min(ballRange, 0.45)); 
         
         // 하지만 dribble에서는 조금 더 여유있게 잡아도 됨. 
         double tightCircleBackDist = min(circleBackDist, ballRange);
-        if (tightCircleBackDist < 0.3) tightCircleBackDist = 0.3; // 최소 30cm 확보 
+        if (tightCircleBackDist < 0.3) tightCircleBackDist = 0.3; // 최소 30cm (너무 가까우면 충돌 위험)
 
         double targetX = ballPos.x - tightCircleBackDist * cos(angleBallToGoal);
         double targetY = ballPos.y - tightCircleBackDist * sin(angleBallToGoal);
@@ -470,7 +467,7 @@ NodeStatus DribbleToGoal::tick() {
         double errY = targetY - robotPos.y;
         
         // P-Control for CircleBack (Gently)
-        double vX_field = errX * 1.0; // Gain reduced 1.5 -> 1.0
+        double vX_field = errX * 1.0; 
         double vY_field = errY * 1.0;
 
         double angleBallToRobot = atan2(robotPos.y - ballPos.y, robotPos.x - ballPos.x); // Ball -> Robot 벡터
@@ -483,7 +480,7 @@ NodeStatus DribbleToGoal::tick() {
             // 고정값(0.8)이 아니라 오차가 줄어들면 같이 줄어들게 하여 오실레이션 및 오버슈트 방지
             // 오차가 30도일 때 1.0 정도의 힘, 5도일 때 0.16 정도
             double swirlStrength = fabs(angleDiff) * 2.0; 
-            if (swirlStrength > 1.0) swirlStrength = 1.0; // Max Cap
+            if (swirlStrength > 1.0) swirlStrength = 1.0; 
             
             double tanAngle = angleBallToRobot + swirlDir * M_PI / 2.0;
             
@@ -493,7 +490,7 @@ NodeStatus DribbleToGoal::tick() {
 
         // circleback 시에 공에 닿는걸 방지
         double distToBall = hypot(ballPos.x - robotPos.x, ballPos.y - robotPos.y);
-        double safeDist = 0.25; 
+        double safeDist = 0.25; // 0.3m 목표에 대해 0.25m 안전 거리 설정 (오실레이션 방지)
         if (distToBall < safeDist) {
             double repulsionStrength = 2.0 * (safeDist - distToBall);
             vX_field += repulsionStrength * cos(angleBallToRobot);
@@ -511,7 +508,7 @@ NodeStatus DribbleToGoal::tick() {
         vy = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
         vtheta = brain->data->ball.yawToRobot * 3.0; // Turn slightly slower
         
-        if (ballRange < 0.22) vx = -0.15; // 너무 가까우면 천천히 후진
+        // if (ballRange < 0.22) vx = -0.15; // Backing 삭제 (오실레이션 원인)
     } 
     else {
         // 정렬이 잘 되었다면 Push로 공 방향으로 전진

@@ -83,8 +83,8 @@ NodeStatus Adjust::tick(){
         brain->data->robotPoseToField.y
     );
     
-    // 골대와 가까우면(2m) 더 과감하게 움직임 (= 속도 증가)
-    if (distToGoal < 2.0) {
+    // 골대와 가까우면(3m) 더 과감하게 움직임 (= 속도 증가)
+    if (distToGoal < 3.0) {
         log("Near Goal Mode: Boost Speed");
         st *= 1.5; // 횡이동 속도 1.5배
         sr = cap(sr, 0.5, -0.5); // 전후진 속도 제한도 품
@@ -119,7 +119,7 @@ NodeStatus Adjust::tick(){
 
     // 승재욱 추가
     double successDeltaDir = 0.1; // 기본 5.7도
-    if (distToGoal < 2.0) successDeltaDir = 0.25; // 14도 정도로 완화
+    if (distToGoal < 3.0) successDeltaDir = 0.25; // 14도 정도로 완화
 
     bool adjustDone = fabs(deltaDir) <= successDeltaDir && fabs(ballYaw) <= 0.1 && ballRange < range + 0.1;
     if (adjustDone){
