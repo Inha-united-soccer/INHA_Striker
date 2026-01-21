@@ -1,42 +1,68 @@
-# INHA-United Robocup 
-## introduction
-This repository is developed on top of the official Booster K1 RoboCup demo provided by Booster.
+# AI Soccer Striker Agent
 
-While the original demo allows the robot to autonomously make decisions and complete a full RoboCup match, we have extended and customized the system with our own implementations.
+> **Advanced Autonomous Decision Making & Control System for Humanoid Soccer Robots**
 
-The overall system is composed of three main programs: vision, brain, and game_controller.
+This module implements the **Striker** intelligence for our humanoid soccer robot, designed to execute dynamic tactical behaviors in real-time. It features a robust **Behavior Tree (BT)** architecture integrated with advanced motion planning algorithms.
 
+---
 
--   vision
-    -   The Robocup vision recognition program, based on Yolo-v8, detects objects such as robots, soccer balls, and the field, and calculates their positions in the robot's coordinate system using geometric relationships.
+## Core Architecture
 
--   brain
-    -   The Robocup decision-making program reads visual data and GameController game control data, integrates all available information, makes judgments, and controls the robot to perform corresponding actions, completing the match process.
+The Striker's cognitive process is structured into a hierarchical **Finite State Machine (FSM)** driven by a Behavior Tree, ensuring reactive yet deliberate actions.
 
--   game_controller
-    -   Reads the game control data packets broadcast by the referee machine on the local area network, converts them into ROS2 topic messages, and makes them available for the brain to use.
+| State | Description | Key Algorithm |
+|-------|-------------|---------------|
+| **Search** | Active perception to localize the ball. | `CamScanField` (Sine-wave Scanning) |
+| **Co-op** | Positioning for passes & tactical support. | `OffTheBall` (Grid-based Utility Maximization) |
+| **Approach** | Dynamic movement to ball or goal. | `Chase` (Curvilinear Swirl) / `Dribble` (Path Projection) |
+| **Attack** | Precision alignment and shooting. | `Adjust` (P-Control) & `Kick` (Lock Mechanism) |
 
-##  Install extra dependency
-sudo apt-get install ros-humble-backward-ros
+---
 
-## Note
-This repo support jetpack 6.2. Adapted to the default TRT model in src/vision/config/vision.yaml.
+## Key Algorithms
 
-vision.yaml for jetpack 6.2 machine
+### 1. Obstacle-Aware Dribble Planner
+*   **Problem**: How to navigate through defenders while maintaining ball control?
+*   **Solution**: **Trajectory Projection & Cost Optimization**
+    *   Generates candidate paths towards the goal line.
+    *   **Projects** obstacles onto each path to calculate clearance.
+    *   Evaluates paths using a cost function: $J = w_c \cdot Clearance - w_d \cdot CenterPenalty + w_g \cdot GoalBonus$.
+    *   Selects the optimal trajectory that balances safety (avoidance) and aggression (goal-scoring).
 
-    detection_model:
-	    model_path: ./src/vision/model/best_digua_second_10.3.engine
-	    confidence_threshold: 0.2
+### 2. Dynamic Curvilinear Approach (Chase)
+*   **Problem**: Approaching the ball directly often leads to poor kicking angles.
+*   **Solution**: **Circle-Back with Swirl Control**
+    *   Instead of a straight line, the robot calculates a **curvilinear path** to approach the ball from the rear (Goal-Ball-Robot alignment).
+    *   **Swirl Logic**: Adds a tangential velocity vector when circling, creating a spiral motion that aligns the robot's heading faster while maintaining momentum.
+    *   **Hysteresis Stabilization**: Uses dual thresholds (Enter 25° / Exit 15°) to prevent state oscillation between "Align" and "Push" phases.
 
-## Build and Run
+### 3. Grid-based Tactical Positioning (Off-Ball)
+*   **Problem**: Where should the robot stand when not in possession?
+*   **Solution**: **Symmetry-based Grid Search**
+    *   Discretizes the field into a grid.
+    *   Calculates the **Centroid of Defenders** and identifies the **Symmetric Target Point** to exploit open space.
+    *   Maximizes utility by avoiding defenders ($D < 3m$) and maintaining optimal distance from the goal.
 
-    #Build the programs
-    ./scripts/build.sh
-    
-    #Run on the actual robot
-    ./scripts/start.sh
+### 4. Robust Kick Execution
+*   **Kick Lock Mechanism**: To solve decision chattering (flickering between "Ready" and "Not Ready"), a temporal lock is applied once shooting conditions are met, ensuring the kick action completes.
+*   **Adaptive Precision**:
+    *   **Quick Kick**: Relaxed tolerances for set-pieces or close-range scrambles.
+    *   **Precision Kick**: Strict alignment requirements for long-range shots.
 
-## Booster Documents
+---
 
-[Chinese Version](https://booster.feishu.cn/wiki/SoJCwyIpiiXrp0kgVnKc5rIrn3f)
-[English version](https://booster.feishu.cn/wiki/CQXowElA0iy2hhkmPJmcY0wwnHf?renamingWikiNode=false)
+## Active Perception
+
+*   **Smooth Tracking**: Uses **EMA (Exponential Moving Average)** filtering on head joints to prevent jitter during tracking.
+*   **Adaptive Gain**: Lowers P-gain and increases damping when tracking noisy ball detection (`CamTrackBall`), while using clean sine-wave trajectories for field scanning (`CamScanField`).
+
+---
+
+## Tech Stack
+*   **Language**: C++17
+*   **Framework**: BehaviorTree.CPP, ROS2 (Humble)
+*   **Optimization**: Eigen 3 (Matrix operations)
+*   **Visualization**: Rerun SDK (Real-time debugging)
+
+---
+*Created by [Your Name/Team Name] - Inha United*
