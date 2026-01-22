@@ -62,7 +62,7 @@ graph LR
     style C fill:#feca57,stroke:#333,stroke-width:2px,color:black
 ```
 
-> [<img width="1000" height="420" alt="image" src="https://github.com/user-attachments/assets/f4c2592e-dc3f-4957-b1f5-4a4410184ee0" />](https://files.slack.com/files-pri/T0908EY4K6V-F0A9TF95XHD/striker.png)
+> [<img width="1000" height="440" alt="image" src="https://github.com/user-attachments/assets/f4c2592e-dc3f-4957-b1f5-4a4410184ee0" />](https://files.slack.com/files-pri/T0908EY4K6V-F0A9TF95XHD/striker.png)
 
 
 ---
