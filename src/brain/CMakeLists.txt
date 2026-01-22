@@ -41,29 +41,29 @@ ament_export_dependencies(rosidl_default_runtime)
 # source files
 file(GLOB SOURCE_FILES src/*.cpp)
 
-set(SOURCE_FILES 
-  src/main.cpp 
-  src/brain.cpp 
-  src/brain_config.cpp 
-  src/brain_data.cpp 
-  src/brain_tree.cpp 
-  src/robot_client.cpp 
-  src/walk.cpp
-  src/movehead.cpp
-  src/detection_utils.cpp 
-  src/brain_log.cpp
-  src/locator.cpp
-  src/chase.cpp
-  src/kick.cpp
-  src/adjust.cpp
-  src/brain_communication.cpp
-  src/speak.cpp
-  src/offtheball.cpp
-  src/defender_decision.cpp
-  src/striker_decision.cpp
-  src/pass_receive.cpp
-  src/gotopose.cpp
-)
+# set(SOURCE_FILES 
+#   src/main.cpp 
+#   src/brain.cpp 
+#   src/brain_config.cpp 
+#   src/brain_data.cpp 
+#   src/brain_tree.cpp 
+#   src/robot_client.cpp 
+#   src/walk.cpp
+#   src/movehead.cpp
+#   src/detection_utils.cpp 
+#   src/brain_log.cpp
+#   src/locator.cpp
+#   src/chase.cpp
+#   src/kick.cpp
+#   src/adjust.cpp
+#   src/brain_communication.cpp
+#   src/speak.cpp
+#   src/offtheball.cpp
+#   src/defender_decision.cpp
+#   src/striker_decision.cpp
+#   src/pass_receive.cpp
+#   src/gotopose.cpp
+# )
 
 add_executable(brain_node ${SOURCE_FILES})
 
