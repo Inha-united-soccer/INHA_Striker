@@ -302,7 +302,7 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
         "END"      // 경기 종료
     };
     string gameState = gameStateMap[static_cast<int>(msg.state)]; // 현재 무슨 게임 상태인지 확인
-    // 영상에서는 Ready에 striker두기 위해
+    // 영상에서는 Ready에 striker두기 위해 주석 처리
     // if (gameState != "PLAY") {
     //     data->hasScored = false;
     // }
