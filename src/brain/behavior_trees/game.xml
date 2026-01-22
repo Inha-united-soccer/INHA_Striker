@@ -39,7 +39,7 @@
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
 
-                            <GoToPose _while="player_role == 'striker'" target_pos_x="1.65" target_pos_y="-1.5" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
+                            <GoToPose _while="player_role == 'striker'" target_pos_x="-1.65" target_pos_y="-1.0" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
                             <CalcKickDir />
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
