@@ -29,6 +29,6 @@ public:
 
 private:
     Brain *brain;
-    std::chrono::steady_clock::time_point scanStartTime = std::chrono::steady_clock::time_point::min();
+    rclcpp::Time scanStartTime = rclcpp::Time(0, 0, RCL_ROS_TIME);
     double smoothHeadYaw = 0.0;
 };

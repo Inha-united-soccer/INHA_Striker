@@ -218,38 +218,40 @@ NodeStatus OfftheballPosition::tick(){
     vtheta = cap(vtheta, 1.0, -1.0);
 
     // 머리 움직임 제어 - scanStartTime, smoothHeadYaw는 헤더에 선언된 멤버 변수 사용
-    auto now = std::chrono::steady_clock::now();
+    auto now = brain->now();
     
     double headPitch = 0.0;
     double headYaw = 0.0;
     
-    // 6초마다 2초간 고개 돌리기
-    double timeSinceScan = std::chrono::duration<double>(now - scanStartTime).count();
-    if (timeSinceScan > 6.0) {
+    // 10초마다 3초간 고개 돌리기
+    double timeSinceScan = (now - scanStartTime).seconds();
+    if (timeSinceScan > 10.0) {
         scanStartTime = now;
+        timeSinceScan = 0.0;
     }
     
     double targetHeadYaw = 0.0;
 
     double angleToBallRel = toPInPI(angleToBall - robotTheta); // 로봇 몸통 기준 공의 각도
 
-    if (timeSinceScan < 2.0) {
+    if (timeSinceScan < 3.0) {
         // 공을 중심으로 좌우로 고개를 움직이게 -> 공을 놓치지 않으면서도 주변 수비수를 확인할 수 있음
-        double scanOffset = 0.5 * sin(2.0 * M_PI * timeSinceScan / 2.0);
+        double scanOffset = 0.6 * sin(2.0 * M_PI * timeSinceScan / 3.0); // 주기를 2.0 -> 3.0으로 조정 (스캔 시간에 맞춤)
         targetHeadYaw = angleToBallRel + scanOffset;
-    } else {
+    } 
+    else {
         // 공을 주시
         targetHeadYaw = angleToBallRel;
     }
     
-    targetHeadYaw = cap(targetHeadYaw, 1.35, -1.35);
+    targetHeadYaw = cap(targetHeadYaw, 1.5, -1.5); // 1.35 -> 1.5로 증가 (최대 head yaw 범위 확대)
 
     // EMA Smoothing (Low Pass Filter) -> alpha가 클수록 기존 값 유지 성향이 강함 (= 부드러움, 반응 느림)
     // 0.6 정도면 적절한 반응성과 부드러움 -> 0.4로 더 안정화
     smoothHeadYaw = smoothHeadYaw * 0.4 + targetHeadYaw * 0.6;
     
     // 최종 Check
-    headYaw = cap(smoothHeadYaw, 1.35, -1.35);
+    headYaw = cap(smoothHeadYaw, 1.5, -1.5); // 1.35 -> 1.5로 증가 (최대 head yaw 범위 확대)
 
     brain->client->moveHead(headPitch, headYaw);
 
@@ -273,7 +275,9 @@ NodeStatus OfftheballPosition::tick(){
         auto endTick = std::chrono::high_resolution_clock::now();
         double duration = std::chrono::duration<double, std::milli>(endTick - startTick).count();
         brain->log->log("debug/offtheball/info", 
-            rerun::TextLog(format("Score: %.2f, Time: %.2fms, v(%.2f, %.2f, %.2f)", maxScore, duration, vx_robot, vy_robot, vtheta))
+            rerun::TextLog(format("Score: %.2f, Time: %.2fms, v(%.2f, %.2f, %.2f)\nHead: %s (%.2fs)", 
+                maxScore, duration, vx_robot, vy_robot, vtheta,
+                (timeSinceScan < 3.0 ? "SCAN" : "STOP"), timeSinceScan))
         );
     }
 
