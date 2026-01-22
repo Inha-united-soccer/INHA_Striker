@@ -302,9 +302,10 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
         "END"      // 경기 종료
     };
     string gameState = gameStateMap[static_cast<int>(msg.state)]; // 현재 무슨 게임 상태인지 확인
-    if (gameState != "PLAY") {
-        data->hasScored = false;
-    }
+    // 영상에서는 Ready에 striker두기 위해
+    // if (gameState != "PLAY") {
+    //     data->hasScored = false;
+    // }
     tree->setEntry<string>("gc_game_state", gameState); // 적용
 
     bool isKickOffSide = (msg.kick_off_team == config->teamId); // 우리 팀이 킥오프(선공) 팀인지 여부
@@ -1640,9 +1641,9 @@ void Brain::handleCooperation() {
     double BALL_CONTROL_COST_THRESHOLD = 3.0;
     get_parameter("strategy.cooperation.ball_control_cost_threshold", BALL_CONTROL_COST_THRESHOLD);
 
-    if (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost) {
+    // if (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost) {
     // [TEST] 강제로 리더가 아님(False)으로 고정하여 Offtheball 테스트
-    // if (true || (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost)) {
+    if (true || (tmMinCost < BALL_CONTROL_COST_THRESHOLD && data->tmMyCost > tmMinCost)) {
 
         data->tmImLead = false;
         tree->setEntry<bool>("is_lead", false);
