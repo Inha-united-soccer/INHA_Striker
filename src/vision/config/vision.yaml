@@ -81,4 +81,4 @@ calibration:
     calibration_time: 2000-01-01-09-29-08
     reprojection_error: 3.5616553263245252
 misc:
-  save_data_nonstationary: true
+  save_data_nonstationary: false
