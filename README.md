@@ -38,7 +38,7 @@ The striker knows where to be even when it doesn't have the ball.
 *   **Symmetry-based Positioning**: Exploits open space by calculating optimal gaps relative to defender positions.
 *   **Obstacle-Aware Dribbling**: Dynamically projects paths to find the safest route through a crowded defense.
 
-### **Precision & Power**
+### **Precision**
 *   **Kick Lock Mechanism**: Prevents action oscillation by committing to a shot once a high-confidence window is identified.
 *   **Adaptive Head Tracking**: Smoothes out sensor noise for stable vision while tracking high-speed balls.
 
