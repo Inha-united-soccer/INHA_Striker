@@ -41,7 +41,7 @@
                             <SubTree
                                 ID="CamFindAndTrackBall"
                                 _autoremap="true"
-                                _while="!offtheball" />
+                                _while="decision != 'offtheball'" />
                             <CalcKickDir /> 
                             <!--<CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" goal_area_buffer="2.0" />     -->
 
