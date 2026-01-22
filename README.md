@@ -62,9 +62,7 @@ graph LR
     style C fill:#feca57,stroke:#333,stroke-width:2px,color:black
 ```
 
-
-<img width="1117" height="523" alt="스크린샷 2026-01-21 오후 8 41 23" src="https://github.com/user-attachments/assets/1fa9ec9f-d363-46bd-80ab-8c16e8c4504d" />
-
+<img width="797" height="373" alt="image" src="https://github.com/user-attachments/assets/f4c2592e-dc3f-4957-b1f5-4a4410184ee0" />
 
 
 ---
