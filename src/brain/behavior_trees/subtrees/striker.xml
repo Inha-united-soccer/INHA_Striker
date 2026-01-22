@@ -50,7 +50,7 @@
                      <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
 
                      <!-- Dribble To Goal -->
-                     <DribbleToGoal _while="decision == 'dribble'" vx_limit="0.6" vy_limit="0.3" vtheta_limit="1.0" dist_to_goal="2.0" min_speed="0.2" max_speed="0.5" slow_dist_far="0.35" circle_back_dist="0.6" />
+                     <DribbleToGoal _while="decision == 'dribble'" vx_limit="0.6" vy_limit="0.3" vtheta_limit="1.0" dist_to_goal="2.0" min_speed="0.35" max_speed="0.5" slow_dist_far="0.35" circle_back_dist="0.6" />
                      
                      <!-- Off the ball -->
                      <OfftheballPosition _while="decision == 'offtheball'" dist_from_goal="2.0" />
