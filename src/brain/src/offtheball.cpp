@@ -35,9 +35,9 @@ NodeStatus OfftheballPosition::tick(){
         distFromGoal = 2.0;
     }
     
-    // 골대 중앙 좌표
+    // 골대 중앙 좌표 (상대 골대)
     double goalX = (fd.length / 2.0);
-    // 골대에서 distFromGoal만큼 떨어진 좌표 (공격 방향 반대로)
+    // 상대 골대에서 distFromGoal만큼 떨어진 좌표 (상대 진영 쪽)
     double baseX = goalX - distFromGoal; // 오프더볼 위치 기준 X좌표 
 
     // 최적의 Y좌표 계산 (경기장 폭 0.5m씩 안쪽)
@@ -109,7 +109,7 @@ NodeStatus OfftheballPosition::tick(){
             double distToBall = norm(x - brain->data->ball.posToField.x, y - brain->data->ball.posToField.y);
             score -= std::abs(distToBall - 2.5) * 3.0; // 7. 공과의 거리 2.5m 유지 가중치 (3.0)
 
-            score += (-x) * 1.5; // 8. 공격 방향(전진) 선호 가중치 (5.2 -> 1.5)
+            score += (-x) * 1.5; // 8. 우리 진영 쪽 선호 가중치 (낮은 가중치, baseX 주변 선호가 우선) (5.2 -> 1.5)
 
             Line passPath = {brain->data->ball.posToField.x, brain->data->ball.posToField.y, x, y};
             Line shotPath = {baseX, y, goalX, 0.0};
