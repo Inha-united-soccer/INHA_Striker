@@ -39,35 +39,26 @@
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
 
-                            <GoToPose _while="player_role == 'striker'" target_pos_x="-2.2" target_pos_y="-1.0" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
+                            <GoToPose _while="player_role == 'striker'" target_pos_x="2.0" target_pos_y="1.5" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
                             <CalcKickDir />
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
-
-                            <SubTree
-                                ID="CamFindAndTrackBall"
-                                _autoremap="true"
-                                _while="decision != 'offtheball'" />
-                            <CalcKickDir /> 
-                            <!--<CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" goal_area_buffer="2.0" />     -->
-
-                            <ReactiveSequence>
-                                <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
-                                <!-- <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" /> -->
-                            </ReactiveSequence>
+                            <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
                             <SubTree ID="Locate" _autoremap="true" />
-                            
+                            <SetVelocity x="0.0" y="0.0" theta="0.0" />
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
                             
-                            <!--<CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.53" goal_area_buffer="2.0" />     -->
+                            <SubTree
+                                ID="CamFindAndTrackBall"
+                                _autoremap="true"
+                                _while="decision != 'offtheball'" />
 
                             <ReactiveSequence>
-                                <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" />
-                                <!-- <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" /> -->
+                                <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
                             </ReactiveSequence>
                             <SubTree ID="Locate" _autoremap="true" />
                             
