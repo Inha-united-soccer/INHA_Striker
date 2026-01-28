@@ -16,10 +16,10 @@ NodeStatus StrategyDirector::tick()
     // 2. 전략 결정
     string mode = "NORMAL";
 
-    if (isLosing && timeRemaining < 60.0) {
+    if (isLosing && timeRemaining < 300.0) {
         mode = "ALL_OUT_ATTACK"; // 지고 있고 시간도 없다면 총공격
     } 
-    else if (isWinning && timeRemaining < 60.0) {
+    else if (isWinning && timeRemaining < 300.0) {
         mode = "TIME_WASTING"; // 이기고 있고 시간이 얼마 안남았다면 시간 보내기
     } 
     else if (isWinning) {
