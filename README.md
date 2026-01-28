@@ -29,13 +29,11 @@ We separate **Strategic Intent** from **Mechanical Execution** using a novel **P
     *   *Example*: "Pressing" tactic injects `speed_limit=1.0` and `kick_aggressiveness=High`.
     *   *Example*: "Tempo Control" tactic injects `speed_limit=0.4` and `kick_aggressiveness=Low`.
 *   **Execution Layer (The Engine)**: The robust `StrikerDecision` node consumes these parameters to execute the optimal action without code changes.
-    
-**Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
 
 **Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
 
-#### **📂 Source Code Structure**
-This architecture is directly reflected in our codebase, proving the clean separation of concerns:
+#### **📂 Proof of Modularity: Code Structure**
+Our source tree is explicitly organized to enforce this architectural separation:
 
 *   📂 **[`src/brain/src/`](src/brain/src)**
     *   📂 **[`strategy/`](src/brain/src/strategy)** (Layer 1: Strategy Director)
