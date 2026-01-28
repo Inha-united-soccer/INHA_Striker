@@ -104,8 +104,18 @@ NodeStatus StrikerDecision::tick() {
         color = 0x00FFFFFF;
     }
     
-    /* ----------------------- 3. OffTheBall ----------------------- */
-    else if (!brain->data->tmImLead && ballRange >= 1.0) {
+    /* ----------------------- 3. OffTheBall / 수비 라인 복귀 ----------------------- */
+    // Tactic에서 대입한 'paramDefenseLineX' 활용 만약 현재 내 위치가 방어선보다 너무 앞서 있다면 -> 복귀(offtheball)
+    bool shouldRetreat = false;
+    if (paramDefenseLineX > -9.0) { // 유효한 수비 라인이 설정된 경우
+        // 로봇이 라인보다 0.5m 이상 앞에 있으면 복귀
+        if (brain->data->robotPoseToField.x > paramDefenseLineX + 0.5) {
+             shouldRetreat = true;
+             brain->log->logToScreen("tree/Decide", format("Retreating to Line: %.2f", paramDefenseLineX), 0xFFFF00FF);
+        }
+    }
+
+    if ((!brain->data->tmImLead && ballRange >= 1.0) || shouldRetreat) {
         newDecision = "offtheball";
         color = 0x00FFFFFF;
     }

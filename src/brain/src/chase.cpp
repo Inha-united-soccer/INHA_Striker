@@ -75,6 +75,13 @@ NodeStatus Chase::tick(){
     getInput("dist", dist);
     getInput("safe_dist", safeDist);
 
+    // 전술에서 설정한 속도 제한이 있으면 보정, Param값이 있으면 그것을 우선시하도록 (전술적 의도 반영)
+    if (auto val = brain->tree->getEntry<double>("Strategy.param_chase_speed_limit")) {
+        vxLimit = val; // Overwrite
+        // vyLimit은 보통 vxLimit보다 작거나 같으므로 비율조정 or cap
+        if (vyLimit > vxLimit) vyLimit = vxLimit; 
+    }
+
     bool avoidObstacle = true;
     brain->get_parameter("obstacle_avoidance.avoid_during_chase", avoidObstacle);
     double oaSafeDist = 1.5;
