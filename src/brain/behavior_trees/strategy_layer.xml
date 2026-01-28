@@ -1,0 +1,26 @@
+<root main_tree_to_execute="StrategyTree">
+    <BehaviorTree ID="StrategyTree">
+        <Sequence>
+            <!-- Layer 1: 상황 인지(게임 상태) -->
+            <GameStateManager is_winning="{is_winning}" is_losing="{is_losing}" time_remaining="{time_remaining}"/>
+            
+            <!-- Layer 2: 상위 전략 선택 -->
+            <StrategyDirector current_mode="{current_strategy}"/>
+            
+            <!-- Layer 3: 세부 전략 선택 -->
+            <TacticSelector active_tactic="{active_tactic}"/>
+            
+            <!-- Layer 4: 세부 전략 실행 (파라미터 주입) -->
+            <Switch3 variable="{active_tactic}" case_1="PRESSING" case_2="LINE_DEFENSE" case_3="TEMPO_CONTROL">
+                <TacticPressing/>
+                <TacticLineDefense/>
+                <TacticTempoControl/>
+                <AlwaysSuccess/> <!-- Default Case -->
+            </Switch3>
+
+            <!-- Layer 5: 최종 행동 결정 (StrikerDecision) -->
+            <!-- 이 노드가 위에서 설정된 파라미터를 사용하여 실제 행동(Chase/Kick)을 결정합니다 -->
+            <StrikerDecision decision_in="" position="" chase_threshold="0.6" set_piece_goal_dist="3.0"/>
+        </Sequence>
+    </BehaviorTree>
+</root>

@@ -5,10 +5,10 @@
 #include <cstdlib>
 #include <ctime>
 
-#define REGISTER_STRIKERDECISION_BUILDER(Name)     \
-    factory.registerBuilder<Name>( \
-        #Name,                     \
-        [brain](const string &name, const NodeConfig &config) { return make_unique<Name>(name, config, brain); });
+// #define REGISTER_STRIKERDECISION_BUILDER(Name)     \
+//     factory.registerBuilder<Name>( \
+//         #Name,                     \
+//         [brain](const string &name, const NodeConfig &config) { return make_unique<Name>(name, config, brain); });
 
 
 void RegisterStrikerDecisionNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
@@ -16,7 +16,15 @@ void RegisterStrikerDecisionNodes(BT::BehaviorTreeFactory &factory, Brain* brain
 }
 
 NodeStatus StrikerDecision::tick() {
-
+    // --- 1. 전술(Tactic)에서 설정한 파라미터를 읽어오기 ---
+    double paramChaseSpeed = 0.8;
+    double paramDefenseLineX = -10.0; // 기본값: 제한 없음
+    double paramKickThreshold = 0.3;  
+    
+    // Default 값
+    if (auto val = brain->tree->getEntry<double>("Strategy.param_chase_speed_limit")) paramChaseSpeed = val;
+    if (auto val = brain->tree->getEntry<double>("Strategy.param_defense_line_x")) paramDefenseLineX = val;
+    if (auto val = brain->tree->getEntry<double>("Strategy.param_kick_threshold")) paramKickThreshold = val;
 
     double chaseRangeThreshold;
     getInput("chase_threshold", chaseRangeThreshold);
@@ -31,22 +39,8 @@ NodeStatus StrikerDecision::tick() {
     double ballYaw = ball.yawToRobot; // 공이 내 정면에 있나
     double ballX = ball.posToRobot.x;
     double ballY = ball.posToRobot.y;
-    double distToGoal = 0.0;
-    
-    distToGoal = norm(ball.posToField.x - (brain->config->fieldDimensions.length/2), ball.posToField.y);
+    double distToGoal = norm(ball.posToField.x - (brain->config->fieldDimensions.length/2), ball.posToField.y);
 
-    // 장애물 회피 로직 -> 드리블이나 오프더볼 등
-    // bool avoidPushing;
-    // double kickAoSafeDist;
-    // brain->get_parameter("obstacle_avoidance.avoid_during_kick", avoidPushing);
-    // brain->get_parameter("obstacle_avoidance.kick_ao_safe_dist", kickAoSafeDist);
-    // bool avoidKick = avoidPushing // 전방에 장애물 있나
-    //     && brain->data->robotPoseToField.x < brain->config->fieldDimensions.length / 2 - brain->config->fieldDimensions.goalAreaLength
-    //     && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
-    //     && brain->data->robotPoseToField.x < brain->config->fieldDimensions.length / 2 - brain->config->fieldDimensions.goalAreaLength
-    //     && brain->distToObstacle(brain->data->ball.yawToRobot) < kickAoSafeDist;
-
-    // 0. 골 판정
     double goalX = brain->config->fieldDimensions.length / 2.0;
     double goalY = brain->config->fieldDimensions.goalWidth / 2.0;
 
@@ -63,24 +57,14 @@ NodeStatus StrikerDecision::tick() {
         return NodeStatus::SUCCESS;
     }
 
-
     // 변수 로드
-    double kickYOffset = 0.0; // -0.077; 
-    // getInput("kick_y_offset", kickYOffset); // 당분간 사용 안 함
-
     double setPieceGoalDist = 3.0;
     getInput("set_piece_goal_dist", setPieceGoalDist);
 
-    // 절대값으로 양발 -> 그냥 절대값이면 항상 양수로 들어갈테니 ball.posToRobot.y로 공이 왼쪽에 있는지 오른쪽에 있는지 판단하고 부호 변경
-    if (kickYOffset > 0) {
-        if (brain->data->ball.posToRobot.y > 0) kickYOffset = fabs(kickYOffset);
-        else kickYOffset = -fabs(kickYOffset);
-    }
 
     // 정렬 오차 계산
-    double deltaDir = toPInPI(kickDir - dir_rb_f);                              // 로봇이 공 뒤에 일직선으로 서있으면 0이라 생각할 수 있음
-    double targetAngleOffset = atan2(kickYOffset, ballRange);                    // 오른 발로 차야하니까 공보다 약간 왼쪽에 있어야함 -> 그 왼쪽에 해당하는 각도
-    double errorDir = toPInPI(deltaDir + targetAngleOffset);                     // 공을 차기 위한 위치인가 -> 최종 위치 오차
+    double deltaDir = toPInPI(kickDir - dir_rb_f);                  // 로봇이 공 뒤에 일직선으로 서있으면 0이라 생각할 수 있음            
+    double errorDir = toPInPI(deltaDir);                            // 공을 차기 위한 위치인가 -> 최종 위치 오차
     double headingError = toPInPI(kickDir - brain->data->robotPoseToField.theta); // 로봇이 골대를 정확히 보고있나 -> 최종 각도 오차
 
     bool iKnowBallPos = brain->tree->getEntry<bool>("ball_location_known");
@@ -96,25 +80,16 @@ NodeStatus StrikerDecision::tick() {
     // Check isAlive to prevent stale signals
     bool passsignal = brain->data->tmStatus[partnerIdx].isAlive && brain->data->tmStatus[partnerIdx].passSignal;
     
-    // Debug Log for Signal Diagnosis
-    // if (tickCount % 60 == 0) { // Log occasionally or use logToScreen
-        brain->log->log("debug/striker_decision_signal", rerun::TextLog(format("PartnerIdx: %d (MyID:%d), Signal: %d", partnerIdx, myId, passsignal)));
-    // }
-
-    // 패스 신호 타임 카운트
+    // 패스 신호 타임 카운트 (Same)
     bool isReceiveTimeout = false;
     if (passsignal) {
-        if (receiveStartTime.nanoseconds() == 0) {
-            receiveStartTime = brain->get_clock()->now();
-        } 
-        else if (brain->msecsSince(receiveStartTime) > 5000) {
-            isReceiveTimeout = true;
-        }
-    } 
-    else {
+        if (receiveStartTime.nanoseconds() == 0) receiveStartTime = brain->get_clock()->now();
+        else if (brain->msecsSince(receiveStartTime) > 5000) isReceiveTimeout = true;
+    } else {
         receiveStartTime = rclcpp::Time(0, 0, RCL_ROS_TIME);
     }
     
+    // ========================= 의사 결정 로직 =========================
     
     /* ----------------------- 1. 공 찾기 ----------------------- */ 
     if (!(iKnowBallPos || tmBallPosReliable)) {
@@ -133,7 +108,7 @@ NodeStatus StrikerDecision::tick() {
     else if (!brain->data->tmImLead && ballRange >= 1.0) {
         newDecision = "offtheball";
         color = 0x00FFFFFF;
-    } 
+    }
 
     /* ----------------------- 4. 공 chase ----------------------- */
     else if (ballRange > chaseRangeThreshold) {
@@ -148,16 +123,15 @@ NodeStatus StrikerDecision::tick() {
     }
 
     /* ----------------------- 6. 공 슛/정렬 ----------------------- */
-    // 멀면 정밀하게 (0.1라디안 = 5.7도)
     else {
-        double kickTolerance = 0.3; 
-        double yawTolerance = 0.5;
-        getInput("kick_tolerance", kickTolerance); // xml에서 수정 가능하도록
-        getInput("yaw_tolerance", yawTolerance);
+        // getInput("kick_tolerance", kickTolerance); // xml에서 수정 가능하도록
+        // getInput("yaw_tolerance", yawTolerance);
+        double kickTolerance = paramKickThreshold; 
+        double yawTolerance = 0.5; // Yaw는 넉넉하게
         
         // 가까우면(세트피스 거리면) 여유롭게
         if (distToGoal < setPieceGoalDist) {
-            kickTolerance = 0.4; 
+            kickTolerance *= 1.5; // 좀 더 여유롭게
             yawTolerance = 0.6;
         }
 
@@ -179,9 +153,7 @@ NodeStatus StrikerDecision::tick() {
         }
 
         double kickRange = 1.0;
-        if (distToGoal < setPieceGoalDist){
-            kickRange = 2.0;
-        }
+        if (distToGoal < setPieceGoalDist) kickRange = 2.0;
 
         // Kick 진입 조건
         if (
@@ -191,18 +163,10 @@ NodeStatus StrikerDecision::tick() {
             // && !avoidKick
             && ball.range < kickRange
         ) {
-            // 골대 거리에 따라 Quick vs Normal Kick 결정
-            if (distToGoal < setPieceGoalDist) {
-                newDecision = "kick_quick"; 
-            }
-            else {
-                newDecision = "kick";      
-            }
+            if (distToGoal < setPieceGoalDist) newDecision = "kick_quick"; 
+            else newDecision = "kick";      
             
-            // 처음 락을 거는 순간 시간 설정
-            if (!isLocked) {
-                kickLockEndTime = now + rclcpp::Duration::from_seconds(3.0);
-            }
+            if (!isLocked) kickLockEndTime = now + rclcpp::Duration::from_seconds(3.0);
             
             color = 0x00FF00FF;
             brain->data->isFreekickKickingOff = false; 
@@ -213,7 +177,6 @@ NodeStatus StrikerDecision::tick() {
             // 골대 거리에 따라 Quick vs Normal Adjust 결정
             if (distToGoal < setPieceGoalDist) newDecision = "adjust_quick";
             else newDecision = "adjust";
-
             color = 0xFFFF00FF;
         }
     }
@@ -226,8 +189,8 @@ NodeStatus StrikerDecision::tick() {
     brain->log->logToScreen(
         "tree/Decide",
         format(
-            "Cnt: %d Decision: %s dist: %.2f range: %.2f errPos: %.2f errHead: %.2f kicking: %d lead: %d", 
-            tickCount, newDecision.c_str(), distToGoal, ballRange, errorDir, headingError, (lastDecision.find("kick") != string::npos), brain->data->tmImLead
+            "Dec: %s (K_Thresh: %.2f) dist: %.2f err: %.2f", 
+            newDecision.c_str(), paramKickThreshold, distToGoal, errorDir
         ),
         color
     );

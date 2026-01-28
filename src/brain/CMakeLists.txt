@@ -63,6 +63,12 @@ set(SOURCE_FILES
   src/striker_decision.cpp
   src/pass_receive.cpp
   src/gotopose.cpp
+  src/strategy/game_state_manager.cpp
+  src/strategy/strategy_director.cpp
+  src/strategy/strategy_nodes.cpp
+  src/tactics/tactics_definitions.cpp
+  src/tactics/tactic_selector.cpp
+  src/tactics/tactics_nodes.cpp
 )
 
 add_executable(brain_node ${SOURCE_FILES})
