@@ -101,3 +101,28 @@ NodeStatus TacticTempoControl::tick()
     setStatus(NodeStatus::RUNNING);
     return NodeStatus::RUNNING;
 }
+
+// ==========================================
+// 전략 4. 총공격 (All Out - Strategy: ALL_OUT_ATTACK)
+// ==========================================
+PortsList TacticAllOut::providedPorts()
+{
+    return {};
+}
+
+NodeStatus TacticAllOut::tick()
+{
+    // 1. 최대 속도
+    brain->tree->setEntry("Strategy.param_chase_speed_limit", 1.2);
+
+    // 2. 킥 임계값 대폭 완화
+    brain->tree->setEntry("Strategy.param_kick_threshold", 0.5); 
+
+    // 3. 수비 라인 극단적 전진 -> 상대 골라인(4.5m) 까지 전진 - 사실상 수비 복귀 안함
+    brain->tree->setEntry("Strategy.param_defense_line_x", 4.5);
+
+    // 디버깅
+    brain->log->logToScreen("tactics", "!!! ALL OUT ATTACK !!!", 0xFF0000FF); // 빨간색
+
+    return NodeStatus::SUCCESS; // SyncActionNode이므로 SUCCESS/FAILURE 반환
+}

@@ -48,3 +48,16 @@ public:
 private:
     Brain *brain;
 };
+
+// 전략 4. 총공격
+class TacticAllOut : public BT::SyncActionNode
+{
+public:
+    TacticAllOut(const string &name, const NodeConfig &config, Brain *_brain) : BT::SyncActionNode(name, config), brain(_brain) {}
+
+    static PortsList providedPorts();
+    NodeStatus tick() override;
+
+private:
+    Brain *brain;
+};

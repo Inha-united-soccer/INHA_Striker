@@ -15,7 +15,7 @@ NodeStatus TacticSelector::tick()
     string selectedTactic = "LINE_DEFENSE"; // Default -> 상대 전력에 대한 결정을 default로 설정해준다?
 
     if (strategyMode == "ALL_OUT_ATTACK") {
-        selectedTactic = "PRESSING";
+        selectedTactic = "TOTAL_ASSAULT"; // striker는 파라미터 키우는 데에 그치지만 goalkeeper라면 공격에 합류할 정도로 급박한 상황으로 설정
     } 
     else if (strategyMode == "OFFENSIVE") {
         selectedTactic = "PRESSING";
