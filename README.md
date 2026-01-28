@@ -32,8 +32,10 @@ We separate **Strategic Intent** from **Mechanical Execution** using a novel **P
     
 **Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
 
-### **Source Code Structure**
-You can verify this modular architecture in our source tree:
+**Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
+
+#### **📂 Source Code Structure**
+This architecture is directly reflected in our codebase, proving the clean separation of concerns:
 
 *   📂 **[`src/brain/src/`](src/brain/src)**
     *   📂 **[`strategy/`](src/brain/src/strategy)** (Layer 1: Strategy Director)
