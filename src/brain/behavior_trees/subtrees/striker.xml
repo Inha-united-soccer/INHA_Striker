@@ -2,7 +2,8 @@
    <include path="./cam_find_and_track_ball.xml" />
    <include path="./locate.xml" />
    <include path="./find_ball.xml" />
-   
+   <include path="../strategy_layer.xml" />
+
    <BehaviorTree ID="Striker">
       <ReactiveSequence>
          <!-- 자기 위치 추정 -->
@@ -42,8 +43,8 @@
                   <ReactiveSequence>
                      
                      <ReactiveSequence>
-                        <StrikerDecision decision_out="{decision}" decision_in="{decision}" chase_threshold="0.80" set_piece_goal_dist="3.0" kick_tolerance="0.3" yaw_tolerance="0.6" />
-                        <!-- kickTolerance : 로봇이 골대를 얼마나 정확히 보고있나, yawTolerance : 공이 내 발 앞에 있는가 -->
+                        <!-- Strategy & Tactics Layer (Parameter Injection + Decision) -->
+                        <SubTree ID="StrategyTree" _autoremap="true" />
                      </ReactiveSequence>
                      
                      <!-- 행동 실행 -->
