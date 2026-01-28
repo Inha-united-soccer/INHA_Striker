@@ -32,23 +32,23 @@ We separate **Strategic Intent** from **Mechanical Execution** using a novel **P
 
 **Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
 
-#### **📂 Proof of Modularity: Code Structure**
-Our source tree is explicitly organized to enforce this architectural separation:
-
-*   📂 **[`src/brain/src/`](src/brain/src)**
-    *   📂 **[`strategy/`](src/brain/src/strategy)** (Layer 1: Strategy Director)
-        *   [`strategy_director.cpp`](src/brain/src/strategy/strategy_director.cpp)
-        *   [`game_state_manager.cpp`](src/brain/src/strategy/game_state_manager.cpp)
-        *   [`strategy_nodes.cpp`](src/brain/src/strategy/strategy_nodes.cpp)
-    *   📂 **[`tactics/`](src/brain/src/tactics)** (Layer 2: Tactics / Tuners)
-        *   [`tactic_selector.cpp`](src/brain/src/tactics/tactic_selector.cpp)
-        *   [`tactics_definitions.cpp`](src/brain/src/tactics/tactics_definitions.cpp)
-        *   [`tactics_nodes.cpp`](src/brain/src/tactics/tactics_nodes.cpp)
-    *   ⚙️ **Layer 3: Execution Engines** (Consumers)
-        *   [`striker_decision.cpp`](src/brain/src/striker_decision.cpp) (Main Decision Logic)
-        *   [`offtheball.cpp`](src/brain/src/offtheball.cpp) (Movement Logic)
-        *   [`chase.cpp`](src/brain/src/chase.cpp) 
-        *   *... and more (kick, adjust, etc.)*
+> #### **📂 Proof of Modularity: Code Structure**
+> Our source tree is explicitly organized to enforce this architectural separation:
+> 
+> * 📂 **[`src/brain/src/`](src/brain/src)**
+>   * 📂 **[`strategy/`](src/brain/src/strategy)** — *(Layer 1: Strategy Director)*
+>     * 📄 [`strategy_director.cpp`](src/brain/src/strategy/strategy_director.cpp)
+>     * 📄 [`game_state_manager.cpp`](src/brain/src/strategy/game_state_manager.cpp)
+>     * 📄 [`strategy_nodes.cpp`](src/brain/src/strategy/strategy_nodes.cpp)
+>   * 📂 **[`tactics/`](src/brain/src/tactics)** — *(Layer 2: Tactics / Tuners)*
+>     * 📄 [`tactic_selector.cpp`](src/brain/src/tactics/tactic_selector.cpp)
+>     * 📄 [`tactics_definitions.cpp`](src/brain/src/tactics/tactics_definitions.cpp)
+>     * 📄 [`tactics_nodes.cpp`](src/brain/src/tactics/tactics_nodes.cpp)
+>   * ⚙️ **Layer 3: Execution Engines** — *(Consumers)*
+>     * 📄 [`striker_decision.cpp`](src/brain/src/striker_decision.cpp) : **Main Decision Logic**
+>     * 📄 [`offtheball.cpp`](src/brain/src/offtheball.cpp) : Movement Logic
+>     * 📄 [`chase.cpp`](src/brain/src/chase.cpp) : Ball Pursuit
+>     * *... and more (kick, adjust, etc.)*
           
 ---
 
