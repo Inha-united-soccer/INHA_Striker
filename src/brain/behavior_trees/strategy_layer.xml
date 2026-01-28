@@ -19,7 +19,6 @@
             </Switch3>
 
             <!-- Layer 5: 최종 행동 결정 (StrikerDecision) -->
-            <!-- 이 노드가 위에서 설정된 파라미터를 사용하여 실제 행동(Chase/Kick)을 결정합니다 -->
             <StrikerDecision 
                 decision_out="{decision}" 
                 decision_in="{decision}" 
