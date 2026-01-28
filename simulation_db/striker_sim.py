@@ -348,9 +348,9 @@ def visualize():
     ax.text(passer.x, passer.y, "DF", color='white', ha='center', va='center', fontweight='bold', zorder=10)
 
     # 3. Our GK (Teammate) - Manual Addition at our goal (Positive X)
-    our_gk_x, our_gk_y = 3.5, 0.0
-    ax.add_patch(plt.Circle((our_gk_x, our_gk_y), 0.2, facecolor='blue', alpha=0.8, zorder=9, edgecolor='black', linewidth=2))
-    ax.text(our_gk_x, our_gk_y, "GK", color='white', ha='center', va='center', fontweight='bold', zorder=10)
+    # our_gk_x, our_gk_y = 3.5, 0.0
+    # ax.add_patch(plt.Circle((our_gk_x, our_gk_y), 0.2, facecolor='blue', alpha=0.8, zorder=9, edgecolor='black', linewidth=2))
+    # ax.text(our_gk_x, our_gk_y, "GK", color='white', ha='center', va='center', fontweight='bold', zorder=10)
 
     # 4. Opponents
     for i, opp in enumerate(opponents):
@@ -426,8 +426,13 @@ def visualize():
     # (0.75, 0.5) puts the center of the legend at 75% width, 50% height
     leg = ax.legend(handles=legend_elements, loc='center', bbox_to_anchor=(0.75, 0.5), 
                     facecolor='white', edgecolor='black', labelcolor='black', fontsize='15', markerscale=1.5)
-    leg.set_zorder(20)
+    leg.set_zorder(40)
     leg.get_frame().set_alpha(0.9)
+
+    # Colorbar
+    cbar = fig.colorbar(cm, ax=ax, orientation='vertical', fraction=0.03, pad=0.02)
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_label('Score', fontsize=14, labelpad=10)
 
     # Limits
     ax.set_xlim(-hfl, hfl)

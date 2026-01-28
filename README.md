@@ -24,11 +24,13 @@ The **INHA Striker** is designed to bridge the gap between rigid robotic control
 
 ### **Hyper-Modular Architecture**
 We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**.
+
 *   **Strategy Layer**: A high-level director determines the mode (Attack, Defend, Time-Wasting).
+    *   *Example*: detects: `Score < Opponent` → Decides `ALL_OUT_ATTACK` mode
 *   **Tactics Layer (The Tuner)**: Instead of hard-coding behaviors, tactics simply **inject parameters** into the Blackboard.
-    *   *Example*: "Pressing" tactic injects `speed_limit=1.0` and `kick_aggressiveness=High`.
-    *   *Example*: "Tempo Control" tactic injects `speed_limit=0.4` and `kick_aggressiveness=Low`.
+    *   *Example*: responds: "Pressing" tactic injects `speed_limit=1.0` and `kick_threshold=0.3` into Blackboard
 *   **Execution Layer (The Engine)**: The robust `StrikerDecision` node consumes these parameters to execute the optimal action without code changes.
+    *   *Example*: `Chase` node reads `speed_limit=1.0` → Robot sprints at max speed. `StrikerDecision` reads `kick_threshold=0.3` → Shoots aggressively (loose tolerance)
 
 **Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
 
