@@ -23,16 +23,26 @@ The **INHA Striker** is designed to bridge the gap between rigid robotic control
 ## Key Feature
 
 ### **Hyper-Modular Architecture**
-We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**.
+We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**. This allows the robot to adapt its personality in real-time without recompiling the core logic.
 
-*   **Strategy Layer**: A high-level director determines the mode (Attack, Defend, Time-Wasting).
-    *   *Example*: detects: `Score < Opponent` → Decides `ALL_OUT_ATTACK` mode
-*   **Tactics Layer (The Tuner)**: Instead of hard-coding behaviors, tactics simply **inject parameters** into the Blackboard.
-    *   *Example*: responds: "Pressing" tactic injects `speed_limit=1.0` and `kick_threshold=0.3` into Blackboard
-*   **Execution Layer (The Engine)**: The robust `StrikerDecision` node consumes these parameters to execute the optimal action without code changes.
-    *   *Example*: `Chase` node reads `speed_limit=1.0` → Robot sprints at max speed. `StrikerDecision` reads `kick_threshold=0.3` → Shoots aggressively (loose tolerance)
+### 1. Strategy Layer (The Director)
+Defines the high-level intent based on the match context.
+* **Role**: Analyzes the environment and sets the global "Mode."
+* **Example**: `Score < Opponent` & `Time Remaining < 2min` → Switches to **`ALL_OUT_ATTACK`**.
 
-**Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
+### 2. Tactics Layer (The Tuner)
+Translates strategy into specific constraints via the **BehaviorTree Blackboard**.
+* **Role**: Injects parameters (speed, aggression, thresholds) instead of hard-coding behaviors.
+* **Example**: "Pressing" tactic injects `speed_limit = 1.0` and `kick_threshold = 0.3`.
+
+### 3. Execution Layer (The Engine)
+The robust `StrikerDecision` node and leaf nodes consume these parameters to perform actions.
+* **Role**: Executes the "How" based on the "What" provided by the Tactics layer.
+* **Example**: The `Chase` node reads `speed_limit = 1.0` and triggers a max-speed sprint, while `StrikerDecision` uses the loose `kick_threshold` to shoot at the first opportunity.
+
+
+> **💡 The Benefit**
+> You can completely overhaul the robot's playstyle—from a conservative defender to a hyper-aggressive striker—just by tweaking a few numbers in the Tactics layer, with **zero risk** of breaking the core movement logic.
 
 > #### **📂 Proof of Modularity: Code Structure**
 > Our source tree is explicitly organized to enforce this architectural separation:
