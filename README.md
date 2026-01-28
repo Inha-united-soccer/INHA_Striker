@@ -13,14 +13,14 @@
 ---
 </div>
 
-## Vision
+## Striker Vision
 **"To create a soccer-playing intelligence that doesn't just calculate, but *understands* the flow of the game."**
 
 The **INHA Striker** is designed to bridge the gap between rigid robotic control and dynamic human intuition. By leveraging hierarchical behavior trees and advanced motion planning, our agent demonstrates adaptive gameplay—switching seamlessly between aggressive dribbling, tactical off-ball movement, and precision finishing.
 
 ---
 
-## Key Features
+## Key Feature
 
 ### **Hyper-Modular Architecture**
 We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**.
@@ -31,37 +31,6 @@ We separate **Strategic Intent** from **Mechanical Execution** using a novel **P
 *   **Execution Layer (The Engine)**: The robust `StrikerDecision` node consumes these parameters to execute the optimal action without code changes.
     
 **Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
-
-### **Fluid Agility**
-We move beyond linear paths. Our **Curvilinear Approach** algorithms allow the robot to:
-*   Approach the ball in smooth spirals rather than sharp turns.
-*   Maintain momentum while aligning for a kick.
-*   Execute **Swirl Maneuvers** to circle behind the ball naturally, mimicking human footwork.
-
-### **Tactical Intelligence**
-The striker knows where to be even when it doesn't have the ball.
-*   **Symmetry-based Positioning**: Exploits open space by calculating optimal gaps relative to defender positions.
-*   **Obstacle-Aware Dribbling**: Dynamically projects paths to find the safest route through a crowded defense.
-
----
-
-## System Architecture
-    
-```mermaid
-graph LR
-    A[Vision] -->|Ball & Field Data| B(Localization)
-    
-    B -->|Behavior Tree| C{Striker}
-    C -->|Attack| D[Dribble & Kick]
-    C -->|Support| E[Chase & OfftheBall Move]
-    C -->|Search| F[Active Scan]
-    
-    D --> G[Motion Control]
-    E --> G
-    F --> G
-
-    style C fill:#feca57,stroke:#333,stroke-width:2px,color:black
-```
 
 ### **Source Code Structure**
 You can verify this modular architecture in our source tree:
@@ -77,11 +46,10 @@ You can verify this modular architecture in our source tree:
         *   [`tactics_nodes.cpp`](src/brain/src/tactics/tactics_nodes.cpp)
     *   ⚙️ **Layer 3: Execution Engines** (Consumers)
         *   [`striker_decision.cpp`](src/brain/src/striker_decision.cpp) (Main Decision Logic)
-        *   [`chase.cpp`](src/brain/src/chase.cpp) (Movement Logic)
-        *   [`kick.cpp`](src/brain/src/kick.cpp)
-        *   [`adjust.cpp`](src/brain/src/adjust.cpp)
-        *   [`offtheball.cpp`](src/brain/src/offtheball.cpp)
-        *   *... and more (Pass, Locate, etc.)*
+        *   [`offtheball.cpp`](src/brain/src/offtheball.cpp) (Movement Logic)
+        *   [`chase.cpp`](src/brain/src/chase.cpp) 
+        *   *... and more (kick, adjust, etc.)*
+          
 ---
 
 ## Striker Behavior Tree Overview
