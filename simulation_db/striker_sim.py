@@ -326,17 +326,17 @@ def visualize():
 
     # Custom Colormap (Infrared Style: Black -> Purple -> Orange/Red -> Yellow)
     colors = [
-        (30/255, 30/255, 45/255),    # Softer Dark (Dark Blue-Grey)
-        (100/255, 60/255, 150/255),  # Brighter Purple
-        (240/255, 140/255, 90/255),  # Brighter Orange
-        (255/255, 255/255, 180/255)  # Pale Yellow
+        (0/255, 0/255, 0/255),    # Softer Dark (Dark Blue-Grey)
+        (62/255, 15/255, 101/255),  # Brighter Purple
+        (216/255, 105/255, 69/255),  # Brighter Orange
+        (240/255, 229/255, 115/255)  # Pale Yellow
     ]
     
     cmap_name = 'custom_thermal'
     custom_cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=256)
 
     # 히트맵 (zorder=0 so grid/lines show on top, alpha=1.0 for deep colors)
-    cm = ax.pcolormesh(X, Y, S, cmap="turbo", shading='auto', alpha=0.9, zorder=0)
+    cm = ax.pcolormesh(X, Y, S, cmap=custom_cmap, shading='auto', alpha=1.0, zorder=0)
     
     # 객체 표시
     # 1. Striker (Robot)
@@ -421,7 +421,11 @@ def visualize():
         Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markeredgecolor='black', markersize=10, lw=0, label='Opponent (Red)'),
         Line2D([0], [0], marker='o', color='w', markerfacecolor='white', markeredgecolor='black', markersize=8, lw=0, label='Ball'),
     ]
-    leg = ax.legend(handles=legend_elements, loc='upper right', facecolor='white', edgecolor='black', labelcolor='black')
+    # Custom Legend Position (Between Center and Center Right)
+    # bbox_to_anchor=(x, y): (0.0, 0.0) is bottom-left, (1.0, 1.0) is top-right
+    # (0.75, 0.5) puts the center of the legend at 75% width, 50% height
+    leg = ax.legend(handles=legend_elements, loc='center', bbox_to_anchor=(0.75, 0.5), 
+                    facecolor='white', edgecolor='black', labelcolor='black', fontsize='15', markerscale=1.5)
     leg.set_zorder(20)
     leg.get_frame().set_alpha(0.9)
 
