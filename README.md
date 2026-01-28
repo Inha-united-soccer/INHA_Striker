@@ -33,7 +33,17 @@ Defines the high-level intent based on the match context.
 ### 2. Tactics Layer (The Tuner)
 Translates strategy into specific constraints via the **BehaviorTree Blackboard**.
 * **Role**: Injects parameters (speed, aggression, thresholds) instead of hard-coding behaviors.
-* **Example**: "Pressing" tactic injects `speed_limit = 1.0` and `kick_threshold = 0.3`.
+* **Feature**: **1:N Mapping** (Context-Aware Selection)
+    * Same Strategy can lead to different Tactics based on `ScoreDiff`, `BallPosition`, etc.
+    * **Example**:
+      * **`OFFENSIVE` Strategy**:
+        * *Losing by 3+ goals*: `TOTAL_ASSAULT` (Risky Attack)
+        * *Ball in own half*: `COUNTER_ATTACK` (Fast Break)
+        * *Otherwise*: `PRESSING` (Standard Pressure)
+      * **`DEFENSIVE` Strategy**:
+        * *Winning by 3+ goals*: `TEMPO_CONTROL` (Possession Game)
+        * *Ball near own goal*: `DEEP_DEFENSE` (Park the Bus)
+        * *Otherwise*: `LINE_DEFENSE` (Standard Defense)
 
 ### 3. Execution Layer (The Engine)
 The robust `StrikerDecision` node and leaf nodes consume these parameters to perform actions.
