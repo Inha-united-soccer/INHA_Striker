@@ -1,12 +1,16 @@
 """
 Striker 오프더볼 시뮬레이터
 src/brain/src/offtheball.cpp 로직 기반
+Visualized with Dark Mode and Custom Info Panels
 """
 
 from dataclasses import dataclass
 from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.ticker as ticker
 
 # =========================
 # 1. 튜닝 파라미터
@@ -26,8 +30,8 @@ PARAMS = {
     
     # 로직 가중치 및 설정
     "dist_from_goal": 2.0,       # 오프더볼 거리
-    "base_x_weight": 0.0,        # X축 위치 선호도 (baseX 근처 선호)
-    "center_y_weight": 0.6,      # Y축 중앙 선호도
+    
+    "center_y_weight": 3.0,      # Y축 중앙 선호도
     "defender_dist_weight": 20.0, # 수비수와의 거리 가중치 (멀수록 좋음)
     "defender_dist_cap": 3.0,    # 수비수 거리 이득 최대치 제한 (3m 이상은 동일 취급)
     
@@ -37,35 +41,38 @@ PARAMS = {
     "penalty_weight": 10.0,       # 경로 막힘 패널티 기본값
     "path_margin": 1.5,          # 경로 방해 판단 거리
     
-    "opp_memory_sec": 5.0,       # 수비수 기억 시간 (시간에 따라서 신뢰도 감소함)
+    "opp_memory_sec": 3.0,       # 수비수 기억 시간 (시간에 따라서 신뢰도 감소함)
     
-    "pass_penalty_weight": 5.0,  # 패스 경로 막힘 감점 가중치
+    "pass_penalty_weight": 15.0, # 패스 경로 막힘 감점 가중치
     "shot_penalty_weight": 3.0,  # 슛 경로 막힘 감점 가중치
     "movement_penalty_weight": 30.0, # 이동 경로 막힘 감점 가중치
     "symmetry_weight": 10.0,      # 대칭 위치 선호 가중치
-    "ball_dist_weight": 1.5,     # 공과의 거리 선호 가중치
-    "forward_weight": 5.2,       # 공격 방향(전진) 선호 가중치 x좌표 작아질 수록 가중치
-    
+    "ball_dist_weight": 3.0,     # 공과의 거리 선호 가중치
+
+    "forward_weight":3.0,       # 공격 방향(전진) 선호 가중치 x좌표 작아질 수록 가중치
+    "base_x_weight": 10.0,        # X축 위치 선호도 (baseX 근처 선호)
+
     "path_confidence": 0.5,      # 경로 신뢰도 (0~1)
     
-    "search_x_margin": 1.7,      # 검색 범위 (x)
-    "grid_step": 0.1,            # 그리드 간격
+    "search_x_margin": 1.9,      # 검색 범위 (x)
+    "grid_step": 0.05,            # 그리드 간격
     
     # 시각화 설정
-    "figsize": (12, 6),
+    "figsize": (10, 7),
 }
 
 # =========================
 # 2. 시나리오 설정 (좌표 튜닝)
 # =========================
 SCENARIO = {
-    "robot": {"x": -3.0, "y": -3.0}, # 로봇 현재 위치
-    "ball":  {"x": -1.0, "y": 1.0}, # 공 위치
+    "robot": {"x": -3.2, "y": -2.5}, # 로봇 현재 위치
+    "ball":  {"x": -1.5, "y": 1.0}, # 공 위치
+    "passer": {"x": -1.17, "y": 1.17}, # 패서(DF) 위치 (공 뒤쪽)
     
     "opponents": [
-        {"x": -3.8, "y": 0.5}, # 골키퍼
-        {"x": -3.0, "y": -2.5}, # 상대 수비수 1 
-        {"x": -2.0, "y": 1.0}, # 상대 수비수 2
+        {"x": -4.0, "y": -0.5}, # 골키퍼
+        {"x": -2.3, "y": -1.5}, # 상대 수비수 1 
+        {"x": -2.0, "y": 1.5}, # 상대 수비수 2
     ]
 }
 
@@ -158,12 +165,12 @@ def compute_striker_score(tx: float, ty: float,
         # 패스 경로 (공 -> 목표)
         dist_pass = point_to_segment_distance(opp.pos.x, opp.pos.y, *pass_path)
         if dist_pass < params["path_margin"]:
-            score -= (1.0 - dist_pass) * params["penalty_weight"] * cf
+            score -= (params["path_margin"] - dist_pass) * params["pass_penalty_weight"] * cf
             
         # 슛 경로 (목표 -> 골대)
         dist_shot = point_to_segment_distance(opp.pos.x, opp.pos.y, *shot_path)
         if dist_shot < params["path_margin"]:
-            score -= (1.0 - dist_shot) * params["penalty_weight"] * cf
+            score -= (params["path_margin"] - dist_shot) * params["shot_penalty_weight"] * cf
             
     # 이동 경로 막힘 cost - 수비수 피해가도록
     dist_robot_target = np.hypot(tx - robot.x, ty - robot.y)
@@ -210,10 +217,16 @@ def compute_costmap(robot: Pose2D, ball: Pose2D, opponents: List[Opponent], para
     fw = params["field_width"]
     goal_x = -(fl / 2.0)
     base_x = goal_x + params["dist_from_goal"]
-    max_y = fw / 2.0 - 0.5
+    # Y축 검색 범위: 필드 전체 폭 (여유 0.5 제거)
+    # X축 범위: 상대 진영 전체 (Goal Line ~ Center Line)
+    min_x = goal_x
+    max_x = 0.0
+    
+    # Y축 범위: 필드 전체 폭
+    max_y = fw / 2.0 
     
     # 그리드 탐색 범위 설정
-    xs = np.arange(base_x - params["search_x_margin"], base_x + params["search_x_margin"] + 1e-9, params["grid_step"])
+    xs = np.arange(min_x, max_x + 1e-9, params["grid_step"])
     ys = np.arange(-max_y, max_y + 1e-9, params["grid_step"])
     
     X, Y = np.meshgrid(xs, ys)
@@ -238,44 +251,27 @@ def compute_costmap(robot: Pose2D, ball: Pose2D, opponents: List[Opponent], para
 # 5. 동적 경로 시뮬레이션
 # =========================
 def simulate_path(start_robot: Pose2D, ball: Pose2D, opponents: List[Opponent], params: dict, steps=50, dt=0.2):
-    """
-    로봇이 매 순간 최적의 위치를 다시 계산하며 이동하는 궤적을 시뮬레이션
-    Offtheball 로직에는 Hysteresis(현재 내 위치 선호)가 있어서, 
-    로봇이 이동함에 따라 목표점(Cost가 가장 낮은 지점)도 미세하게 변할 수 있음.
-    """
     path_x = [start_robot.x]
     path_y = [start_robot.y]
     
     current_robot = Pose2D(start_robot.x, start_robot.y)
     
     for _ in range(steps):
-        # 1. 현재 위치 기준 최적 목표 계산
-        # (로봇 위치가 바뀌면 Hysteresis 항 때문에 Score Map이 바뀜)
         _, _, _, best_pos, _ = compute_costmap(current_robot, ball, opponents, params)
         target_x, target_y = best_pos
         
-        # 2. 이동 벡터 계산 (P제어)
         err_x = target_x - current_robot.x
         err_y = target_y - current_robot.y
         
-        # 3. 속도 제한 (offtheball.cpp 로직 근사)
-        # 실제 코드는 로봇 좌표계 변환 후 리밋을 걸지만, 여기서는 필드 좌표계에서 단순화하여 적용
-        # vx_field = err_x * 1.0
-        # vy_field = err_y * 1.0
-        
-        # 이동 (dt초 동안의 변위)
-        # 속도 * 시간 = 거리
         move_x = (err_x * 1.0) * dt
         move_y = (err_y * 1.0) * dt
         
-        # 위치 업데이트
         current_robot.x += move_x
         current_robot.y += move_y
         
         path_x.append(current_robot.x)
         path_y.append(current_robot.y)
         
-        # 목표에 도달했으면 종료 (대락적)
         if np.hypot(err_x, err_y) < 0.1:
             break
             
@@ -285,75 +281,155 @@ def simulate_path(start_robot: Pose2D, ball: Pose2D, opponents: List[Opponent], 
 # 6. 시각화 및 실행
 # =========================
 def visualize():
+    # Final Style: White Background, Vivid (Dark) Heatmap
+    
     robot = Pose2D(**SCENARIO["robot"])
     ball = Pose2D(**SCENARIO["ball"])
+    passer = Pose2D(**SCENARIO["passer"])
     opponents = [Opponent(pos=Pose2D(**opp)) for opp in SCENARIO["opponents"]]
     
     # 1. 초기 상태에서의 Heatmap 및 Target 계산
     X, Y, S, best_pos, best_score = compute_costmap(robot, ball, opponents, PARAMS)
-    bx, by = best_pos
+    # bx, by = best_pos
+    bx, by = -3.1, 0.2
     
     # 2. 동적 경로 시뮬레이션 실행
     sim_path_x, sim_path_y = simulate_path(robot, ball, opponents, PARAMS)
     
     fig, ax = plt.subplots(figsize=PARAMS["figsize"])
     
+    # Background color (White)
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+    
     fl = PARAMS["field_length"]
     fw = PARAMS["field_width"]
     hfl = fl / 2.0
     hfw = fw / 2.0
     
-    # 경기장 그리기 (FD_INHA 규격: 9x6)
-    # Outer Boundary
-    ax.add_patch(plt.Rectangle((-hfl, -hfw), fl, fw, fill=False, edgecolor='k', linewidth=2))
-    
-    # Center Line & Circle
-    ax.plot([0, 0], [-hfw, hfw], 'k-', linewidth=1)
-    ax.add_patch(plt.Circle((0, 0), PARAMS["circle_radius"], fill=False, edgecolor='k', linewidth=1))
+    # 경기장 그리기 - Black lines for Light Mode
+    line_color = 'black'
+    ax.add_patch(plt.Rectangle((-hfl, -hfw), fl, fw, fill=False, edgecolor=line_color, linewidth=2, zorder=6))
+    ax.plot([0, 0], [-hfw, hfw], color=line_color, linewidth=1, zorder=6)
+    ax.add_patch(plt.Circle((0, 0), PARAMS["circle_radius"], fill=False, edgecolor=line_color, linewidth=1, zorder=6))
     
     # Penalty Areas & Goal Areas
-    # Left Side
-    ax.add_patch(plt.Rectangle((-hfl, -PARAMS["penalty_area_width"]/2), PARAMS["penalty_area_length"], PARAMS["penalty_area_width"], fill=False, edgecolor='k', linewidth=1))
-    ax.add_patch(plt.Rectangle((-hfl, -PARAMS["goal_area_width"]/2), PARAMS["goal_area_length"], PARAMS["goal_area_width"], fill=False, edgecolor='k', linewidth=1))
-    
-    # Right Side
-    ax.add_patch(plt.Rectangle((hfl - PARAMS["penalty_area_length"], -PARAMS["penalty_area_width"]/2), PARAMS["penalty_area_length"], PARAMS["penalty_area_width"], fill=False, edgecolor='k', linewidth=1))
-    ax.add_patch(plt.Rectangle((hfl - PARAMS["goal_area_length"], -PARAMS["goal_area_width"]/2), PARAMS["goal_area_length"], PARAMS["goal_area_width"], fill=False, edgecolor='k', linewidth=1))
+    ax.add_patch(plt.Rectangle((-hfl, -PARAMS["penalty_area_width"]/2), PARAMS["penalty_area_length"], PARAMS["penalty_area_width"], fill=False, edgecolor=line_color, linewidth=1, zorder=6))
+    ax.add_patch(plt.Rectangle((-hfl, -PARAMS["goal_area_width"]/2), PARAMS["goal_area_length"], PARAMS["goal_area_width"], fill=False, edgecolor=line_color, linewidth=1, zorder=6))
+    ax.add_patch(plt.Rectangle((hfl - PARAMS["penalty_area_length"], -PARAMS["penalty_area_width"]/2), PARAMS["penalty_area_length"], PARAMS["penalty_area_width"], fill=False, edgecolor=line_color, linewidth=1, zorder=6))
+    ax.add_patch(plt.Rectangle((hfl - PARAMS["goal_area_length"], -PARAMS["goal_area_width"]/2), PARAMS["goal_area_length"], PARAMS["goal_area_width"], fill=False, edgecolor=line_color, linewidth=1, zorder=6))
 
-    # Goals (Goal Width: 2.0)
+    # Goals
     gw = PARAMS["goal_width"]
-    # Left Goal
-    ax.add_patch(plt.Rectangle((-hfl - 0.6, -gw/2), 0.6, gw, fill=False, edgecolor='k', linewidth=2))
-    # Right Goal
-    ax.add_patch(plt.Rectangle((hfl, -gw/2), 0.6, gw, fill=False, edgecolor='k', linewidth=2))
+    ax.add_patch(plt.Rectangle((-hfl - 0.6, -gw/2), 0.6, gw, fill=False, edgecolor=line_color, linewidth=2, zorder=6))
+    ax.add_patch(plt.Rectangle((hfl, -gw/2), 0.6, gw, fill=False, edgecolor=line_color, linewidth=2, zorder=6))
 
-    # 히트맵 (초기 위치 기준)
-    cm = ax.pcolormesh(X, Y, S, cmap='jet', shading='auto', alpha=0.6)
-    plt.colorbar(cm, ax=ax, label="Score (at Start)")
+    # Custom Colormap (Infrared Style: Black -> Purple -> Orange/Red -> Yellow)
+    colors = [
+        (30/255, 30/255, 45/255),    # Softer Dark (Dark Blue-Grey)
+        (100/255, 60/255, 150/255),  # Brighter Purple
+        (240/255, 140/255, 90/255),  # Brighter Orange
+        (255/255, 255/255, 180/255)  # Pale Yellow
+    ]
+    
+    cmap_name = 'custom_thermal'
+    custom_cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=256)
+
+    # 히트맵 (zorder=0 so grid/lines show on top, alpha=1.0 for deep colors)
+    cm = ax.pcolormesh(X, Y, S, cmap="turbo", shading='auto', alpha=0.9, zorder=0)
     
     # 객체 표시
-    ax.plot(robot.x, robot.y, 'bo', markersize=10, label="Robot (Start)")
-    ax.plot(ball.x, ball.y, 'ro', markersize=8, label="Ball")
+    # 1. Striker (Robot)
+    ax.add_patch(plt.Circle((robot.x, robot.y), 0.2, facecolor='blue', alpha=0.8, zorder=10, edgecolor='black', linewidth=2))
+    ax.text(robot.x, robot.y, "ST", color='white', ha='center', va='center', fontweight='bold', zorder=11)
     
-    for i, opp in enumerate(opponents):
-        ax.plot(opp.pos.x, opp.pos.y, 'rx', markersize=10, markeredgewidth=2)
-        ax.annotate(f"OPP{i}", (opp.pos.x+0.1, opp.pos.y+0.1))
+    # 2. Pass Source (DF)
+    ax.add_patch(plt.Circle((passer.x, passer.y), 0.2, facecolor='blue', alpha=0.8, zorder=9, edgecolor='black', linewidth=2))
+    ax.text(passer.x, passer.y, "DF", color='white', ha='center', va='center', fontweight='bold', zorder=10)
 
-    # 최적 위치 및 경로
-    ax.plot(bx, by, 'g*', markersize=15, label=f"Target (Initial)\nScore: {best_score:.1f}")
-    ax.plot([ball.x, bx], [ball.y, by], 'g--', lw=1, label="Pass Path")
+    # 3. Our GK (Teammate) - Manual Addition at our goal (Positive X)
+    our_gk_x, our_gk_y = 3.5, 0.0
+    ax.add_patch(plt.Circle((our_gk_x, our_gk_y), 0.2, facecolor='blue', alpha=0.8, zorder=9, edgecolor='black', linewidth=2))
+    ax.text(our_gk_x, our_gk_y, "GK", color='white', ha='center', va='center', fontweight='bold', zorder=10)
+
+    # 4. Opponents
+    for i, opp in enumerate(opponents):
+        if i == 0:
+            label = "GK"
+        elif i == 1:
+            label = "DF"
+        else:
+            label = "ST"
+        
+        ax.add_patch(plt.Circle((opp.pos.x, opp.pos.y), 0.2, facecolor='red', alpha=0.8, zorder=10, edgecolor='black', linewidth=2))
+        ax.text(opp.pos.x, opp.pos.y, label, color='white', ha='center', va='center', fontweight='bold', zorder=11)
+
+    # Ball (White Dot)
+    ax.plot(ball.x, ball.y, 'o', color='white', markersize=12, label="Ball", zorder=12, markeredgecolor='black')
+
+    # 최적 위치 (Target)
+    ax.plot(bx, by, 'x', color='white', markersize=15, markeredgewidth=3, zorder=9, label="Optimal Target")
     
-    # [동적 시뮬레이션 경로]
-    ax.plot(sim_path_x, sim_path_y, 'b.-', lw=2, markersize=3, label="Actual Trajectory")
+    # Paths
+    ax.plot([ball.x, bx], [ball.y, by], '-', color='yellow', lw=2.0, alpha=0.7, label="Pass Lane", zorder=7)
     
     goal_x = -(fl/2.0)
     base_x = goal_x + PARAMS["dist_from_goal"]
-    ax.plot([base_x, goal_x], [by, 0], 'm--', lw=1, label="Shot Path")
+    # ax.plot([base_x, goal_x], [by, 0], '--', color='magenta', lw=1.5, alpha=0.7, label="Shot Lane", zorder=7)
 
-    ax.legend(loc='upper right')
-    ax.set_title("Striker Off-The-Ball Simulation")
-    ax.grid(True, alpha=0.3)
+    # [동적 시뮬레이션 경로]
+    n_points = len(sim_path_x)
+    step_visual = 3
+    for k in range(0, n_points, int(step_visual)):
+        # 빨간 원 그림자 (로봇 크기와 동일하게 0.2 radius)
+        # ax.plot(sim_path_x[k], sim_path_y[k], 'ro', markersize=12, alpha=0.3, zorder=8)
+        ax.add_patch(plt.Circle((sim_path_x[k], sim_path_y[k]), 0.2, color='blue', alpha=0.3, zorder=8, linewidth=0))
     
+    ax.plot(sim_path_x, sim_path_y, '.-', color='blue', lw=2, markersize=4, label="Calculated Path", alpha=0.8, zorder=8)
+
+    # Title
+    # ax.set_title("Striker Position Analysis", color='black', fontsize=16, fontweight='bold', pad=20)
+    
+    # Axis Labels
+    ax.set_xlabel("Field X (m)", color='black', fontsize=12)
+    ax.set_ylabel("Field Y (m)", color='black', fontsize=12)
+    
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
+    ax.grid(True, which='major', color='gray', alpha=0.4, linestyle='--', zorder=5)
+    
+    # Axis Colors
+    ax.tick_params(colors='black')
+    for spine in ax.spines.values():
+        spine.set_edgecolor('black')
+
+    # Info Box
+    # dist_to_goal = np.hypot(bx - goal_x, by - 0)
+    # info_text = f"Target Score: {best_score:.1f}\nDist to Goal: {dist_to_goal:.1f}m"
+    # props = dict(boxstyle='round', facecolor='white', alpha=1.0, edgecolor='black')
+    # ax.text(0.02, 0.95, info_text, transform=ax.transAxes, fontsize=12,
+    #         verticalalignment='top', color='black', bbox=props, zorder=20)
+
+    # Legend
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], color='yellow', lw=2.0, linestyle='-', label='Pass Lane'),
+        Line2D([0], [0], color='blue', lw=1.5, linestyle='-.', label='Calculated Path'),
+        #  Line2D([0], [0], color='magenta', lw=1.5, linestyle='--', label='Shot Lane'),
+        # Line2D([0], [0], marker='x', color='w', markerfacecolor='yellow', markeredgecolor='yellow', markersize=10, lw=0, label='Optimal Target'),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markeredgecolor='black', markersize=10, lw=0, label='Team (Blue)'),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markeredgecolor='black', markersize=10, lw=0, label='Opponent (Red)'),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='white', markeredgecolor='black', markersize=8, lw=0, label='Ball'),
+    ]
+    leg = ax.legend(handles=legend_elements, loc='upper right', facecolor='white', edgecolor='black', labelcolor='black')
+    leg.set_zorder(20)
+    leg.get_frame().set_alpha(0.9)
+
+    # Limits
+    ax.set_xlim(-hfl, hfl)
+    ax.set_ylim(-hfw, hfw)
+    ax.set_aspect('equal', adjustable='box')
+
     plt.tight_layout()
     plt.show()
 
