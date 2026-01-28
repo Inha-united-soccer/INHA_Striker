@@ -22,10 +22,15 @@ The **INHA Striker** is designed to bridge the gap between rigid robotic control
 
 ## Key Features
 
-### **Cognitive Flexibility**
-Instead of simple if-else logic, we utilize a **Behavior Tree (BT)** architecture that allows for complex, reactive decision-making. The robot constantly evaluates the game state to transition between behaviors seamlessly.
-*   **Reactive**: Handles interruptions (e.g., sudden ball loss) gracefully.
-*   **Modular**: Easy to expand with new strategies or plays.
+### **Hyper-Modular Architecture**
+We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**.
+*   **Strategy Layer**: A high-level director determines the mode (Attack, Defend, Time-Wasting).
+*   **Tactics Layer (The Tuner)**: Instead of hard-coding behaviors, tactics simply **inject parameters** into the Blackboard.
+    *   *Example*: "Pressing" tactic injects `speed_limit=1.0` and `kick_aggressiveness=High`.
+    *   *Example*: "Tempo Control" tactic injects `speed_limit=0.4` and `kick_aggressiveness=Low`.
+*   **Execution Layer (The Engine)**: The robust `StrikerDecision` node consumes these parameters to execute the optimal action without code changes.
+    
+**Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
 
 ### **Fluid Agility**
 We move beyond linear paths. Our **Curvilinear Approach** algorithms allow the robot to:
@@ -38,34 +43,45 @@ The striker knows where to be even when it doesn't have the ball.
 *   **Symmetry-based Positioning**: Exploits open space by calculating optimal gaps relative to defender positions.
 *   **Obstacle-Aware Dribbling**: Dynamically projects paths to find the safest route through a crowded defense.
 
-### **Hyper-Modular Architecture**
-We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**.
-*   **Strategy Layer**: A high-level director determines the mode (Attack, Defend, Time-Wasting).
-*   **Tactics Layer (The Tuner)**: Instead of hard-coding behaviors, tactics simply **inject parameters** into the Blackboard.
-    *   *Example*: "Pressing" tactic injects `speed_limit=1.0` and `kick_aggressiveness=High`.
-    *   *Example*: "Tempo Control" tactic injects `speed_limit=0.4` and `kick_aggressiveness=Low`.
-*   **Execution Layer (The Engine)**: The robust `StrikerDecision` node consumes these parameters to execute the optimal action without code changes.
-    
-**Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
-
 ---
 
 ## System Architecture
     
 ```mermaid
 graph LR
-    A[Vision & WorldModel] --> B(Strategy Director)
-    B --> C{Tactics Selector}
+    A[Vision] -->|Ball & Field Data| B(Localization)
     
-    C -->|Inject Params| D[Pressing / Line Defense / Tempo]
-    D -.->|Blackboard| E[Striker Decision Engine]
+    B -->|Behavior Tree| C{Striker}
+    C -->|Attack| D[Dribble & Kick]
+    C -->|Support| E[Chase & OfftheBall Move]
+    C -->|Search| F[Active Scan]
     
-    E -->|Execute| F[Chase / Kick / Positioning]
-    F --> G[Motion Control]
+    D --> G[Motion Control]
+    E --> G
+    F --> G
 
     style C fill:#feca57,stroke:#333,stroke-width:2px,color:black
-    style E fill:#ff6b6b,stroke:#333,stroke-width:2px,color:white
 ```
+
+### **Source Code Structure**
+You can verify this modular architecture in our source tree:
+
+*   📂 **[`src/brain/src/`](src/brain/src)**
+    *   📂 **[`strategy/`](src/brain/src/strategy)** (Layer 1: Strategy Director)
+        *   [`strategy_director.cpp`](src/brain/src/strategy/strategy_director.cpp)
+        *   [`game_state_manager.cpp`](src/brain/src/strategy/game_state_manager.cpp)
+        *   [`strategy_nodes.cpp`](src/brain/src/strategy/strategy_nodes.cpp)
+    *   📂 **[`tactics/`](src/brain/src/tactics)** (Layer 2: Tactics / Tuners)
+        *   [`tactic_selector.cpp`](src/brain/src/tactics/tactic_selector.cpp)
+        *   [`tactics_definitions.cpp`](src/brain/src/tactics/tactics_definitions.cpp)
+        *   [`tactics_nodes.cpp`](src/brain/src/tactics/tactics_nodes.cpp)
+    *   ⚙️ **Layer 3: Execution Engines** (Consumers)
+        *   [`striker_decision.cpp`](src/brain/src/striker_decision.cpp) (Main Decision Logic)
+        *   [`chase.cpp`](src/brain/src/chase.cpp) (Movement Logic)
+        *   [`kick.cpp`](src/brain/src/kick.cpp)
+        *   [`adjust.cpp`](src/brain/src/adjust.cpp)
+        *   [`offtheball.cpp`](src/brain/src/offtheball.cpp)
+        *   *... and more (Pass, Locate, etc.)*
 ---
 
 ## Striker Behavior Tree Overview
