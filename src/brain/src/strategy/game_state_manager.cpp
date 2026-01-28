@@ -22,9 +22,9 @@ NodeStatus GameStateManager::tick()
     setOutput("is_losing", isLosing);
     setOutput("time_remaining", (double)timeRemaining);
 
-    brain->tree->blackboard->set("GameState.isWinning", isWinning);
-    brain->tree->blackboard->set("GameState.isLosing", isLosing);
-    brain->tree->blackboard->set("GameState.timeRemaining", (double)timeRemaining);
+    brain->tree->setEntry("GameState.isWinning", isWinning);
+    brain->tree->setEntry("GameState.isLosing", isLosing);
+    brain->tree->setEntry("GameState.timeRemaining", (double)timeRemaining);
     
     return NodeStatus::SUCCESS;
 }

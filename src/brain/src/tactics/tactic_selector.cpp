@@ -29,7 +29,7 @@ NodeStatus TacticSelector::tick()
 
     // 3. 블랙보드에 선택된 테크닉 넘겨주기
     setOutput("active_tactic", selectedTactic);
-    brain->tree->blackboard->set("Tactics.activeTactic", selectedTactic);
+    brain->tree->setEntry("Tactics.activeTactic", selectedTactic);
 
     return NodeStatus::SUCCESS;
 }

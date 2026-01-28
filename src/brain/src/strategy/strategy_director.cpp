@@ -31,7 +31,7 @@ NodeStatus StrategyDirector::tick()
 
     // 3. 블랙보드에 전략 넘겨주기
     setOutput("current_mode", mode);
-    brain->tree->blackboard->set("Strategy.currentMode", mode);
+    brain->tree->setEntry("Strategy.currentMode", mode);
 
     return NodeStatus::SUCCESS;
 }
