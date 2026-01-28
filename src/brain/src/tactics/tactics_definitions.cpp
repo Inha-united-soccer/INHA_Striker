@@ -103,7 +103,7 @@ NodeStatus TacticTempoControl::tick()
 }
 
 // ==========================================
-// 전략 4. 총공격 (All Out - Strategy: ALL_OUT_ATTACK)
+// 전략 4. 총공격 (ALL_OUT_ATTACK)
 // ==========================================
 PortsList TacticAllOut::providedPorts()
 {
@@ -125,4 +125,41 @@ NodeStatus TacticAllOut::tick()
     brain->log->logToScreen("tactics", "!!! ALL OUT ATTACK !!!", 0xFF0000FF); // 빨간색
 
     return NodeStatus::SUCCESS; // SyncActionNode이므로 SUCCESS/FAILURE 반환
+}
+
+// ==========================================
+// 전략 5. 역습 (Counter Attack - Strategy: OFFENSIVE)
+// ==========================================
+NodeStatus TacticCounterAttack::tick()
+{
+    // 빠른 역습: 속도 최대
+    brain->tree->setEntry("Strategy.param_chase_speed_limit", 1.0);
+    
+    // 슛은 신중하게 (확실한 찬스 전까진 드리블 유도)
+    brain->tree->setEntry("Strategy.param_kick_threshold", 0.2); 
+
+    // 수비 라인은 하프라인 근처로 설정하여 즉시 압박 준비
+    brain->tree->setEntry("Strategy.param_defense_line_x", 0.0);
+
+    return NodeStatus::SUCCESS;
+}
+
+// ==========================================
+// 전략 6. 텐백 수비 (Deep Defense - Strategy: DEFENSIVE / TIME_WASTING)
+// ==========================================
+NodeStatus TacticDeepDefense::tick()
+{
+    // 골대 앞을 지키는 것에 집중 (움직임 최소화)
+    brain->tree->setEntry("Strategy.param_chase_speed_limit", 0.3);
+    
+    // 걷어내기 위주 (각도 상관없이 뻥 차기)
+    brain->tree->setEntry("Strategy.param_kick_threshold", 0.8); 
+
+    // 골라인 바로 앞까지 수비 라인 내림 (Park the Bus)
+    brain->tree->setEntry("Strategy.param_defense_line_x", -4.0);
+    
+    // 디버깅
+    brain->log->logToScreen("tactics", "PARK THE BUS", 0x0000FFFF);
+
+    return NodeStatus::SUCCESS;
 }

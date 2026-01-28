@@ -61,3 +61,25 @@ public:
 private:
     Brain *brain;
 };
+
+// 전략 5. 역습
+class TacticCounterAttack : public BT::SyncActionNode
+{
+public:
+    TacticCounterAttack(const string &name, const NodeConfig &config, Brain *_brain) : BT::SyncActionNode(name, config), brain(_brain) {}
+    static PortsList providedPorts() { return {}; }
+    NodeStatus tick() override;
+private:
+    Brain *brain;
+};
+
+// 전략 6. 텐백 수비 (Deep Defense / Park the Bus)
+class TacticDeepDefense : public BT::SyncActionNode
+{
+public:
+    TacticDeepDefense(const string &name, const NodeConfig &config, Brain *_brain) : BT::SyncActionNode(name, config), brain(_brain) {}
+    static PortsList providedPorts() { return {}; }
+    NodeStatus tick() override;
+private:
+    Brain *brain;
+};

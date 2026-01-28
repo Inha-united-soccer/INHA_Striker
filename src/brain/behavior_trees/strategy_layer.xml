@@ -10,12 +10,13 @@
             <!-- Layer 3: 세부 전략 선택 -->
             <TacticSelector active_tactic="{active_tactic}"/>
             
-            <!-- Layer 4: 세부 전략 실행 (파라미터 주입) -->
-            <Switch3 variable="{active_tactic}" case_1="PRESSING" case_2="LINE_DEFENSE" case_3="TEMPO_CONTROL" case_4="TOTAL_ASSAULT">
+            <Switch3 variable="{active_tactic}" case_1="PRESSING" case_2="LINE_DEFENSE" case_3="TEMPO_CONTROL" case_4="TOTAL_ASSAULT" case_5="COUNTER_ATTACK" case_6="DEEP_DEFENSE">
                 <TacticPressing/>
                 <TacticLineDefense/>
                 <TacticTempoControl/>
                 <TacticAllOut/>
+                <TacticCounterAttack/>
+                <TacticDeepDefense/>
                 <AlwaysSuccess/> <!-- Default Case -->
             </Switch3>
 
