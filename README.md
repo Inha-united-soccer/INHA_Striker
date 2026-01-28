@@ -38,9 +38,15 @@ The striker knows where to be even when it doesn't have the ball.
 *   **Symmetry-based Positioning**: Exploits open space by calculating optimal gaps relative to defender positions.
 *   **Obstacle-Aware Dribbling**: Dynamically projects paths to find the safest route through a crowded defense.
 
-### **Precision**
-*   **Kick Lock Mechanism**: Prevents action oscillation by committing to a shot once a high-confidence window is identified.
-*   **Adaptive Head Tracking**: Smoothes out sensor noise for stable vision while tracking high-speed balls.
+### **Hyper-Modular Architecture**
+We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**.
+*   **Strategy Layer**: A high-level director determines the mode (Attack, Defend, Time-Wasting).
+*   **Tactics Layer (The Tuner)**: Instead of hard-coding behaviors, tactics simply **inject parameters** into the Blackboard.
+    *   *Example*: "Pressing" tactic injects `speed_limit=1.0` and `kick_aggressiveness=High`.
+    *   *Example*: "Tempo Control" tactic injects `speed_limit=0.4` and `kick_aggressiveness=Low`.
+*   **Execution Layer (The Engine)**: The robust `StrikerDecision` node consumes these parameters to execute the optimal action without code changes.
+    
+**Benefit**: You can completely change the robot's playstyle by tweaking a few numbers in the Tactics layer, with zero risk of breaking the core movement logic.
 
 ---
 
@@ -48,18 +54,17 @@ The striker knows where to be even when it doesn't have the ball.
     
 ```mermaid
 graph LR
-    A[Vision] -->|Ball & Field Data| B(Localization)
+    A[Vision & WorldModel] --> B(Strategy Director)
+    B --> C{Tactics Selector}
     
-    B -->|Behavior Tree| C{Striker}
-    C -->|Attack| D[Dribble & Kick]
-    C -->|Support| E[Chase & OfftheBall Move]
-    C -->|Search| F[Active Scan]
+    C -->|Inject Params| D[Pressing / Line Defense / Tempo]
+    D -.->|Blackboard| E[Striker Decision Engine]
     
-    D --> G[Motion Control]
-    E --> G
-    F --> G
+    E -->|Execute| F[Chase / Kick / Positioning]
+    F --> G[Motion Control]
 
     style C fill:#feca57,stroke:#333,stroke-width:2px,color:black
+    style E fill:#ff6b6b,stroke:#333,stroke-width:2px,color:white
 ```
 ---
 
