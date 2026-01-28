@@ -58,9 +58,9 @@ The robust `StrikerDecision` node and leaf nodes consume these parameters to per
 >     * 📄 [`tactics_nodes.cpp`](src/brain/src/tactics/tactics_nodes.cpp)
 >   * ⚙️ **Layer 3: Execution Engines** — *(Consumers)*
 >     * 📄 [`striker_decision.cpp`](src/brain/src/striker_decision.cpp) : **Main Decision Logic**
->     * 📄 [`offtheball.cpp`](src/brain/src/offtheball.cpp) : Movement Logic
->     * 📄 [`chase.cpp`](src/brain/src/chase.cpp) : Ball Pursuit
->     * *... and more (kick, adjust, etc.)*
+>     * 📄 [`offtheball.cpp`](src/brain/src/offtheball.cpp)
+>     * 📄 [`chase.cpp`](src/brain/src/chase.cpp)
+>     * *... (kick, adjust, etc.)*
           
 ---
 
