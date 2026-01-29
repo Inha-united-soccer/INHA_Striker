@@ -10,13 +10,16 @@
 
 *Dynamic Decision Making • Tactical Positioning • Human-like Agility*
 
----
 </div>
+<div align="center">
 
-## Striker Vision
+</br>
+
 **"To create a soccer-playing intelligence that doesn't just calculate, but *understands* the flow of the game."**
 
 The **INHA Striker** is designed to bridge the gap between rigid robotic control and dynamic human intuition. By leveraging hierarchical behavior trees and advanced motion planning, our agent demonstrates adaptive gameplay—switching seamlessly between aggressive dribbling, tactical off-ball movement, and precision finishing.
+
+</div>
 
 ---
 
@@ -33,17 +36,16 @@ Defines the high-level intent based on the match context.
 ### 2. Tactics Layer (The Tuner)
 Translates strategy into specific constraints via the **BehaviorTree Blackboard**.
 * **Role**: Injects parameters (speed, aggression, thresholds) instead of hard-coding behaviors.
-* **Feature**: **1:N Mapping** (Context-Aware Selection)
-    * Same Strategy can lead to different Tactics based on `ScoreDiff`, `BallPosition`, etc.
-    * **Example**:
-      * **`OFFENSIVE` Strategy**:
-        * *Losing by 3+ goals*: `TOTAL_ASSAULT` (Risky Attack)
-        * *Ball in own half*: `COUNTER_ATTACK` (Fast Break)
-        * *Otherwise*: `PRESSING` (Standard Pressure)
-      * **`DEFENSIVE` Strategy**:
-        * *Winning by 3+ goals*: `TEMPO_CONTROL` (Possession Game)
-        * *Ball near own goal*: `DEEP_DEFENSE` (Park the Bus)
-        * *Otherwise*: `LINE_DEFENSE` (Standard Defense)
+* **1:N Mapping** (Context-Aware Selection): Same Strategy can lead to different Tactics based on `ScoreDiff`, `BallPosition`, etc.
+* **Example**:
+   * **`OFFENSIVE` Strategy**:
+     * *Losing by 3+ goals*: `TOTAL_ASSAULT` (Risky Attack)
+     * *Ball in own half*: `COUNTER_ATTACK` (Fast Break)
+     * *Otherwise*: `PRESSING` (Standard Pressure)
+   * **`DEFENSIVE` Strategy**:
+     * *Winning by 3+ goals*: `TEMPO_CONTROL` (Possession Game)
+     * *Ball near own goal*: `DEEP_DEFENSE` (Park the Bus)
+     * *Otherwise*: `LINE_DEFENSE` (Standard Defense)
 
 ### 3. Execution Layer (The Engine)
 The robust `StrikerDecision` node and leaf nodes consume these parameters to perform actions.
