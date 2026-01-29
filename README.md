@@ -119,16 +119,7 @@ while all contextual decision-making lives upstream.
 ---
 ## Striker Behavior Tree Overview
 [<img width="900" height="" alt="image" src="https://github.com/user-attachments/assets/f4c2592e-dc3f-4957-b1f5-4a4410184ee0" />](https://files.slack.com/files-pri/T0908EY4K6V-F0A9TF95XHD/striker.png)
- 
----
 
-## Contribution
-This project contributes to the field of humanoid robotics by:
-1.  **Demonstrating Robust Autonomy**: Showing how behavior trees can handle the chaotic environment of a soccer match.
-2.  **Implementing Human-inspired Motion**: Proving that curvilinear paths are superior to linear point-to-point navigation for bipedal robots.
-3.  **Open Source Innovation**: Providing a modular, extensible C++ framework for future researchers in the RoboCup domain.
-
----
 
 </br>
 
