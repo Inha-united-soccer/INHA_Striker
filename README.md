@@ -118,7 +118,8 @@ while all contextual decision-making lives upstream.
 
 ---
 ## Striker Behavior Tree Overview
-<img width="2530" height="900" alt="image" src="https://github.com/user-attachments/assets/00e4f967-abbc-4ec6-bce3-2492852e1acd" />
+<img width="2524" height="1092" alt="image" src="https://github.com/user-attachments/assets/d67dbda5-41b2-40c5-9c6e-0783299fcfd9" />
+
 
 
 </br>
