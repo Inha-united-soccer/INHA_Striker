@@ -14,7 +14,7 @@ NodeStatus StrategyDirector::tick()
     double timeRemaining = brain->tree->getEntry<double>("GameState.timeRemaining");
 
     // 2. 전략 결정
-    string mode = "NORMAL";
+    string mode = "NORMAL"; // default 모드 -> 무승부 중인 상황 즉 별다른 전략이 필요하지 않은 시작 상황
 
     if (isLosing && timeRemaining < 300.0) {
         mode = "ALL_OUT_ATTACK"; // 지고 있고 시간도 없다면 총공격

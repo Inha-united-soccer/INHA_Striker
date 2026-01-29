@@ -324,15 +324,20 @@ def visualize():
     ax.add_patch(plt.Rectangle((-hfl - 0.6, -gw/2), 0.6, gw, fill=False, edgecolor=line_color, linewidth=2, zorder=6))
     ax.add_patch(plt.Rectangle((hfl, -gw/2), 0.6, gw, fill=False, edgecolor=line_color, linewidth=2, zorder=6))
 
-    # Custom Colormap (Infrared Style: Black -> Purple -> Orange/Red -> Yellow)
+    # Custom Colormap (Turbo-like but optimized for marker visibility)
+    # Turbo is Blue->Cyan->Green->Yellow->Orange->Red.
+    # We remove the Red end to keep Red Opponent markers visible, 
+    # and darken the low end to contrast well on white.
     colors = [
-        (0/255, 0/255, 0/255),    # Softer Dark (Dark Blue-Grey)
-        (62/255, 15/255, 101/255),  # Brighter Purple
-        (216/255, 105/255, 69/255),  # Brighter Orange
-        (240/255, 229/255, 115/255)  # Pale Yellow
+        "#1a1025",  # Midnight Purple
+        "#22446d",  # Deep Navy
+        "#1e6351",  # Dark Pine
+        "#8a843d",  # Dark Mustard
+        "#a35631",  # Burnt Sienna
+        "#6b1e1e",  # Wine Red
     ]
     
-    cmap_name = 'custom_thermal'
+    cmap_name = 'custom_turbo_no_red'
     custom_cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=256)
 
     # 히트맵 (zorder=0 so grid/lines show on top, alpha=1.0 for deep colors)
