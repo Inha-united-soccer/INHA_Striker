@@ -23,25 +23,32 @@ The **INHA Striker** is designed to bridge the gap between rigid robotic control
 
 ---
 
-## Key Feature
-
-### **Hyper-Modular Architecture**
+## Key Feature : Hyper-Modular Architecture
 We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**. This allows the robot to adapt its personality in real-time without recompiling the core logic.
 
 ### 1. Strategy Layer (The Director)
 Defines the high-level intent based on the match context.
 * **Role**: Analyzes the environment and sets the global "Mode."
+  </br>
+  
 * **Example**: `Score < Opponent` & `Time Remaining < 2min` → Switches to **`ALL_OUT_ATTACK`**.
 
 ### 2. Tactics Layer (The Tuner)
 Translates strategy into specific constraints via the **BehaviorTree Blackboard**.
 * **Role**: Injects parameters (speed, aggression, thresholds) instead of hard-coding behaviors.
-* **1:N Mapping** (Context-Aware Selection): Same Strategy can lead to different Tactics based on `ScoreDiff`, `BallPosition`, etc.
+  </br>
+  
+* **Feature**: **1:N Mapping** (Context-Aware Selection) </br>
+  Same Strategy can lead to different Tactics based on `ScoreDiff`, `BallPosition`, etc.
+  </br>
+  
 * **Example**:
    * **`OFFENSIVE` Strategy**:
      * *Losing by 3+ goals*: `TOTAL_ASSAULT` (Risky Attack)
      * *Ball in own half*: `COUNTER_ATTACK` (Fast Break)
      * *Otherwise*: `PRESSING` (Standard Pressure)
+  </br>
+  
    * **`DEFENSIVE` Strategy**:
      * *Winning by 3+ goals*: `TEMPO_CONTROL` (Possession Game)
      * *Ball near own goal*: `DEEP_DEFENSE` (Park the Bus)
@@ -50,11 +57,14 @@ Translates strategy into specific constraints via the **BehaviorTree Blackboard*
 ### 3. Execution Layer (The Engine)
 The robust `StrikerDecision` node and leaf nodes consume these parameters to perform actions.
 * **Role**: Executes the "How" based on the "What" provided by the Tactics layer.
+  </br>
+  
 * **Example**: The `Chase` node reads `speed_limit = 1.0` and triggers a max-speed sprint, while `StrikerDecision` uses the loose `kick_threshold` to shoot at the first opportunity.
+  </br>
 
-
-> **💡 The Benefit**
-> You can completely overhaul the robot's playstyle—from a conservative defender to a hyper-aggressive striker—just by tweaking a few numbers in the Tactics layer, with **zero risk** of breaking the core movement logic.
+**💡 The Benefit**
+You can completely overhaul the robot's playstyle—from a conservative defender to a hyper-aggressive striker—just by tweaking a few numbers in the Tactics layer, with **zero risk** of breaking the core movement logic.
+</br>
 
 > #### **📂 Proof of Modularity: Code Structure**
 > Our source tree is explicitly organized to enforce this architectural separation:
@@ -72,14 +82,12 @@ The robust `StrikerDecision` node and leaf nodes consume these parameters to per
 >     * 📄 [`striker_decision.cpp`](src/brain/src/striker_decision.cpp) : **Main Decision Logic**
 >     * 📄 [`offtheball.cpp`](src/brain/src/offtheball.cpp)
 >     * 📄 [`chase.cpp`](src/brain/src/chase.cpp)
->     * *... (kick, adjust, etc.)*
-          
----
+>     * *... (kick, adjust, etc.)*     
 
+---
 ## Striker Behavior Tree Overview
 [<img width="900" height="" alt="image" src="https://github.com/user-attachments/assets/f4c2592e-dc3f-4957-b1f5-4a4410184ee0" />](https://files.slack.com/files-pri/T0908EY4K6V-F0A9TF95XHD/striker.png)
-
-
+ 
 ---
 
 ## Contribution
@@ -89,6 +97,8 @@ This project contributes to the field of humanoid robotics by:
 3.  **Open Source Innovation**: Providing a modular, extensible C++ framework for future researchers in the RoboCup domain.
 
 ---
+
+</br>
 
 <div align="center">
     <b>Built with by INHA United</b><br>
