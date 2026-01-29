@@ -23,12 +23,12 @@ The **INHA Striker** is designed to bridge the gap between rigid robotic control
 
 ---
 
-## Key Feature : Hyper-Modular Architecture
-We separate **Strategic Intent** from **Mechanical Execution** using a novel **Parameter-Injection Pattern**. This allows the robot to adapt its personality in real-time without recompiling the core logic.
+## Key Strength : Hyper-Modular Architecture
+We separate **Strategic Intent** from **Mechanical Execution** through a **Parameter-Injection Pattern**. This enables real-time adaptation of the robot’s playstyle without recompiling the core logic.
 
 ### 1. Strategy Layer (The Director)
 Defines the high-level intent based on the match context.
-* **Role**: Analyzes the environment and sets the global "Mode."
+* **Role**: Analyzes the environment and sets a global mode for the team.
   </br>
   
 * **Example**: `Score < Opponent` & `Time Remaining < 2min` → Switches to **`ALL_OUT_ATTACK`**.
@@ -38,32 +38,32 @@ Translates strategy into specific constraints via the **BehaviorTree Blackboard*
 * **Role**: Injects parameters (speed, aggression, thresholds) instead of hard-coding behaviors.
   </br>
   
-* **Feature**: **1:N Mapping** (Context-Aware Selection) </br>
+* **Key Idea**: **1:N Mapping** (Context-Aware Selection) </br>
   Same Strategy can lead to different Tactics based on `ScoreDiff`, `BallPosition`, etc.
   </br>
   
 * **Example**:
    * **`OFFENSIVE` Strategy**:
-     * *Losing by 3+ goals*: `TOTAL_ASSAULT` (Risky Attack)
-     * *Ball in own half*: `COUNTER_ATTACK` (Fast Break)
-     * *Otherwise*: `PRESSING` (Standard Pressure)
+     - *Losing by 3+ goals* → `TOTAL_ASSAULT` (High-Risk Attack)
+     - *Ball in own half* → `COUNTER_ATTACK` (Fast Break)
+     - *Otherwise* → `PRESSING` (Standard Pressure)
   </br>
   
    * **`DEFENSIVE` Strategy**:
-     * *Winning by 3+ goals*: `TEMPO_CONTROL` (Possession Game)
-     * *Ball near own goal*: `DEEP_DEFENSE` (Park the Bus)
-     * *Otherwise*: `LINE_DEFENSE` (Standard Defense)
+     * *Winning by 3+ goals* → `TEMPO_CONTROL` (Possession Game)
+     * *Ball near own goal* → `DEEP_DEFENSE` (Park the Bus)
+     * *Otherwise* → `LINE_DEFENSE` (Standard Defense)
 
 ### 3. Execution Layer (The Engine)
-The robust `StrikerDecision` node and leaf nodes consume these parameters to perform actions.
+The robust `StrikerDecision` node and leaf nodes use these parameters to execute actions.
 * **Role**: Executes the "How" based on the "What" provided by the Tactics layer.
   </br>
   
 * **Example**: The `Chase` node reads `speed_limit = 1.0` and triggers a max-speed sprint, while `StrikerDecision` uses the loose `kick_threshold` to shoot at the first opportunity.
   </br>
 
-**💡 The Benefit**
-You can completely overhaul the robot's playstyle—from a conservative defender to a hyper-aggressive striker—just by tweaking a few numbers in the Tactics layer, with **zero risk** of breaking the core movement logic.
+**💡 Strengths**
+You can completely overhaul the robot's playstyle—from a conservative defender to a hyper-aggressive striker—by tweaking just a few parameters in the Tactics layer, with zero risk of breaking the core execution logic.
 </br>
 
 > #### **📂 Proof of Modularity: Code Structure**
