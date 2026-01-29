@@ -79,13 +79,18 @@ while all contextual decision-making lives upstream.
 * **Role**: Executes the **"How"** based on the **"What"** provided by the Tactics layer.
   </br>
   
-* **Example**: Under the **OFFENSIVE Strategy** (specifically **`PRESSING`** tactic), the following parameters are generated:
-  > * `Defense Line` = **1.0m**
-  > * `Kick Threshold` = **0.3m**
-  > * `Chase Speed` = **1.0**
+* **Example**: The Execution Layer consumes a **Composite Parameter Map** aggregated from multiple specialized sub-tactics.
 
-  The **`Chase`** node increases sprint intensity based on `Chase Speed`.
-  **`StrikerDecision`** adjusts its alignment constraints and shooting trigger based on the `Kick Threshold`.
+  **[Parameter Aggregation Map]**
+  > | Parameter Source | Key | Value |
+  > | :--- | :--- | :--- |
+  > | `Tactic_Pressing` | **`Chase Speed`** | **1.0** |
+  > | `Tactic_LineControl` | **`Defense Line`** | **1.0m** |
+  > | `Tactic_Finishing` | **`Kick Threshold`** | **0.3m** |
+
+  **[Execution Behavior]**
+  The **`Chase`** node reads `Chase Speed`, ignoring the source logic.
+  **`StrikerDecision`** independently adapts its shooting condition using `Kick Threshold`.
 
   </br>
 
