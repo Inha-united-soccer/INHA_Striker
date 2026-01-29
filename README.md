@@ -82,11 +82,11 @@ while all contextual decision-making lives upstream.
 * **Example**: The Execution Layer consumes a **Composite Parameter Map** aggregated from multiple specialized sub-tactics.
 
   **[Parameter Aggregation Map]**
-  > | Parameter Source | Key | Value |
-  > | :--- | :--- | :--- |
-  > | `Tactic_Pressing` | **`Chase Speed`** | **1.0** |
-  > | `Tactic_LineControl` | **`Defense Line`** | **1.0m** |
-  > | `Tactic_Finishing` | **`Kick Threshold`** | **0.3m** |
+  > | Parameter Source | Contributing Parameters (`Key` : `Value`) |
+  > | :--- | :--- |
+  > | **`Tactic_Pressing`** | • `Chase Speed` : **1.0**<br>• `Aggression` : **High** |
+  > | **`Tactic_LineControl`** | • `Defense Line` : **1.0m** |
+  > | **`Tactic_Finishing`** | • `Kick Threshold` : **0.3m**<br>• `Aim Bias` : **Corners** |
 
   **[Execution Behavior]**
   The **`Chase`** node reads `Chase Speed`, ignoring the source logic.
